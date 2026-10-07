@@ -28,6 +28,7 @@
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     $('#stage-label').innerHTML = labels[next];
     window.scrollTo({top:0,behavior:'instant'});
+    document.dispatchEvent(new CustomEvent('museum:screen',{detail:next}));
     if (focus) {
       const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next} h1`);
       heading.setAttribute('tabindex','-1');
@@ -115,6 +116,7 @@
         state.completed.add(id);
         save();
         $('#passport-preview-count').textContent = `${state.completed.size} de 6 salas completadas`;
+        document.dispatchEvent(new CustomEvent('museum:progress'));
       }
     } catch { notify(config.texts.roomSoon); }
   }
@@ -124,7 +126,9 @@
     registerRoom(id, handler) { if(config.rooms.some(room=>room.id===id) && typeof handler==='function') roomHandlers.set(id,handler); },
     openRoom:visitRoom,
     getProgress:()=>({entered:state.entered,completed:[...state.completed]}),
-    returnToLobby:()=>showScreen('lobby')
+    returnToLobby:()=>showScreen('lobby'),
+    openMap:source=>openDialog('map',source||$('#open-map')),
+    openPassport:source=>openDialog('passport',source||$('#open-passport'))
   });
   const ambient = {playing:false,audio:null,context:null,gain:null,nodes:[]};
   function updateSoundButton() {

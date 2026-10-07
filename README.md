@@ -26,6 +26,12 @@ Museum.registerRoom('beginning', async ({ returnToLobby }) => {
 
 `Museum.openRoom(id)` respeta el bloqueo de la sexta sala. `Museum.getProgress()` devuelve una copia del progreso. No existe un botón de demostración que conceda sellos ficticios. Las rutas de configuración quedan preparadas en `null`, y el contenido futuro debe registrarse explícitamente.
 
+## Vestíbulo en 3D
+
+`dist/scene3d.js` dibuja el vestíbulo como una rotonda en 3D con Three.js (incluido en `dist/vendor/`, sin descargas): seis puertas-portal, un corazón de oro que abre el pasaporte, suelo de espejo y polvo dorado bajo el óculo. Al tocar una puerta, la cámara vuela hacia ella, la cruza y llama a `Museum.openRoom(id)`; después regresa al vestíbulo.
+
+El 3D necesita servirse con `node preview.cjs` (o desde Sites): al abrir `dist/index.html` directamente, o en un navegador sin WebGL, se muestra el vestíbulo ilustrado.
+
 ## Accesibilidad y almacenamiento
 
 Botones nativos, diálogo modal con cierre mediante Escape, foco devuelto al control de origen, foco visible y movimiento reducido. El estado guarda únicamente entrada al museo, salas completadas y preferencia sonora. El almacenamiento inaccesible o corrupto no impide navegar.
