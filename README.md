@@ -84,3 +84,22 @@ La escena sigue el arrastre del dedo o del mouse en el vestíbulo y en la sala. 
 La captura de WhatsApp, la foto, los anillos y la llave abren una nota lateral dentro de la sala. No hay cambio de página ni fondo modal. Las notas admiten cierre con X o Escape, cierran sus medios al salir y conservan los sellos y las pistas. El primer mensaje ofrece un botón «Ver captura en grande»: abre una vista de lectura ampliada solo al solicitarla y vuelve a la nota al cerrarse.
 
 El vestíbulo utiliza puertas de vidrio con apertura lateral; la sala 01 utiliza nogal y bronce con apertura de bisagras. La cámara del vestíbulo comienza y permanece en el mismo encuadre: no vuelve a ejecutar un vuelo al terminar la carga ni oscila sin interacción. Los retornos de cámara pendientes se cancelan al cambiar de pantalla.
+
+## Sala 02: Momentos que se quedaron
+
+La galería conserva sus tres zonas y ocho recuerdos. Se retiraron las tres bancas, sus superficies interactivas y sus colisiones. «Contemplar» ofrece una vista desde el pasillo despejado. La cámara secreta está en el muro derecho al entrar a «La belleza de lo cotidiano»; la ayuda indica su nueva ubicación.
+
+Los ocho recursos son ejemplos descargados de Pexels, con créditos en las notas y las vistas ampliadas. Las fotografías se sirven localmente a 1600 píxeles de ancho; los videos se optimizaron a 1280 × 720, conservando su duración y proporción, y sus portadas se extrajeron del propio clip. Los dos clips no tienen sonido audible original; se indica en sus créditos. No se presentan como recuerdos personales de Daniel y Sofía.
+
+| Recuerdo | Archivo en dist/assets/sala02 | Fuente y autor |
+| --- | --- | --- |
+| Perdernos para encontrarnos | aventuras-camino.jpg | [Nascimento Vieira: carretera al atardecer](https://www.pexels.com/photo/winding-road-by-the-seashore-at-sunset-16295810/) |
+| Nuestro lugar favorito | aventuras-lugar.jpg | [hubbugaye: dos cafés junto a la ventana](https://www.pexels.com/photo/cozy-coffee-cups-by-a-window-in-urban-setting-29392194/) |
+| Un día sin planes | cotidiano-sin-planes.jpg | [RDNE Stock project: libros y fruta en un pícnic](https://www.pexels.com/photo/a-stack-of-books-and-fruits-on-a-picnic-blanket-5530673/) |
+| La felicidad también era esto | cotidiano-felicidad.jpg | [Kadir Avşar: mesa para dos con pasta y vino](https://www.pexels.com/photo/a-table-with-two-plates-of-pasta-and-wine-24869084/) |
+| Así sonaba nuestra felicidad | video-felicidad.mp4 y video-felicidad-portada.jpg | [Alex Green: pareja riendo en casa](https://www.pexels.com/video/a-couple-laughing-5698956/) |
+| Celebrarte siempre | celebrar-pastel.jpg | [Snap Spark: pastel con velas encendidas](https://www.pexels.com/photo/delightful-birthday-cake-with-candles-lit-33930868/) |
+| Otro recuerdo para guardar | celebrar-luces.jpg | [Trev W. Adams: fuegos artificiales sobre la ciudad](https://www.pexels.com/photo/fireworks-in-city-12304696/) |
+| Un pedacito de nosotros | video-pedacito.mp4 y video-pedacito-portada.jpg | [Jep Gambardella: abrazo al atardecer](https://www.pexels.com/video/couple-hugging-each-other-during-sunset-5102615/) |
+
+Todos se distribuyen bajo la [licencia Pexels](https://www.pexels.com/license/). Para sustituirlos por recuerdos propios, reemplaza los archivos o edita `momentsRoom.exhibits[].src`, `poster`, `alt` y `credit` en dist/config.js. Elimina `credit` al usar contenido personal. Los videos sólo se descargan al pulsar reproducir.

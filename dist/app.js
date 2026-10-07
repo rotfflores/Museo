@@ -32,15 +32,18 @@
   function showScreen(next, focus = true) {
     clearTimeout(invitationTimer);
     screen = next;
-    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen']]) $(`#${id}`).hidden = name !== next;
+    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen']]) $(`#${id}`).hidden = name !== next;
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     labels.room='04 <span class="footer-line"></span> AQUÍ COMENZÓ TODO';
+    labels.moments='05 <span class="footer-line"></span> MOMENTOS QUE SE QUEDARON';
     $('#stage-label').innerHTML = labels[next];
     document.body.classList.toggle('lobby-view',next==='lobby');
+    // Las salas comparten el mismo diseño a pantalla completa.
+    document.body.classList.toggle('room-view',next==='room'||next==='moments');
     window.scrollTo({top:0,behavior:'instant'});
     document.dispatchEvent(new CustomEvent('museum:screen',{detail:next}));
     if (focus) {
-      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next} h1`);
+      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next} h1`);
       heading.setAttribute('tabindex','-1');
       heading.focus({preventScroll:true});
     }
@@ -112,7 +115,7 @@
   }
   // Volver desde una sala: la puerta del museo se cierra, cambia la escena y se abre en el vestíbulo.
   async function returnToLobby() {
-    if(screen!=='room'){showScreen('lobby');return;}
+    if(screen!=='room'&&screen!=='moments'){showScreen('lobby');return;}
     if(dialog.open) closeDialog();
     const opened=await playDoors({lines:['Cerrando la sala…','Volviendo al vestíbulo…','Bienvenida de nuevo.'],cover:()=>showScreen('lobby',false),ready:()=>null,minimum:1100,label:'EL MUSEO DE NOSOTROS',title:'El vestíbulo'});
     if(opened){$('#lobby-title').setAttribute('tabindex','-1');$('#lobby-title').focus({preventScroll:true});} else showScreen('lobby');
@@ -200,8 +203,9 @@
     $('#dialog-content').className = type === 'ticket' ? 'dialog-ticket' : '';
     $('#dialog-content').innerHTML = type === 'map' ? mapMarkup() : type === 'passport' ? passportMarkup() : `<div class="dialog-heading"><h2 id="dialog-title">Tu entrada, para siempre</h2><p>Esta historia tiene un lugar reservado para ti.</p></div>${ticketMarkup()}`;
     if(type==='map') {
-      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':'Vestíbulo';
-      $('.map-footnote',dialog).textContent='Aquí comenzó todo está abierta. Las otras salas abrirán pronto.';
+      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':screen==='moments'?'Sala 02 · Momentos que se quedaron':'Vestíbulo';
+      const open=config.rooms.filter(room=>roomHandlers.has(room.id)).map(room=>room.title.replace(/\.$/,''));
+      $('.map-footnote',dialog).textContent=open.length>1?`${open.slice(0,-1).join(', ')} y ${open.at(-1)} están abiertas. Las otras salas abrirán pronto.`:`${open[0]||'La primera sala'} está abierta. Las otras salas abrirán pronto.`;
       dialog.querySelectorAll('[data-room]').forEach(button=>{
         if(roomHandlers.has(button.dataset.room)) {
           button.classList.add('available');
@@ -249,6 +253,9 @@
     openRoom:visitRoom,
     getProgress:progressStore.getProgress,
     showRoom:()=>showScreen('room'),
+    showView:name=>showScreen(name),
+    suspendAmbient,
+    restoreAmbient,
     openContent,
     closeOverlay:closeDialog,
     notify,
@@ -271,7 +278,22 @@
     $('#ambient-toggle').setAttribute('aria-pressed',String(ambient.playing));
     $('#ambient-toggle span').textContent = ambient.playing ? 'Silenciar ambiente' : 'Activar ambiente';
   }
+  // Los videos pausan el ambiente y lo restauran sólo si estaba sonando antes.
+  let ambientSuspended=false;
+  async function suspendAmbient() {
+    if(!ambient.playing) return false;
+    try { ambient.audio?.pause(); if(ambient.context) await ambient.context.suspend(); } catch { /* Sin ambiente que pausar. */ }
+    ambient.playing=false; ambientSuspended=true; updateSoundButton();
+    return true;
+  }
+  async function restoreAmbient() {
+    if(!ambientSuspended) return;
+    ambientSuspended=false;
+    try { if(ambient.audio) await ambient.audio.play(); if(ambient.context) await ambient.context.resume(); ambient.playing=true; } catch { ambient.playing=false; }
+    updateSoundButton();
+  }
   async function toggleAmbient() {
+    ambientSuspended=false;
     const button = $('#ambient-toggle');
     button.disabled = true;
     try {

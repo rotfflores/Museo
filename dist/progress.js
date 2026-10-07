@@ -1,7 +1,35 @@
 /* Almacenamiento compartido por las salas. No depende de Three.js ni del DOM. */
 (function(root) {
   'use strict';
+  /* Límite del paquete completo y piezas de cada sala calculadas desde su contenido:
+     si se quita una pieza, el sello no pide algo imposible. */
+  const LIMITS = {photos:25, videos:5};
+  function prepareConfig(config) {
+    if(config.__prepared) return config;
+    let photos=0, videos=0;
+    for(const piece of config.beginningRoom?.exhibits||[]) {
+      for(const key of ['screenshot','photo','chat']) if(piece[key]) photos++;
+      if(piece.video) videos++;
+    }
+    for(const room of config.rooms||[]) {
+      const data=room.piecesFrom && config[room.piecesFrom];
+      if(!data) continue;
+      const seen=new Set(), dropped=[];
+      data.exhibits=(Array.isArray(data.exhibits)?data.exhibits:[]).filter(piece=>{
+        if(!piece||!piece.id||seen.has(piece.id)||!['photo','video'].includes(piece.type)) return false;
+        const isVideo=piece.type==='video';
+        if(isVideo?videos>=LIMITS.videos:photos>=LIMITS.photos){dropped.push(piece.id);return false;}
+        seen.add(piece.id); if(isVideo) videos++; else photos++;
+        return true;
+      });
+      if(dropped.length && typeof console!=='undefined') console.warn(`Límite de ${LIMITS.photos} fotos y ${LIMITS.videos} videos: se omiten ${dropped.join(', ')}.`);
+      room.pieces=data.exhibits.map(piece=>piece.id);
+    }
+    Object.defineProperty(config,'__prepared',{value:true});
+    return config;
+  }
   function createStore(config, storage) {
+    prepareConfig(config);
     const key = `museum-of-us:${config.id}:v1`;
     let saved = {};
     try { saved = JSON.parse(storage?.getItem(key) || '{}') || {}; } catch { /* La visita funciona sin almacenamiento. */ }
@@ -48,6 +76,6 @@
     }
     return {state,save,getProgress,discoverPiece,completeRoom,findClue};
   }
-  root.MuseumProgress={createStore};
-  if(typeof module!=='undefined' && module.exports) module.exports={createStore};
+  root.MuseumProgress={createStore,prepareConfig,LIMITS};
+  if(typeof module!=='undefined' && module.exports) module.exports={createStore,prepareConfig,LIMITS};
 })(globalThis);

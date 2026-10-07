@@ -30,14 +30,14 @@ window.MUSEUM_CONFIG = {
   },
   rooms: [
     { id: "beginning", title: "Aquí comenzó todo.", route: "beginning-room.js", pieces: ["message", "first-date", "together"] },
-    { id: "moments", title: "Momentos que se quedaron.", route: null },
+    { id: "moments", title: "Momentos que se quedaron.", route: "moments-room.js", piecesFrom: "momentsRoom" },
     { id: "little-things", title: "Pequeñas cosas, grandes recuerdos.", route: null },
     { id: "you", title: "Así te veo yo.", route: null },
     { id: "future", title: "Lo que todavía nos espera.", route: null },
     { id: "artwork", title: "Una obra para ti.", route: null, requires: ["beginning", "moments", "little-things", "you", "future"] }
   ],
   /* Las pistas tienen su propio contador; no son requisitos para los sellos. */
-  clueIds: ["beginning-key", "moments-key", "little-things-key", "you-key", "future-key"],
+  clueIds: ["beginning-key", "moments-camera", "little-things-key", "you-key", "future-key"],
   beginningRoom: {
     title: "Aquí comenzó todo",
     subtitle: "Antes de tener una historia, tuvimos un primer momento.",
@@ -92,6 +92,61 @@ window.MUSEUM_CONFIG = {
         video: null,
         videoPoster: null
       }
+    ]
+  },
+  /* Sala 02. Cambia títulos, fechas, frases y archivos; quita una pieza y el total se recalcula solo.
+     Límite del paquete completo: hasta 25 fotos y 5 videos (contando todas las salas). */
+  momentsRoom: {
+    title: "Momentos que se quedaron",
+    subtitle: "Hay momentos que terminan, pero nunca se van.",
+    completionMessage: "Hay momentos que terminan, pero nunca se van. Esta sala ya forma parte de tu pasaporte.",
+    zones: ["Nuestras aventuras", "La belleza de lo cotidiano", "Días para celebrar"],
+    clue: {
+      id: "moments-camera",
+      message: "Hay instantes que merecen quedarse con nosotros. Has encontrado otra parte de la sorpresa.",
+      hint: "Al entrar a «La belleza de lo cotidiano», busca un pequeño detalle dorado en el muro derecho."
+    },
+    exhibits: [
+      { id: "perdernos", type: "photo", zone: 0, title: "Perdernos para encontrarnos", date: "Primer viaje juntos · marzo de 2026",
+        phrase: "Ningún mapa nos llevó tan lejos como las ganas de seguir.",
+        anecdote: "Lo que más recuerdo de ese día no es el lugar. Es que podía voltear y encontrarte a mi lado.",
+        src: "assets/sala02/aventuras-camino.jpg", alt: "Fotografía de ejemplo: carretera entre montañas junto al mar al atardecer",
+        credit: { author: "Nascimento Vieira", url: "https://www.pexels.com/photo/winding-road-by-the-seashore-at-sunset-16295810/" } },
+      { id: "lugar-favorito", type: "photo", zone: 0, title: "Nuestro lugar favorito", date: "Abril de 2026",
+        phrase: "La mesa junto a la ventana ya sabía nuestros nombres.",
+        anecdote: "Pedíamos lo mismo de siempre y aun así cada visita se sentía nueva. Creo que mi lugar favorito eras tú.",
+        src: "assets/sala02/aventuras-lugar.jpg", alt: "Fotografía de ejemplo: dos tazas de café en una mesa junto a la ventana",
+        credit: { author: "hubbugaye", url: "https://www.pexels.com/photo/cozy-coffee-cups-by-a-window-in-urban-setting-29392194/" } },
+      { id: "sin-planes", type: "photo", zone: 1, title: "Un día sin planes", date: "Un domingo cualquiera · mayo de 2026",
+        phrase: "No pasó nada extraordinario. Y fue perfecto.",
+        anecdote: "Nos quedamos en la manta hasta que se fue el sol. No hacía falta ir a ningún lado.",
+        src: "assets/sala02/cotidiano-sin-planes.jpg", alt: "Fotografía de ejemplo: libros, fruta y tazas sobre una manta de pícnic",
+        credit: { author: "RDNE Stock project", url: "https://www.pexels.com/photo/a-stack-of-books-and-fruits-on-a-picnic-blanket-5530673/" } },
+      { id: "felicidad", type: "photo", zone: 1, title: "La felicidad también era esto", date: "Cena en casa · junio de 2026",
+        phrase: "Pasta, risas y la cocina hecha un desastre.",
+        anecdote: "Se nos pasó un poco la salsa y nos reímos tanto que ya no importó. Esa noche entendí que la felicidad también era esto.",
+        src: "assets/sala02/cotidiano-felicidad.jpg", alt: "Fotografía de ejemplo: una mesa para dos con pasta y dos copas de vino",
+        credit: { author: "Kadir Avşar", url: "https://www.pexels.com/photo/a-table-with-two-plates-of-pasta-and-wine-24869084/" } },
+      { id: "sonaba", type: "video", zone: 1, title: "Así sonaba nuestra felicidad", date: "Una tarde cualquiera",
+        phrase: "Tu risa de fondo, como siempre.",
+        dedication: "Guardé este momento para escucharlo cuando te extrañe. Es la canción más bonita que conozco.",
+        src: "assets/sala02/video-felicidad.mp4", poster: "assets/sala02/video-felicidad-portada.jpg",
+        credit: { author: "Alex Green", url: "https://www.pexels.com/video/a-couple-laughing-5698956/", note: "Clip de ejemplo sin audio original." } },
+      { id: "celebrarte", type: "photo", zone: 2, title: "Celebrarte siempre", date: "Tu cumpleaños · septiembre de 2026",
+        phrase: "Cada vela fue un deseo, y todos tenían tu nombre.",
+        anecdote: "Cantamos desafinados y apagaste las velas a la primera. Pedí en silencio poder celebrarte muchos años más.",
+        src: "assets/sala02/celebrar-pastel.jpg", alt: "Fotografía de ejemplo: pastel decorado con cerezas y velas encendidas",
+        credit: { author: "Snap Spark", url: "https://www.pexels.com/photo/delightful-birthday-cake-with-candles-lit-33930868/" } },
+      { id: "otro-recuerdo", type: "photo", zone: 2, title: "Otro recuerdo para guardar", date: "Fin de año · diciembre de 2026",
+        phrase: "Las luces del cielo, y tú mirándolas.",
+        anecdote: "Mientras todos veían los fuegos artificiales, yo te miraba a ti. Ese fue mi momento favorito de la noche.",
+        src: "assets/sala02/celebrar-luces.jpg", alt: "Fotografía de ejemplo: fuegos artificiales sobre una ciudad reflejados en el río",
+        credit: { author: "Trev W. Adams", url: "https://www.pexels.com/photo/fireworks-in-city-12304696/" } },
+      { id: "pedacito", type: "video", zone: 2, title: "Un pedacito de nosotros", date: "Nuestro primer aniversario",
+        phrase: "Pocos segundos, muchísimo amor.",
+        dedication: "Un pedacito de lo que somos, para que lo lleves contigo siempre.",
+        src: "assets/sala02/video-pedacito.mp4", poster: "assets/sala02/video-pedacito-portada.jpg",
+        credit: { author: "Jep Gambardella", url: "https://www.pexels.com/video/couple-hugging-each-other-during-sunset-5102615/", note: "Clip de ejemplo sin audio original." } }
     ]
   }
 };

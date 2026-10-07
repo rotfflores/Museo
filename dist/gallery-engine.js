@@ -1,8 +1,8 @@
 /* Motor reutilizable de salas: Three.js local, navegación, enfoque y pausa. */
 import * as THREE from './vendor/three.module.min.js';
-import {moveWithCollisions,planPath} from './navigation.mjs';
+import {moveWithCollisions,planPath,WALK_BOUNDS} from './navigation.mjs';
 
-export function createGallery({container,scene,camera,obstacles,targets,onTarget,onActivate,onUnavailable,onTap,onSwipe,onHover,onBack,onFrame,floor}) {
+export function createGallery({container,scene,camera,obstacles,targets,onTarget,onActivate,onUnavailable,onTap,onSwipe,onHover,onBack,onFrame,floor,bounds=WALK_BOUNDS}) {
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<600?1.25:1.5));
@@ -12,7 +12,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
   const canvas=renderer.domElement;canvas.className='gallery-canvas';canvas.setAttribute('aria-hidden','true');container.prepend(canvas);
   const view={yaw:0,pitch:-.03},keys=new Set(),pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();
   const meshes=targets.flatMap(target=>target.hits);
-  let active=false,paused=false,running=false,raf=0,last=0,drag=null,flight=null,selected=null,pointerInside=false,hovered=null,rendered=false;
+  let active=false,paused=false,running=false,raf=0,last=0,drag=null,flight=null,selected=null,pointerInside=false,hovered=null,rendered=false,locked=false;
   const resolveTarget=object=>targets.find(target=>target.hits.includes(object));
   function setTarget(target) {
     if(selected===target)return;
@@ -60,7 +60,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
           const length=Math.hypot(forward,strafe),speed=dt*2;
           const dx=(-Math.sin(view.yaw)*forward+Math.cos(view.yaw)*strafe)/length*speed;
           const dz=(-Math.cos(view.yaw)*forward-Math.sin(view.yaw)*strafe)/length*speed;
-          const next=moveWithCollisions(camera.position,dx,dz,obstacles);camera.position.x=next.x;camera.position.z=next.z;
+          const next=moveWithCollisions(camera.position,dx,dz,obstacles,bounds);camera.position.x=next.x;camera.position.z=next.z;
         }
       }
       look();select();onFrame?.(dt,now);
@@ -83,13 +83,13 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
   }
   function hover(target){if(hovered===target)return;hovered=target;canvas.style.cursor=target?'pointer':'';onHover?.(target);}
   canvas.addEventListener('pointerdown',event=>{
-    if(paused)return;keys.clear();drag={x:event.clientX,y:event.clientY,time:performance.now(),yaw:view.yaw,pitch:view.pitch,moved:false,flying:!!flight};
+    if(paused||locked)return;keys.clear();drag={x:event.clientX,y:event.clientY,time:performance.now(),yaw:view.yaw,pitch:view.pitch,moved:false,flying:!!flight};
     try{canvas.setPointerCapture(event.pointerId);}catch{/* Puntero ya liberado. */}container.focus({preventScroll:true});
     // El primer toque ya ilumina la pieza, igual que pasar el mouse por encima.
     if(event.pointerType!=='mouse'){const hit=pick(event,meshes);hover(hit?resolveTarget(hit.object):null);}
   });
   canvas.addEventListener('pointermove',event=>{
-    if(paused)return;
+    if(paused||locked)return;
     if(drag){if(!drag.moved&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.moved=true;flight=null;container.classList.remove('guiding');if(event.pointerType!=='mouse')hover(null);}if(!drag.moved)return;view.yaw=drag.yaw+(event.clientX-drag.x)/container.clientWidth*2.5;view.pitch=THREE.MathUtils.clamp(drag.pitch+(event.clientY-drag.y)/container.clientHeight*1.6,-.5,.55);}
     else if(event.pointerType==='mouse'){const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);pointerInside=true;const hit=flight?null:pick(event,meshes);hover(hit?resolveTarget(hit.object):null);}
   });
@@ -114,7 +114,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
   });canvas.addEventListener('pointercancel',()=>{release();hover(null);});canvas.addEventListener('pointerleave',leave);
   // Las tres piezas se abren con un botón; la pequeña llave admite un toque sin arrastre.
   container.addEventListener('keydown',event=>{
-    if(paused||event.target.closest('button'))return;
+    if(paused||locked||event.target.closest('button'))return;
     const key=event.key.toLowerCase();
     if(key==='q'||key==='e'){event.preventDefault();view.yaw+=(key==='q'?1:-1)*.18;flight=null;container.classList.remove('guiding');}
     if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)){event.preventDefault();keys.add(key);flight=null;container.classList.remove('guiding');}
@@ -131,7 +131,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
     button.addEventListener('pointerdown',event=>{if(paused)return;event.preventDefault();keys.add(key);flight=null;button.setPointerCapture(event.pointerId);});
     for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,()=>keys.delete(key));
     button.addEventListener('click',event=>{
-      if(event.detail===0&&!paused){const f=key==='w'?1:key==='s'?-1:0,s=key==='d'?1:key==='a'?-1:0;const next=moveWithCollisions(camera.position,(-Math.sin(view.yaw)*f+Math.cos(view.yaw)*s)*.45,(-Math.cos(view.yaw)*f-Math.sin(view.yaw)*s)*.45,obstacles);camera.position.x=next.x;camera.position.z=next.z;}
+      if(event.detail===0&&!paused){const f=key==='w'?1:key==='s'?-1:0,s=key==='d'?1:key==='a'?-1:0;const next=moveWithCollisions(camera.position,(-Math.sin(view.yaw)*f+Math.cos(view.yaw)*s)*.45,(-Math.cos(view.yaw)*f-Math.sin(view.yaw)*s)*.45,obstacles,bounds);camera.position.x=next.x;camera.position.z=next.z;}
     });
   });
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();active=false;sync();onUnavailable?.();});
@@ -139,9 +139,10 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
     renderer,
     setActive(value){active=value;keys.clear();resize();sync();},
     setPaused(value){paused=value;keys.clear();drag=null;sync();},
+    setLocked(value){locked=value;keys.clear();drag=null;hover(null);},
     guideTo(target,{onArrive=null,select=true}={}){
       if(paused)return false;
-      const path=planPath(camera.position,target.approach,obstacles);if(!path.length)return false;
+      const path=planPath(camera.position,target.approach,obstacles,bounds);if(!path.length)return false;
       const delta=target.focus.clone().sub(new THREE.Vector3(target.approach.x,1.65,target.approach.z));
       const yaw=Math.atan2(-delta.x,-delta.z),pitch=Math.atan2(delta.y,Math.hypot(delta.x,delta.z));
       if(reduced.matches){flight=null;camera.position.set(target.approach.x,1.65,target.approach.z);view.yaw=yaw;view.pitch=pitch;look();setTarget(select?target:null);container.dispatchEvent(new CustomEvent('gallery:arrived'));onArrive?.(target);}

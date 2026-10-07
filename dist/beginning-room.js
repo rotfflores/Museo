@@ -525,5 +525,5 @@ $('#clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#accessible-decoration').addEventListener('click',event=>openKey(event.currentTarget));
 document.addEventListener('museum:progress',updateProgress);
 document.addEventListener('museum:overlay',event=>{if(event.detail)closeNote(false);engine?.setPaused(event.detail);});
-document.addEventListener('museum:screen',event=>{if(event.detail!=='room')closeNote(false);engine?.setActive(event.detail==='room');document.body.classList.toggle('room-view',event.detail==='room');});
+document.addEventListener('museum:screen',event=>{if(event.detail!=='room')closeNote(false);engine?.setActive(event.detail==='room');});
 updateProgress();
