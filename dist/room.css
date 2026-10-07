@@ -6,3 +6,24 @@
 .look-target>span{color:#58452c;background:#fbf0dacc;text-shadow:none;padding:5px 8px;border:1px solid #c7b08a55;font-size:16px}.gallery-control-hint{color:#715b3e;text-shadow:0 1px 2px #fff8ea}
 @media(max-width:600px){.look-target>span{font-size:13px}.gallery-navigation button{width:44px}}
 @media(prefers-reduced-motion:reduce){.new-stamp{animation:none}.room-screen{animation:none}.gallery-stage.guiding .gallery-canvas{cursor:default}}
+/* Sala con el mismo lenguaje del vestíbulo: marco de portal dorado, placas y píldoras translúcidas. */
+.room-heading h1 em{font-style:italic}
+.gallery-stage{border:1px solid #beaa85;background:#efe6d6;box-shadow:0 18px 44px #4636241c,0 2px 6px #46362412}
+.gallery-stage:before{content:'';position:absolute;inset:7px;border:1px solid #c9a5646b;border-radius:84px 84px 1px 1px;pointer-events:none;z-index:1}
+.gallery-vignette{background:radial-gradient(ellipse at 50% 42%,transparent 58%,#46362426),linear-gradient(0deg,#46362430,transparent 22%)}
+.gallery-caption{background:radial-gradient(circle at 9px 9px,#a28b61 2px,transparent 2.6px),radial-gradient(circle at calc(100% - 9px) 9px,#a28b61 2px,transparent 2.6px),radial-gradient(circle at 9px calc(100% - 9px),#a28b61 2px,transparent 2.6px),radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),#a28b61 2px,transparent 2.6px),linear-gradient(120deg,#efe5d0f0,#e0d0b3f0);border:1px solid #beaa85;box-shadow:0 5px 20px #46362418,inset 0 0 0 4px #f5ecd455;padding:12px 30px}
+.gallery-caption .eyebrow{letter-spacing:2.6px;color:#9a7b45}
+.gallery-caption p{color:#5d4a33}
+.look-target>span{font-family:var(--serif);font-style:italic;color:#5d4a33;background:#f8f2e6cc;backdrop-filter:blur(6px);border:1px solid #b9a17766;border-radius:999px;padding:6px 16px}
+.look-target .button:disabled{background:#f8f2e6b3;color:#9a8a70;border:1px solid #b9a17766;backdrop-filter:blur(6px)}
+.gallery-navigation button{width:44px;height:44px;border-radius:50%;background:#f8f2e6d9;backdrop-filter:blur(6px);border:1px solid #b9a177a6;color:#5d4a33;box-shadow:0 2px 8px #4636241a;transition:background .2s,border-color .2s}
+.gallery-navigation button:hover{background:#fbf7ed;border-color:#a18756}
+.gallery-navigation button:active{background:#e9d9b6}
+.gallery-navigation .turn-controls button{height:44px;font-size:17px}
+.gallery-control-hint{display:flex;align-items:center;gap:0;bottom:12px;padding:5px 14px;border:1px solid #b9a17766;border-radius:999px;background:#f8f2e6cc;backdrop-filter:blur(6px);font-size:8px;letter-spacing:1.6px;text-transform:uppercase;color:#5d4a33;text-shadow:none;white-space:nowrap}
+.gallery-control-hint span{color:#b89b66}
+.tour-number{letter-spacing:1.5px;color:#9a7b45}
+.tour-stop.guiding-stop{border-color:#a18756}
+.room-topline>.eyebrow{color:#9a7b45}
+@media(max-width:600px){.gallery-stage:before{border-radius:59px 59px 1px 1px;inset:6px}.gallery-caption{padding:9px 18px}.look-target>span{font-size:13px;padding:5px 12px}.gallery-navigation button{width:42px;height:42px}.gallery-navigation .turn-controls button{height:42px}.gallery-control-hint{font-size:7px;letter-spacing:1px;padding:4px 10px;left:12px;bottom:8px}}
+@media(max-width:380px){.gallery-navigation{right:6px}.look-target{max-width:calc(100% - 150px)}}

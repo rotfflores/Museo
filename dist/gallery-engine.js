@@ -35,7 +35,10 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
   function look() {camera.rotation.set(view.pitch,view.yaw,0,'YXZ');}
   function updateFlight(dt) {
     if(!flight)return;
-    let remaining=dt*2.8;
+    // Arranca y frena con suavidad, como los vuelos de cámara del vestíbulo.
+    const progress=flight.length?Math.min(1,flight.travelled/flight.length):1;
+    let remaining=dt*2.8*(.3+1.4*Math.sin(Math.PI*progress));
+    flight.travelled+=remaining;
     while(remaining>0 && flight.index<flight.path.length) {
       const goal=flight.path[flight.index],distance=Math.hypot(goal.x-camera.position.x,goal.z-camera.position.z);
       if(distance<=remaining){camera.position.x=goal.x;camera.position.z=goal.z;remaining-=distance;flight.index++;}
@@ -115,7 +118,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
       const delta=target.focus.clone().sub(new THREE.Vector3(target.approach.x,1.65,target.approach.z));
       const yaw=Math.atan2(-delta.x,-delta.z),pitch=Math.atan2(delta.y,Math.hypot(delta.x,delta.z));
       if(reduced.matches){camera.position.set(target.approach.x,1.65,target.approach.z);view.yaw=yaw;view.pitch=pitch;look();setTarget(target);container.dispatchEvent(new CustomEvent('gallery:arrived'));}
-      else{flight={path,index:1,yaw,pitch,target};container.classList.add('guiding');setTarget(null);}
+      else{let length=0;for(let i=1;i<path.length;i++)length+=Math.hypot(path[i].x-path[i-1].x,path[i].z-path[i-1].z);flight={path,index:1,yaw,pitch,target,length,travelled:0};container.classList.add('guiding');setTarget(null);}
       return true;
     },
     getSelected:()=>selected,
