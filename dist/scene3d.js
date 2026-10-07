@@ -595,7 +595,7 @@ function build() {
     if (drag) {
       const dx = event.clientX - drag.x;
       if (Math.abs(dx) > 6) drag.moved = true;
-      if (drag.moved) view.targetYaw = THREE.MathUtils.clamp(drag.yaw + dx / sceneBox.clientWidth * 2.4, -yawLimit(), yawLimit());
+      if (drag.moved) view.targetYaw = THREE.MathUtils.clamp(drag.yaw - dx / sceneBox.clientWidth * 2.4, -yawLimit(), yawLimit());
     }
     if (event.pointerType === 'mouse') {
       const object = flight ? null : pick(event);

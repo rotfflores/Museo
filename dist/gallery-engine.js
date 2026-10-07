@@ -90,7 +90,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
   });
   canvas.addEventListener('pointermove',event=>{
     if(paused)return;
-    if(drag){if(!drag.moved&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.moved=true;flight=null;container.classList.remove('guiding');if(event.pointerType!=='mouse')hover(null);}if(!drag.moved)return;view.yaw=drag.yaw-(event.clientX-drag.x)/container.clientWidth*2.5;view.pitch=THREE.MathUtils.clamp(drag.pitch-(event.clientY-drag.y)/container.clientHeight*1.6,-.5,.55);}
+    if(drag){if(!drag.moved&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>8){drag.moved=true;flight=null;container.classList.remove('guiding');if(event.pointerType!=='mouse')hover(null);}if(!drag.moved)return;view.yaw=drag.yaw+(event.clientX-drag.x)/container.clientWidth*2.5;view.pitch=THREE.MathUtils.clamp(drag.pitch+(event.clientY-drag.y)/container.clientHeight*1.6,-.5,.55);}
     else if(event.pointerType==='mouse'){const rect=canvas.getBoundingClientRect();pointer.set((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1);pointerInside=true;const hit=flight?null:pick(event,meshes);hover(hit?resolveTarget(hit.object):null);}
   });
   function release(){drag=null;pointerInside=false;}

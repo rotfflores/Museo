@@ -80,7 +80,7 @@ body.lobby-view .site-header>*{pointer-events:auto}
 .tutorial-dots i.on{background:#a18756}
 .tutorial-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
 @keyframes tutorial-drag{0%,100%{transform:translateX(-55px)}50%{transform:translateX(55px)}}
-@keyframes tutorial-pan{0%,100%{transform:translateX(18px)}50%{transform:translateX(-18px)}}
+@keyframes tutorial-pan{0%,100%{transform:translateX(-18px)}50%{transform:translateX(18px)}}
 @keyframes tutorial-tap{0%,30%{transform:translate(40px,30px) scale(1)}55%{transform:translate(0,0) scale(1)}65%{transform:translate(0,0) scale(.82)}75%,100%{transform:translate(0,0) scale(1)}}
 @keyframes tutorial-ripple{0%,62%{opacity:0;transform:scale(.6)}68%{opacity:1}100%{opacity:0;transform:scale(2.2)}}
 @keyframes tutorial-glow{0%,55%{opacity:.25}70%,85%{opacity:.85}100%{opacity:.25}}

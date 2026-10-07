@@ -151,3 +151,8 @@ dialog:has(.room-help-sheet){width:min(560px,calc(100% - 36px))}
 @keyframes room-note-in{from{opacity:0;transform:translateY(8px)}}
 @media(max-width:600px){.room-note{right:16px;left:16px;bottom:92px;width:auto;padding:21px 22px;max-height:44svh}.room-note h2{font-size:23px}.room-note-description{font-size:11px}.room-note-dedication{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.room-note{animation:none}}
+
+.room-note-expand{min-height:40px;margin-top:17px;font-size:11px;padding:10px 16px;gap:12px}
+.expanded-conversation .conversation-capture{max-width:500px}
+.expanded-conversation .conversation-capture img{width:100%;max-height:none;height:auto;object-fit:contain}
+dialog:has(.expanded-conversation) .dialog-top{position:sticky;top:0;z-index:2;background:#fbf7ed;margin-top:-8px;padding-top:8px;padding-bottom:8px}

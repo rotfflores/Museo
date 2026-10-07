@@ -79,8 +79,8 @@ La transición de carga utiliza ahora vidrio esmerilado, perfiles finos de bronc
 
 ## Controles y notas de sala
 
-El arrastre mira hacia el lado indicado en el vestíbulo y en la sala. Los arrastres del mouse nunca cambian de pieza; en pantalla táctil, un deslizamiento rápido hacia la derecha avanza y hacia la izquierda vuelve, mientras se contempla un recuerdo. WASD y las flechas conservan el movimiento normal.
+La escena sigue el arrastre del dedo o del mouse en el vestíbulo y en la sala. Los arrastres del mouse nunca cambian de pieza; en pantalla táctil, un deslizamiento rápido hacia la izquierda avanza y hacia la derecha vuelve, mientras se contempla un recuerdo. WASD y las flechas conservan el movimiento normal.
 
-La foto, los anillos y la llave abren una nota lateral dentro de la sala. No hay cambio de página ni fondo modal. Las notas admiten cierre con X o Escape, cierran sus medios al salir y conservan los sellos y las pistas. El primer mensaje conserva su vista ampliada.
+La captura de WhatsApp, la foto, los anillos y la llave abren una nota lateral dentro de la sala. No hay cambio de página ni fondo modal. Las notas admiten cierre con X o Escape, cierran sus medios al salir y conservan los sellos y las pistas. El primer mensaje ofrece un botón «Ver captura en grande»: abre una vista de lectura ampliada solo al solicitarla y vuelve a la nota al cerrarse.
 
 El vestíbulo utiliza puertas de vidrio con apertura lateral; la sala 01 utiliza nogal y bronce con apertura de bisagras. La cámara del vestíbulo comienza y permanece en el mismo encuadre: no vuelve a ejecutar un vuelo al terminar la carga ni oscila sin interacción. Los retornos de cámara pendientes se cancelan al cambiar de pantalla.

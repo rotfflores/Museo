@@ -132,10 +132,10 @@
     if(kind==='room') return [
       {scene:'piece',title:'Toca una pieza para acercarte',text:'La cámara se desliza hasta la vitrina, el cuadro o los anillos, y el recuerdo se abre al llegar.'},
       {scene:'floor',title:'Toca el suelo para caminar',text:touch?'Llegas a ese punto rodeando los muebles. Arrastra para mirar y desliza hacia abajo para dar un paso atrás.':'Llegas a ese punto rodeando los muebles. También puedes usar W, A, S, D o las flechas; Escape da un paso atrás.'},
-      {scene:'swipe',title:'Muévete a tu ritmo',text:touch?'Mientras contemplas una pieza, desliza hacia la derecha para ir a la siguiente o hacia la izquierda para volver.':'Arrastra hacia la derecha para mirar a la derecha. Usa < y > para cambiar de pieza.'}
+      {scene:'swipe',title:'Muévete a tu ritmo',text:touch?'Mientras contemplas una pieza, desliza hacia la izquierda para avanzar o hacia la derecha para volver.':'Arrastra para desplazar la escena, como una fotografía. Usa < y > para cambiar de pieza.'}
     ];
     return [
-      {scene:'look',title:'Arrastra para mirar alrededor',text:touch?'Arrastra hacia la derecha para mirar a la derecha, y hacia la izquierda para mirar a la izquierda.':'Mantén pulsado el mouse y arrastra hacia el lado al que quieres mirar.'},
+      {scene:'look',title:'Arrastra para mirar alrededor',text:touch?'Arrastra para desplazar la escena, como una fotografía. La escena sigue el movimiento de tu dedo.':'Mantén pulsado el mouse y arrastra: la escena sigue tu movimiento.'},
       {scene:'door',title:'Toca una puerta para entrar a una sala',text:'La cámara vuela hasta ella y la cruza contigo. Dentro, toca una pieza para acercarte.'},
       {scene:'heart',title:'Toca el corazón para ver tu pasaporte',text:touch?'Ahí se guardan los sellos de cada sala. Desliza hacia arriba desde el menú inferior para abrir el mapa.':'Ahí se guardan los sellos de cada sala. El menú inferior tiene tu nota, el mapa y tu boleto.'}
     ];
