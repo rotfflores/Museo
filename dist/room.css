@@ -27,3 +27,20 @@
 .room-topline>.eyebrow{color:#9a7b45}
 @media(max-width:600px){.gallery-stage:before{border-radius:59px 59px 1px 1px;inset:6px}.gallery-caption{padding:9px 18px}.look-target>span{font-size:13px;padding:5px 12px}.gallery-navigation button{width:42px;height:42px}.gallery-navigation .turn-controls button{height:42px}.gallery-control-hint{font-size:7px;letter-spacing:1px;padding:4px 10px;left:12px;bottom:8px}}
 @media(max-width:380px){.gallery-navigation{right:6px}.look-target{max-width:calc(100% - 150px)}}
+/* Interacción por toques: pista de un solo uso, pasos entre piezas y controles discretos. */
+.gallery-hint{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;padding:8px 16px;border:1px solid #b9a17766;border-radius:999px;background:#f8f2e6cc;backdrop-filter:blur(6px);font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:#5d4a33;white-space:nowrap;pointer-events:none;transition:opacity .8s;animation:hint-in 1s 1.2s both;z-index:2}
+.gallery-hint b{color:#b89b66;font-weight:400}.gallery-hint.gone{opacity:0;animation:none}
+.piece-stepper{display:flex;align-items:center;gap:6px}
+.piece-step{width:40px;height:40px;border-radius:50%;background:#f8f2e6b3;backdrop-filter:blur(6px);border:1px solid #b9a17780;color:#5d4a33;font-family:var(--serif);font-size:22px;line-height:1;opacity:.8;transition:opacity .2s,background .2s}
+.piece-step:hover,.piece-step:focus-visible{opacity:1;background:#fbf7ed}
+.gallery-navigation{opacity:.55;transition:opacity .25s}
+.gallery-navigation:hover,.gallery-navigation:focus-within{opacity:1}
+.gallery-navigation button{width:34px;height:34px;font-size:16px}
+.gallery-navigation .turn-controls button{height:34px;font-size:14px}
+.toggle-controls{display:none;position:absolute;right:14px;bottom:14px;min-height:36px;padding:6px 14px;border:1px solid #b9a17780;border-radius:999px;background:#f8f2e6cc;backdrop-filter:blur(6px);font-size:9px;letter-spacing:1.6px;text-transform:uppercase;color:#5d4a33}
+.toggle-controls[aria-expanded="true"]{background:#e9d9b6}
+@media(hover:none) and (pointer:coarse){.toggle-controls{display:block}.gallery-navigation{display:none;bottom:60px;opacity:.9}.controls-open .gallery-navigation{display:flex}.gallery-navigation button,.gallery-navigation .turn-controls button{width:42px;height:42px}.look-target{max-width:calc(100% - 135px)}}
+@media(max-width:600px){.gallery-hint{bottom:126px;font-size:7px;letter-spacing:1.2px;padding:6px 12px;gap:6px}.piece-step{width:40px;height:40px}.look-target .button{padding:10px 12px}}
+@media(prefers-reduced-motion:reduce){.gallery-hint{animation:none}}
+.without-webgl .toggle-controls,.without-webgl .gallery-hint{display:none}
+@media(hover:none) and (pointer:coarse){.controls-open .look-target{max-width:calc(100% - 165px)}.controls-open .look-target>span{font-size:12px}}

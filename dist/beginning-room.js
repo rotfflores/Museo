@@ -2,13 +2,17 @@ import * as THREE from './vendor/three.module.min.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 import {Reflector} from './vendor/Reflector.js';
 import {createGallery} from './gallery-engine.js';
+import {isWalkable,WALK_BOUNDS} from './navigation.mjs';
 
 const Museum=window.Museum,config=window.MUSEUM_CONFIG,room=config.beginningRoom;
 const $=selector=>document.querySelector(selector);
 const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const text=value=>value.replace(/\{(sender|recipient)\}/g,(_,key)=>config[key]);
 let engine=null,initialized=false,selected=null,currentPiece=0,fallback=false;
-const targets=[];
+const targets=[],pieceTargets=[];
+// Estado de la mirada: la pieza que se contempla, hacia dónde vuela la cámara y qué brilla bajo el dedo o el mouse.
+let focused=null,flyingTo=null,hoverTarget=null,ping=null;
+const overview={id:'overview',focus:new THREE.Vector3(0,1.9,-5.6),approach:{x:0,z:3.4},hits:[],marker:null};
 const obstacles=[{minX:-4.6,maxX:-2.5,minZ:-2.2,maxZ:-.8},{minX:2.65,maxX:4.15,minZ:-2.05,maxZ:-.55},{minX:-5.55,maxX:-4.8,minZ:-5.8,maxZ:-4.9},{minX:4.8,maxX:5.55,minZ:-5.8,maxZ:-4.9}];
 
 {const words=room.title.split(' '),last=words.pop();$('#room-title').innerHTML=words.length?`${escape(words.join(' '))} <em>${escape(last)}</em>`:escape(last);}
@@ -21,6 +25,7 @@ function updateProgress() {
   $('#room-discovery-count').textContent=`Recuerdos descubiertos: ${discovered.length} de 3`;
   $('#room-clue-count').textContent=`Pistas encontradas: ${progress.clues.length} de 5`;
   $('#room-completed').hidden=!progress.completed.includes('beginning');
+  for(const target of pieceTargets)target.seen.visible=discovered.includes(target.id);
   document.querySelectorAll('[data-tour]').forEach(button=>{
     const done=discovered.includes(room.exhibits[Number(button.dataset.tour)].id);
     button.classList.toggle('discovered',done);
@@ -38,6 +43,7 @@ function fallbackMode() {
   fallback=true;$('#gallery-fallback').hidden=false;$('#gallery-stage').classList.add('without-webgl');
   $('#accessible-decoration').hidden=false;
   document.querySelectorAll('.gallery-navigation button').forEach(button=>button.disabled=true);
+  $('#toggle-controls').hidden=true;$('#gallery-hint').hidden=true;
   setTarget(targets[0]||{id:'message',index:0});
 }
 function texture(width,height,paint) {
@@ -176,7 +182,7 @@ function buildRoom() {
   });
   const letter=new THREE.Mesh(new THREE.PlaneGeometry(1.08,1.35),new THREE.MeshStandardMaterial({map:conversation,roughness:1,side:THREE.DoubleSide}));letter.position.set(-3.55,1.34,-1.55);letter.rotation.x=-.6;scene.add(letter);
   const casePlaque=plaque(room.exhibits[0],0,-3.55,.67,-.77,2);
-  targets.push({id:'message',index:0,focus:new THREE.Vector3(-3.55,1.45,-1.5),approach:{x:-3.55,z:1.1},hits:[glass,letter,casePlaque],marker:marker(-3.55,-1.5,1.05)});
+  targets.push({id:'message',index:0,focus:new THREE.Vector3(-3.55,1.45,-1.5),approach:{x:-3.55,z:1.1},hits:[glass,letter,casePlaque],marker:marker(-3.55,-1.5,1.05),glow:[letter.material],lift:letter,rise:[0,.06,0],halo:[-3.55,1.4,-1.5,1.9],seen:[-3.55,2.25,-1.5]});
   // Pieza 02: una obra enmarcada. Su foto sólo se carga cuando se entra en la sala.
   const placeholder=texture(768,512,(g,w,h)=>{
     const grad=g.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#b7bba6');grad.addColorStop(1,'#e8c897');g.fillStyle=grad;g.fillRect(0,0,w,h);
@@ -193,7 +199,7 @@ function buildRoom() {
   for(const y of [1.39,3.61])box(3.33,.025,.17,0,y,-5.64,goldTrim);
   box(1.2,.06,.22,0,3.98,-5.35,goldTrim);
   const photoPlaque=plaque(room.exhibits[1],1,0,.87,-5.72,3);
-  targets.push({id:'first-date',index:1,focus:new THREE.Vector3(0,2.3,-5.75),approach:{x:0,z:-2.65},hits:[picture,photoPlaque],marker:marker(0,-3.95,.5)});
+  targets.push({id:'first-date',index:1,focus:new THREE.Vector3(0,2.3,-5.75),approach:{x:0,z:-2.65},hits:[picture,photoPlaque],marker:marker(0,-3.95,.5),glow:[picture.material],lift:picture,rise:[0,.03,.04],halo:[0,2.5,-5.5,3.2],seen:[0,4.4,-5.6]});
   const pictureUrl=room.exhibits[1].photo||room.exhibits[1].placeholder;
   if(pictureUrl)new THREE.TextureLoader().load(pictureUrl,map=>{
     const original=map.image;
@@ -212,11 +218,11 @@ function buildRoom() {
   box(1.5,.12,1.5,3.4,.06,-1.3,trim);box(1.18,1.05,1.18,3.4,.64,-1.3,marble).castShadow=true;box(1.5,.1,1.5,3.4,1.21,-1.3,marble).castShadow=true;box(1.52,.025,1.52,3.4,1.15,-1.3,goldTrim);
   const rings=new THREE.Group();rings.position.set(3.4,1.73,-1.3);
   const loopGeometry=room.symbolicObject.type==='interlocked-links'?new THREE.TorusGeometry(.29,.07,12,32):new THREE.TorusGeometry(.28,.065,12,40);
-  const ringA=new THREE.Mesh(loopGeometry,gold);ringA.position.x=-.17;ringA.rotation.y=.45;ringA.rotation.z=.22;
+  const ringA=new THREE.Mesh(loopGeometry,gold.clone());ringA.position.x=-.17;ringA.rotation.y=.45;ringA.rotation.z=.22;
   const ringB=new THREE.Mesh(loopGeometry,new THREE.MeshStandardMaterial({color:room.symbolicObject.secondColor,metalness:.9,roughness:.3}));ringB.position.x=.17;ringB.rotation.y=-.85;ringB.rotation.z=-.3;ringA.castShadow=ringB.castShadow=true;rings.add(ringA,ringB);scene.add(rings);
   const symbolPlaque=plaque(room.exhibits[2],2,3.4,.81,-.52,1.9);
   const symbolHit=box(1.15,1.05,.8,3.4,1.58,-1.3,new THREE.MeshBasicMaterial({visible:false}));
-  targets.push({id:'together',index:2,focus:new THREE.Vector3(3.4,1.6,-1.3),approach:{x:3.4,z:1.15},hits:[symbolHit,symbolPlaque],marker:marker(3.4,-1.3,.88)});
+  targets.push({id:'together',index:2,focus:new THREE.Vector3(3.4,1.6,-1.3),approach:{x:3.4,z:1.15},hits:[symbolHit,symbolPlaque],marker:marker(3.4,-1.3,.88),glow:[ringA.material,ringB.material],lift:rings,rise:[0,.08,0],halo:[3.4,1.73,-1.3,1.5],seen:[3.4,2.3,-1.3]});
   // Llave pequeña, integrada en el detalle de una columna; siempre accesible.
   const position=room.clue.position;
   const keyGroup=new THREE.Group();keyGroup.position.set(THREE.MathUtils.clamp(position[0],-4.7,4.7),THREE.MathUtils.clamp(position[1],.9,2.1),THREE.MathUtils.clamp(position[2],-4.75,4.5));
@@ -225,7 +231,19 @@ function buildRoom() {
   for(const y of [-.09,-.14]){const tooth=new THREE.Mesh(new THREE.BoxGeometry(.075,.026,.025),gold);tooth.position.set(.03,y,0);keyGroup.add(tooth);}
   scene.add(keyGroup);
   const keyHit=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),new THREE.MeshBasicMaterial({visible:false}));keyHit.position.copy(keyGroup.position);scene.add(keyHit);
-  const keyTarget={id:'key',focus:keyGroup.position.clone(),approach:{x:keyGroup.position.x*.77,z:keyGroup.position.z+1.3},hits:[keyHit],marker:null};targets.push(keyTarget);
+  const keyTarget={id:'key',focus:keyGroup.position.clone(),approach:{x:keyGroup.position.x*.77,z:keyGroup.position.z+1.3},hits:[keyHit],marker:null,glow:[gold],lift:keyGroup,rise:[0,.04,0],halo:[keyGroup.position.x,keyGroup.position.y,keyGroup.position.z,.7]};targets.push(keyTarget);
+  pieceTargets.push(...targets.filter(target=>target.id!=='key'));
+  // Brillo dorado, un halo y una pequeña ✧ sobre las piezas ya vistas.
+  const sparkle=texture(128,128,(g,w,h)=>{g.textAlign='center';g.textBaseline='middle';g.font='92px Georgia, "Segoe UI Symbol", serif';g.shadowColor='rgba(255,226,160,.9)';g.shadowBlur=18;g.fillStyle=g.strokeStyle='#c9a564';g.lineWidth=5;g.lineJoin='round';g.strokeText('✧',w/2,h/2+4);g.fillText('✧',w/2,h/2+4);});
+  for(const target of targets) {
+    for(const material of target.glow){material.emissive=new THREE.Color('#c9a564');material.emissiveIntensity=0;}
+    target.base=target.lift.position.clone();target.h=0;
+    const [x,y,z,size]=target.halo;
+    target.haloSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:dot(),color:'#ffe2a8',transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+    target.haloSprite.position.set(x,y,z);target.haloSprite.scale.setScalar(size);scene.add(target.haloSprite);
+    if(target.seen){const star=new THREE.Sprite(new THREE.SpriteMaterial({map:sparkle,transparent:true,depthWrite:false,toneMapped:false}));star.position.set(...target.seen);star.scale.setScalar(.32);star.visible=false;scene.add(star);target.seen=star;}
+  }
+  ping=new THREE.Mesh(new THREE.RingGeometry(.18,.24,40),new THREE.MeshBasicMaterial({color:'#b89b66',transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));ping.rotation.x=-Math.PI/2;ping.position.y=.012;ping.userData.t=1;scene.add(ping);
   // Polvo dorado que flota bajo el óculo; se mueve sólo mientras la sala se dibuja.
   const COUNT=small?220:360,dust=new Float32Array(COUNT*3),speeds=new Float32Array(COUNT);
   for(let i=0;i<COUNT;i++){const r=Math.sqrt(rand())*4.6,a=rand()*Math.PI*2;dust.set([Math.cos(a)*r,rand()*5.2,Math.sin(a)*r-.6],i*3);speeds[i]=.05+rand()*.12;}
@@ -241,7 +259,7 @@ function buildRoom() {
     for(let i=0;i<COUNT;i++){let y=p.getY(i)+speeds[i]*dt;if(y>5.2)y=0;p.setY(i,y);p.setX(i,p.getX(i)+Math.sin(t*.3+i)*.0008);}
     p.needsUpdate=true;
   };
-  engine=createGallery({container:$('#gallery-stage'),scene,camera,obstacles,targets,onTarget:setTarget,onActivate:openTarget,onUnavailable:fallbackMode});
+  engine=createGallery({container:$('#gallery-stage'),scene,camera,obstacles,targets,floor,onTarget:setTarget,onActivate:target=>openTarget(target),onUnavailable:fallbackMode,onTap,onSwipe,onHover:target=>{hoverTarget=target;},onBack:()=>{if(focused)stepBack();},onFrame:animate});
   engine.renderer.toneMappingExposure=.88;engine.renderer.shadowMap.enabled=true;engine.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const pmrem=new THREE.PMREMGenerator(engine.renderer),environment=new RoomEnvironment();
   scene.environment=pmrem.fromScene(environment,.04).texture;scene.environmentIntensity=.55;environment.dispose();pmrem.dispose();
@@ -260,12 +278,75 @@ function enterRoom() {
 }
 function guideTo(index,source=null) {
   currentPiece=index;
-  if(fallback){setTarget({id:room.exhibits[index].id,index});return;}
-  const target=targets[index];
-  if(target && engine?.guideTo(target)) {
-    $('#target-name').textContent=`Hacia: ${room.exhibits[index].title}`;
-    source?.classList.add('guiding-stop');
-  } else Museum.notify('Puedes acercarte a la pieza con los controles de la sala.');
+  if(fallback||!engine){setTarget({id:room.exhibits[index].id,index});openPiece(index,source||undefined);return;}
+  source?.classList.add('guiding-stop');
+  goTo(pieceTargets[index],{source});
+}
+const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+function buzz(pattern){try{if(matchMedia('(pointer: coarse)').matches)navigator.vibrate?.(pattern);}catch{/* Sin vibración disponible. */}}
+function resume(){if(!$('#museum-dialog').open)engine?.setPaused(false);}
+// La cámara se desliza hasta la pieza y el recuerdo se abre al llegar.
+function goTo(target,{open=true,source=null}={}) {
+  resume();
+  if(target.id!=='key')currentPiece=target.index;
+  if(focused===target&&!engine.isFlying()){if(open)openTarget(target,source||undefined);return;}
+  const previous=$('#target-name').textContent;
+  if(target.id!=='key')$('#target-name').textContent=`Hacia: ${room.exhibits[target.index].title}`;
+  flyingTo=target;focused=null;
+  const ok=engine.guideTo(target,{onArrive:()=>{flyingTo=null;focused=target;if(open)openTarget(target,source||undefined);}});
+  if(ok)return;
+  flyingTo=null;$('#target-name').textContent=previous;
+  if(open&&engine.camera.position.distanceTo(target.focus)<5)openTarget(target,source||undefined);
+  else Museum.notify('Puedes acercarte a la pieza con los controles de la sala.');
+}
+function stepBack() {
+  if(!engine)return;
+  resume();focused=null;flyingTo=null;
+  engine.guideTo(overview,{select:false});
+}
+// Tocar el suelo: caminar hasta ese punto rodeando los muebles.
+function walkTo(point) {
+  const camera=engine.camera.position;
+  let x=THREE.MathUtils.clamp(point.x,WALK_BOUNDS.minX,WALK_BOUNDS.maxX),z=THREE.MathUtils.clamp(point.z,WALK_BOUNDS.minZ,WALK_BOUNDS.maxZ);
+  for(let i=0;i<14&&!isWalkable(x,z,obstacles);i++){x+=(camera.x-x)*.22;z+=(camera.z-z)*.22;}
+  const dx=x-camera.x,dz=z-camera.z,length=Math.hypot(dx,dz);
+  if(!isWalkable(x,z,obstacles)||length<.3)return;
+  resume();focused=null;flyingTo=null;
+  if(ping){ping.position.x=x;ping.position.z=z;ping.userData.t=0;}
+  engine.guideTo({id:'floor',focus:new THREE.Vector3(x+dx/length*4,1.65,z+dz/length*4),approach:{x,z},hits:[],marker:null},{select:false});
+}
+function onTap(target,point) {
+  interacted();
+  if(target)goTo(target);
+  else if(point)walkTo(point);
+  else if(focused)stepBack();
+}
+function onSwipe(direction,restoreView) {
+  interacted();
+  if(!focused||focused.id==='key')return;
+  restoreView();
+  if(direction==='down'){stepBack();return;}
+  goTo(pieceTargets[(focused.index+(direction==='left'?1:2))%3]);
+}
+function animate(dt) {
+  const ease=reducedMotion.matches?1:Math.min(1,dt*8);
+  for(const target of targets) {
+    const goal=hoverTarget===target||flyingTo===target?1:0;
+    target.h+=(goal-target.h)*ease;
+    const h=target.h,[rx,ry,rz]=target.rise;
+    target.lift.position.set(target.base.x+rx*h,target.base.y+ry*h,target.base.z+rz*h);
+    for(const material of target.glow)material.emissiveIntensity=h*.32;
+    target.haloSprite.material.opacity=h*.32;
+    if(target.marker)target.marker.material.opacity=Math.max(engine.getSelected()===target?.9:.16,.16+h*.74);
+  }
+  if(ping&&ping.userData.t<1){ping.userData.t=Math.min(1,ping.userData.t+dt*1.4);const t=ping.userData.t;ping.scale.setScalar(1+t*2.2);ping.material.opacity=(1-t)*.8;}
+  if(focused&&!engine.isFlying()&&Math.hypot(engine.camera.position.x-focused.approach.x,engine.camera.position.z-focused.approach.z)>.6)focused=null;
+}
+// Pista de un solo uso, con el estilo de la del vestíbulo.
+const HINT_KEY='museum-of-us:room-hint-seen';
+function interacted() {
+  const hint=$('#gallery-hint');if(hint.classList.contains('gone'))return;
+  hint.classList.add('gone');try{localStorage.setItem(HINT_KEY,'1');}catch{/* Sin almacenamiento: la pista sólo se oculta en esta visita. */}
 }
 function placeholderPhoto(piece) {
   return `<figure class="memory-photo"><img src="${escape(piece.photo||piece.placeholder)}" alt="${escape(piece.photo?piece.photoAlt:'Ilustración provisional de una terraza con dos cafés')}" decoding="async"><figcaption>${piece.photo?escape(piece.description):'Una primera salida · composición provisional'}</figcaption></figure>`;
@@ -279,6 +360,7 @@ function rewardMarkup(){return `<div class="stamp-reward" role="status"><div cla
 function openPiece(index,source=$('#view-memory')) {
   const piece=room.exhibits[index];currentPiece=index;
   const progress=Museum.discoverPiece('beginning',piece.id);
+  buzz(progress.newlyCompleted?[30,60,45]:14);
   const artwork=index===0?conversationMarkup(piece):index===1?placeholderPhoto(piece):symbolMarkup();
   let media='';
   if(piece.audio)media=`<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ ${escape(text(piece.audioLabel))}</button><audio id="memory-audio" preload="none" src="${escape(piece.audio)}"></audio><p id="media-status" role="status"></p></div>`;
@@ -306,13 +388,32 @@ function openPiece(index,source=$('#view-memory')) {
   updateProgress();
 }
 function openKey(source=$('#view-memory')) {
-  const added=Museum.findClue(room.clue.id);
+  const added=Museum.findClue(room.clue.id);buzz(14);
   Museum.openContent({className:'key-overlay',source,html:`<div class="dialog-heading"><p class="eyebrow">${added?'LA PRIMERA PISTA':'TU PRIMERA LLAVE'}</p><h2 id="dialog-title">La llave del comienzo</h2></div><div class="collectible-key" aria-hidden="true"><span></span><i></i></div><blockquote class="memory-dedication">“${escape(room.clue.message)}”</blockquote><p class="key-counter">Pistas encontradas: ${Museum.getProgress().clues.length} de 5</p><p class="key-note">Una de las cinco llaves de la vitrina secreta. Tu sello y tus pistas cuentan su propia historia.</p>`});
   updateProgress();
 }
-function openTarget(target=selected){if(!target)return;if(target.id==='key')openKey();else openPiece(target.index);}
+function openTarget(target=selected,source){if(!target)return;if(target.id==='key')openKey(source);else openPiece(target.index,source);}
 Museum.registerRoom('beginning',enterRoom);
 $('#view-memory').addEventListener('click',()=>openTarget());
+$('#step-prev').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+2)%3,event.currentTarget));
+$('#step-next').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+1)%3,event.currentTarget));
+$('#toggle-controls').addEventListener('click',event=>{const open=$('#gallery-stage').classList.toggle('controls-open');event.currentTarget.setAttribute('aria-expanded',String(open));interacted();});
+{
+  const coarse=matchMedia('(pointer: coarse)').matches,parts=coarse?['Toca una pieza','Desliza para avanzar']:['Haz clic en una pieza','Arrastra para mirar'];
+  $('#gallery-hint').replaceChildren(...[['span',parts[0]],['b','·'],['span',parts[1]]].map(([tag,value])=>{const part=document.createElement(tag);part.textContent=value;return part;}));
+  let seen=false;try{seen=localStorage.getItem(HINT_KEY)==='1';}catch{/* Sin almacenamiento. */}
+  if(seen)$('#gallery-hint').classList.add('gone');
+}
+// Deslizar dentro de un recuerdo abierto lleva a la pieza anterior o siguiente.
+{
+  let start=null;const dialog=$('#museum-dialog');
+  dialog.addEventListener('touchstart',event=>{start=$('#dialog-content').classList.contains('memory-overlay')&&event.touches.length===1&&!event.target.closest('video,audio')?{x:event.touches[0].clientX,y:event.touches[0].clientY,time:performance.now()}:null;},{passive:true});
+  dialog.addEventListener('touchend',event=>{
+    if(!start)return;const touch=event.changedTouches[0],dx=touch.clientX-start.x,dy=touch.clientY-start.y,quick=performance.now()-start.time<500;start=null;
+    if(!quick||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    const next=(currentPiece+(dx<0?1:2))%3;Museum.closeOverlay();setTimeout(()=>guideTo(next),0);
+  },{passive:true});
+}
 document.querySelectorAll('[data-tour]').forEach(button=>button.addEventListener('click',()=>guideTo(Number(button.dataset.tour),button)));
 $('#gallery-stage').addEventListener('gallery:arrived',()=>{document.querySelectorAll('.guiding-stop').forEach(button=>button.classList.remove('guiding-stop'));});
 $('#room-back').addEventListener('click',Museum.returnToLobby);
