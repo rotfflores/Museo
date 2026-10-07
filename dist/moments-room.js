@@ -83,6 +83,8 @@ function buildRoom() {
   const small=innerWidth<600,maxTexture=small?768:1024;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#efe6d6');scene.fog=new THREE.Fog('#efe6d6',16,34);
   const camera=new THREE.PerspectiveCamera(60,1,.1,45);camera.position.set(0,1.65,4.6);
+  // Los haces decorativos sólo se dibujan en la vista directa, fuera del espejo.
+  camera.layers.enable(1);
   const ivory=new THREE.MeshStandardMaterial({color:'#f1e8d6',roughness:.95});
   const trim=new THREE.MeshStandardMaterial({color:'#d8c6a6',roughness:.8});
   const wood=new THREE.MeshStandardMaterial({color:'#4c3828',roughness:.5});
@@ -146,7 +148,7 @@ function buildRoom() {
   for(const zone of ZONES){const cz=(zone.start+zone.end)/2;
     const oculus=new THREE.Mesh(oculusGeometry,oculusMaterial);oculus.rotation.x=Math.PI/2;oculus.position.set(0,WALL_H-.01,cz);scene.add(oculus);
     const ring=new THREE.Mesh(ringGeometry,goldTrim);ring.rotation.x=Math.PI/2;ring.position.set(0,WALL_H-.02,cz);scene.add(ring);
-    const shaft=new THREE.Mesh(shaftGeometry,shaftMaterial);shaft.position.set(0,(WALL_H-.05)/2,cz);scene.add(shaft);
+    const shaft=new THREE.Mesh(shaftGeometry,shaftMaterial);shaft.layers.set(1);shaft.position.set(0,(WALL_H-.05)/2,cz);scene.add(shaft);
     const light=new THREE.PointLight('#ffe2b0',16,13,1.4);light.position.set(0,3.6,cz);scene.add(light);
   }
   // Placas como las de la sala 01: título, fecha o etapa y una frase breve.
@@ -213,7 +215,7 @@ function buildRoom() {
     } else {
       // Pantalla enmarcada: portada con botón de reproducción; el video se carga sólo al pedirlo.
       const portrait=fh>fw,screenCanvas=document.createElement('canvas');screenCanvas.width=portrait?576:640;screenCanvas.height=Math.round(screenCanvas.width*fh/fw);
-      const paintScreen=image=>{const g=screenCanvas.getContext('2d'),w=screenCanvas.width,h=screenCanvas.height,cx=w/2,cy=portrait?h*.86:h/2;g.fillStyle='#1f1814';g.fillRect(0,0,w,h);if(image){const r=Math.min(w/image.width,h/image.height);g.drawImage(image,(w-image.width*r)/2,(h-image.height*r)/2,image.width*r,image.height*r);}
+      const paintScreen=image=>{const g=screenCanvas.getContext('2d'),w=screenCanvas.width,h=screenCanvas.height,cx=w/2,cy=h/2;g.fillStyle='#1f1814';g.fillRect(0,0,w,h);if(image){const r=Math.min(w/image.width,h/image.height);g.drawImage(image,(w-image.width*r)/2,(h-image.height*r)/2,image.width*r,image.height*r);}
         g.beginPath();g.arc(cx,cy,portrait?42:52,0,Math.PI*2);g.fillStyle='rgba(251,247,237,.92)';g.fill();g.strokeStyle='#c9a564';g.lineWidth=4;g.stroke();
         g.beginPath();g.moveTo(cx-12,cy-22);g.lineTo(cx-12,cy+22);g.lineTo(cx+25,cy);g.closePath();g.fillStyle='#4a3c2c';g.fill();};
       paintScreen(null);

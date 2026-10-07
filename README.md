@@ -93,6 +93,8 @@ Las seis fotografías y el video del aniversario son ejemplos descargados de Pex
 
 «Una canción que me lleva a ti» sustituye el clip de risas con el video de WhatsApp aportado por el usuario: se conserva completo, sin modificar el audio ni el archivo original, a 576 × 976 y 56,83 segundos. Su cuadro es vertical y mantiene toda la imagen; el reproductor muestra la dedicatoria a un lado en escritorio y debajo en móvil. Conserva el identificador `sonaba` para respetar el progreso existente. Se retiraron los círculos decorativos y los aros persistentes del suelo de la sala; la señal breve de un toque para caminar sigue disponible.
 
+El botón de reproducción queda centrado tanto en el cuadro 3D como en el reproductor. Los haces decorativos del techo se dibujan en la vista directa y se excluyen del espejo mediante una capa de cámara separada, para evitar las líneas discontinuas en el reflejo sin quitar la reflexión de las obras y los muros.
+
 | Recuerdo | Archivo en dist/assets/sala02 | Fuente y autor |
 | --- | --- | --- |
 | Perdernos para encontrarnos | aventuras-camino.jpg | [Nascimento Vieira: carretera al atardecer](https://www.pexels.com/photo/winding-road-by-the-seashore-at-sunset-16295810/) |
