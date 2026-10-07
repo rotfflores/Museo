@@ -485,7 +485,20 @@ function showNote({eyebrow,title,body,source=$('#little-stage'),onClose=null,ins
   $('#little-note').hidden=false;$('#little-note-title').focus({preventScroll:true});
 }
 $('#close-little-note').addEventListener('click',()=>{if(inspecting)closeInspection();else closeNote();});
-$('#little-note').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(inspecting)closeInspection();else closeNote();}});
+$('#little-note').addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(inspecting)closeInspection();else closeNote();return;}
+  if(event.key!=='Tab'||!inspecting)return;
+  const items=[...$('#little-note').querySelectorAll('button:not([hidden]),[tabindex="0"],a[href]')].filter(item=>item.offsetParent!==null);
+  if(!items.length)return;
+  const first=items[0],last=items.at(-1);
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+});
+{
+  let start=null;const note=$('#little-note');
+  note.addEventListener('touchstart',event=>{start=inspecting&&event.touches.length===1&&!event.target.closest('.inspect-canvas,button,a,audio')?{y:event.touches[0].clientY,x:event.touches[0].clientX,time:performance.now(),scroll:event.target.closest('.inspect-band')?.scrollTop||0}:null;},{passive:true});
+  note.addEventListener('touchend',event=>{if(!start)return;const t=event.changedTouches[0],dy=t.clientY-start.y,dx=t.clientX-start.x,quick=performance.now()-start.time<600,atTop=start.scroll<=0;start=null;if(quick&&atTop&&dy>80&&dy>Math.abs(dx)*1.4)closeInspection();},{passive:true});
+}
 
 // Visor del objeto: su propio lienzo, de modo que girar el objeto nunca mueve la cámara del museo.
 const viewer={renderer:null,scene:null,camera:null,holder:null,raf:0,yaw:.5,pitch:-.25,distance:1.55,running:false};
@@ -557,16 +570,16 @@ function openInspection(index,source=$('#little-stage')) {
   const photo=piece.photo&&piece.object!=='photo'?`<figure class="inspect-photo"><img src="${escape(piece.photo)}" alt="${escape(piece.photoAlt||piece.title)}" loading="lazy" decoding="async"></figure>`:'';
   const audio=piece.audio?`<div class="optional-audio inspect-audio"><button id="little-play-audio" class="button secondary" type="button">▶ ${escape(text(piece.audioLabel||'Escuchar este recuerdo'))}</button><p id="little-audio-status" role="status"></p></div>`:'';
   showNote({source,inspect:true,onClose:()=>{unmountViewer();stopAudio();},body:`
-    <div class="inspect-stage" id="little-inspect-stage">${fallback?'<p class="inspect-fallback" aria-hidden="true">✧</p>':''}</div>
+    <div class="inspect-view"><div class="inspect-stage" id="little-inspect-stage">${fallback?'<p class="inspect-fallback" aria-hidden="true">✧</p>':''}</div>
     ${fallback?'':`<div class="inspect-controls" role="group" aria-label="Girar el objeto">
       <button type="button" data-view="left" aria-label="Girar a la izquierda">↺</button><button type="button" data-view="up" aria-label="Inclinar hacia arriba">↑</button><button type="button" data-view="down" aria-label="Inclinar hacia abajo">↓</button><button type="button" data-view="right" aria-label="Girar a la derecha">↻</button><button type="button" data-view="in" aria-label="Acercar">+</button><button type="button" data-view="out" aria-label="Alejar">−</button>
-      <button type="button" data-view="reset" class="inspect-reset">Restablecer vista</button></div>`}
-    <p class="eyebrow">OBJETO ${String(index+1).padStart(2,'0')}${piece.date?` · ${escape(piece.date)}`:''}</p>
+      <button type="button" data-view="reset" class="inspect-reset">Restablecer vista</button></div>`}</div>
+    <div class="inspect-band"><span class="inspect-grip" aria-hidden="true"></span><p class="eyebrow">OBJETO ${String(index+1).padStart(2,'0')}${piece.date?` · ${escape(piece.date)}`:''}</p>
     <h2 id="little-note-title" tabindex="-1">${escape(piece.title)}</h2>
     <p class="room-note-description">${escape(text(piece.description||''))}</p>
     <p class="room-note-dedication">${escape(text(piece.dedication||''))}</p>
     ${piece.message?`<p class="room-note-description inspect-message">${escape(text(piece.message))}</p>`:''}
-    ${photo}${audio}`});
+    ${photo}${audio}</div>`});
   if(!fallback)mountViewer(piece,$('#little-inspect-stage'));
   $('#little-note').querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
     const action=button.dataset.view;

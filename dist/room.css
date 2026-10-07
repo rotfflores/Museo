@@ -226,3 +226,31 @@ dialog:has(.moments-photo),dialog:has(.moments-video){width:min(860px,calc(100% 
 .collection-item span{color:#b89b66;font-size:12px}
 @media(max-width:600px){.lobby-heading.room-overlay>p#little-counter{font-size:8px;letter-spacing:1.1px;margin-top:5px}.lobby-heading.room-overlay #little-subtitle{font-size:12px}.room-note.inspect-note.inspecting{left:12px;right:12px;width:auto;max-height:58svh}.inspect-stage{height:190px}.examine-pill{bottom:calc(86px + env(safe-area-inset-bottom));font-size:11px}}
 @media(prefers-reduced-motion:reduce){.examine-pill{animation:none}}
+/* Sala 03: examinar un recuerdo a pantalla completa (las otras salas conservan su nota lateral). */
+#little-note.inspecting{position:fixed;inset:0;left:0;right:0;top:0;bottom:0;width:auto;max-height:none;z-index:30;padding:0;border:0;overflow:hidden;background:radial-gradient(ellipse 70% 60% at 38% 45%,#fbf4e4 0,#efe3cc 55%,#dccbae 100%);box-shadow:none;backdrop-filter:none;animation:inspect-in .35s ease}
+#little-note.inspecting:before{display:none}
+#little-note.inspecting #little-note-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,380px);height:100%}
+#little-note.inspecting .inspect-view{position:relative;display:flex;flex-direction:column;min-height:0;padding:calc(env(safe-area-inset-top) + 18px) 18px 18px}
+#little-note.inspecting .inspect-stage{flex:1;height:auto;min-height:0;margin:0;background:transparent;border:0}
+#little-note.inspecting .inspect-controls{margin:10px 0 0;gap:6px;opacity:.75;transition:opacity .2s}
+#little-note.inspecting .inspect-controls:hover,#little-note.inspecting .inspect-controls:focus-within{opacity:1}
+#little-note.inspecting .inspect-controls button{background:#fbf7edcc;backdrop-filter:blur(6px)}
+#little-note.inspecting .inspect-band{position:relative;overflow:auto;padding:calc(env(safe-area-inset-top) + 76px) 30px calc(env(safe-area-inset-bottom) + 28px);background:#fbf7ed;border-left:1px solid #beaa85;box-shadow:inset 3px 0 0 #a58a59}
+#little-note.inspecting .inspect-band h2{font-size:30px;line-height:1.15;margin:0 0 14px}
+#little-note.inspecting .inspect-band .eyebrow{font-size:9px;letter-spacing:1.8px;color:#90794f;margin:0 0 12px}
+#little-note.inspecting .inspect-band .room-note-dedication{font-size:19px}
+#little-note.inspecting .inspect-grip{display:none}
+#little-note.inspecting>.close-button{position:fixed;top:calc(env(safe-area-inset-top) + 16px);right:18px;z-index:2;width:44px;height:44px;font-size:24px;background:#fbf7ed;border:1px solid #b9a17799;box-shadow:0 6px 18px #46362426}
+#little-screen:has(#little-note.inspecting) .lobby-dock,#little-screen:has(#little-note.inspecting) .room-overlay{visibility:hidden}
+@keyframes inspect-in{from{opacity:0}}
+@media(max-width:760px){
+  #little-note.inspecting #little-note-content{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  #little-note.inspecting .inspect-view{padding:calc(env(safe-area-inset-top) + 64px) 10px 6px}
+  #little-note.inspecting .inspect-controls button{min-width:40px;height:40px}
+  #little-note.inspecting .inspect-band{max-height:34svh;padding:14px 22px calc(env(safe-area-inset-bottom) + 18px);border-left:0;border-top:1px solid #beaa85;box-shadow:inset 0 3px 0 #a58a59}
+  #little-note.inspecting .inspect-grip{display:block;width:36px;height:4px;margin:0 auto 10px;border-radius:4px;background:#a1875666}
+  #little-note.inspecting .inspect-band h2{font-size:24px;margin-bottom:8px}
+  #little-note.inspecting .inspect-band .room-note-dedication{font-size:16px;margin-top:8px}
+}
+@media(prefers-reduced-motion:reduce){#little-note.inspecting{animation:none}}
+body:has(#little-note.inspecting) .site-header{visibility:hidden}
