@@ -393,9 +393,6 @@ function discover(id) {
   if(progress.newlyCompleted)celebrate();
   return progress;
 }
-function photoCredit(piece) {
-  return piece?.credit?`<details class="media-credit"><summary>Fotografía de ejemplo</summary><a href="${escape(piece.credit.url)}" target="_blank" rel="noopener noreferrer">${escape(piece.credit.author)} / Pexels</a></details>`:'';
-}
 // La cámara muestra el retrato; la nota conserva solo una frase breve.
 function openPortrait(index,source=$('#you-stage')) {
   const piece=portraits[index];currentPortrait=index;
@@ -404,18 +401,14 @@ function openPortrait(index,source=$('#you-stage')) {
   showNote({eyebrow:`RETRATO ${String(index+1).padStart(2,'0')} DE ${String(count).padStart(2,'0')}`,title:piece.title,source,body:`
     <p class="room-note-dedication">${escape(text(piece.phrase||piece.dedication||''))}</p>
     ${piece.audio?`<div class="optional-audio you-audio"><button id="you-play-audio" class="button secondary" type="button">▶ ${escape(text(piece.audioLabel||'Escuchar'))}</button><p id="you-audio-status" role="status"></p></div>`:''}
-    ${photoCredit(piece)}
-    ${count>1?`<div class="you-steps"><button id="you-note-prev" class="text-button" type="button">‹ Anterior</button><button id="you-note-next" class="text-button" type="button">Siguiente ›</button></div>`:''}`});
-  const keep=returnPose;
+    `});
   Museum.bindAudioButton($('#you-play-audio'),{src:piece.audio,title:piece.title,label:`▶ ${text(piece.audioLabel||'Escuchar')}`,status:$('#you-audio-status')});
-  $('#you-note-prev')?.addEventListener('click',()=>{returnPose=keep;guidePortrait((index+count-1)%count,source);});
-  $('#you-note-next')?.addEventListener('click',()=>{returnPose=keep;guidePortrait((index+1)%count,source);});
 }
 // La obra central: pendiente, lista para descubrirse o ya revelada.
 function openCenter(source=$('#you-stage')) {
   if(!center)return;
   if(centerRevealed()){
-    showNote({eyebrow:'LA OBRA CENTRAL',title:center.title,source,body:`<p class="room-note-dedication">Me encanta compartir mi vida contigo.</p>${photoCredit(center)}`});
+    showNote({eyebrow:'LA OBRA CENTRAL',title:center.title,source,body:`<p class="room-note-dedication">Me encanta compartir mi vida contigo.</p>`});
       return;
   }
   const ready=portraitsFound()>=portraits.length;

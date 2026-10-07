@@ -416,12 +416,9 @@ function interacted() {
   const hint=$('#gallery-hint');if(hint.classList.contains('gone'))return;
   hint.classList.add('gone');try{localStorage.setItem(HINT_KEY,'1');}catch{/* Sin almacenamiento: la pista sólo se oculta en esta visita. */}
 }
-function mediaCredit(credit) {
-  if(!credit)return '';
-  return `<details class="media-credit"><summary>Imagen de ejemplo</summary><a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="${escape(credit.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escape(credit.license)}</a></details>`;
-}
+
 function conversationMarkup(piece) {
-  if(piece.screenshot)return `<figure class="conversation-capture"><img src="${escape(piece.screenshot)}" alt="${escape(piece.screenshotAlt)}" decoding="async">${mediaCredit(piece.screenshotCredit)}</figure>`;
+  if(piece.screenshot)return `<figure class="conversation-capture"><img src="${escape(piece.screenshot)}" alt="${escape(piece.screenshotAlt)}" decoding="async"></figure>`;
   return `<div class="conversation-paper"><div class="conversation-header"><span>${escape(config.couple)}</span><small>${escape(piece.date)}</small></div>${piece.messages.map(message=>`<div class="message-bubble ${message.from==='sender'?'sent':'received'}"><span>${escape(config[message.from]||message.from)}</span><p>${escape(text(message.text))}</p><small>${escape(message.time||'')}</small></div>`).join('')}<p class="conversation-note">Conversación de demostración</p></div>`;
 }
 let noteSource=null;
@@ -441,7 +438,7 @@ $('#close-room-note').addEventListener('click',()=>closeNote());
 $('#room-note').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeNote();}});
 function showPieceNote(piece,index,progress,source) {
   const video=piece.video?`<div class="optional-video"><button id="play-memory-video" class="button secondary">▶ Reproducir video</button><video id="memory-video" preload="none" playsinline ${piece.videoPoster?`poster="${escape(piece.videoPoster)}"`:''} hidden></video></div>`:'';
-  showNote({eyebrow:piece.date,title:piece.title,source,body:`<p class="room-note-dedication">${escape(piece.description)}</p>${mediaCredit(index===0?piece.screenshotCredit:piece.photoCredit)}${piece.audio?'<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ Escuchar</button><p id="media-status" role="status"></p></div>':''}${video}`});
+  showNote({eyebrow:piece.date,title:piece.title,source,body:`<p class="room-note-dedication">${escape(piece.description)}</p>${piece.audio?'<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ Escuchar</button><p id="media-status" role="status"></p></div>':''}${video}`});
   $('#room-screen').classList.toggle('viewing-art',index<2);
   Museum.bindAudioButton($('#play-memory-audio'),{src:piece.audio,title:piece.title,label:`▶ ${text(piece.audioLabel||'Escuchar')}`,status:$('#media-status')});
   $('#play-memory-video')?.addEventListener('click',async event=>{

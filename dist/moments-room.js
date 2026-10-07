@@ -40,7 +40,7 @@ $('#moments-subtitle').textContent=room.subtitle;
 $('#moments-screen .room-overlay').append($('#moments-counter'));
 $('#moments-tour').innerHTML=exhibits.map((piece,index)=>`<button class="tour-stop" data-moments-tour="${index}" type="button"><span class="tour-number">${String(index+1).padStart(2,'0')}</span><span>${escape(piece.title)}<small>${escape(room.zones[piece.zone]||'')} · ${escape(piece.mediaLabel?.toLowerCase()||(piece.type==='video'?'video':'fotografía'))}</small></span><span class="tour-check" aria-label="Sin descubrir">○</span></button>`).join('');
 const videoDescriptions=document.createElement('div');videoDescriptions.className='room-video-descriptions';
-videoDescriptions.innerHTML=exhibits.filter(piece=>piece.type==='video').map(piece=>`<h3>${escape(piece.title)}</h3><p class="room-note-dedication">${escape(text(piece.dedication||piece.phrase||''))}</p>${mediaCredit(piece)}`).join('');
+videoDescriptions.innerHTML=exhibits.filter(piece=>piece.type==='video').map(piece=>`<h3>${escape(piece.title)}</h3><p class="room-note-dedication">${escape(text(piece.dedication||piece.phrase||''))}</p>`).join('');
 $('#moments-help-panel').append(videoDescriptions);
 
 function updateProgress() {
@@ -446,13 +446,10 @@ function openPiece(index,source=$('#moments-stage')) {
   discover(piece);
   showPhotoNote(piece,index,source);
 }
-function mediaCredit(piece) {
-  const credit=piece.credit;if(!credit)return '';
-  return `<details class="media-credit"><summary>${piece.type==='video'?'Video':'Fotografía'} de ejemplo</summary><a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="https://www.pexels.com/license/" target="_blank" rel="noopener noreferrer">Pexels</a>${credit.note?`<br>${escape(credit.note)}`:''}</details>`;
-}
+
 function showPhotoNote(piece,index,source) {
   $('#moments-screen').classList.add('viewing-art');
-  showNote({eyebrow:piece.date,title:piece.title,source,body:`<p class="room-note-dedication">${escape(text(piece.phrase||''))}</p>${mediaCredit(piece)}`});
+  showNote({eyebrow:piece.date,title:piece.title,source,body:`<p class="room-note-dedication">${escape(text(piece.phrase||''))}</p>`});
   $('#moments-screen').classList.add('viewing-art');
 }
 /* El video ocupa el propio cuadro 3D; no abre notas ni diálogos. */
