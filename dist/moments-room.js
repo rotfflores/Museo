@@ -27,12 +27,21 @@ let engine=null,initialized=false,fallback=false,selected=null,currentPiece=0;
 let focused=null,flyingTo=null,hoverTarget=null,ping=null,firstFrame=null,contemplating=false;
 let exitTarget=null,exitOpen=0,exitOpening=false,overviewTarget=null,clueTarget=null;
 const targets=[],pieceTargets=[],lazy=[];
+let playback=null;
+const videoControls=document.createElement('div');
+videoControls.className='room-video-controls';videoControls.hidden=true;
+videoControls.setAttribute('role','group');videoControls.setAttribute('aria-label','Controles del video en el cuadro');
+videoControls.innerHTML='<button id="room-video-play" type="button">Reproducir</button><input id="room-video-seek" type="range" min="0" max="100" value="0" step=".1" aria-label="Posición del video"><button id="room-video-sound" type="button" aria-label="Silenciar video">Sonido</button><button id="room-video-back" type="button">Volver</button><p id="room-video-status" class="sr-only" role="status"></p>';
+$('#moments-screen').append(videoControls);
 
 {const words=room.title.split(' '),last=words.pop();$('#moments-title').innerHTML=words.length?`${escape(words.join(' '))} <em>${escape(last)}</em>`:escape(last);}
 $('#moments-subtitle').textContent=room.subtitle;
 // Contador discreto bajo el título, como parte del rótulo de la sala.
 $('#moments-screen .room-overlay').append($('#moments-counter'));
 $('#moments-tour').innerHTML=exhibits.map((piece,index)=>`<button class="tour-stop" data-moments-tour="${index}" type="button"><span class="tour-number">${String(index+1).padStart(2,'0')}</span><span>${escape(piece.title)}<small>${escape(room.zones[piece.zone]||'')} · ${escape(piece.mediaLabel?.toLowerCase()||(piece.type==='video'?'video':'fotografía'))}</small></span><span class="tour-check" aria-label="Sin descubrir">○</span></button>`).join('');
+const videoDescriptions=document.createElement('div');videoDescriptions.className='room-video-descriptions';
+videoDescriptions.innerHTML=exhibits.filter(piece=>piece.type==='video').map(piece=>`<h3>${escape(piece.title)}</h3><p class="room-note-dedication">${escape(text(piece.dedication||piece.phrase||''))}</p>${mediaCredit(piece)}`).join('');
+$('#moments-help-panel').append(videoDescriptions);
 
 function updateProgress() {
   const progress=Museum.getProgress(),found=progress.discoveries[ROOM_ID]||[];
@@ -197,7 +206,7 @@ function buildRoom() {
     // Marco de madera con filete dorado.
     for(const [w,h,x,y] of [[fw+border*2,border,0,fh/2+border/2],[fw+border*2,border,0,-fh/2-border/2],[border,fh,-fw/2-border/2,0],[border,fh,fw/2+border/2,0]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.09),wood);b.position.set(x,y,.045);b.castShadow=true;group.add(b);}
     for(const [w,h,x,y] of [[fw+.02,.025,0,fh/2],[fw+.02,.025,0,-fh/2],[.025,fh,-fw/2,0],[.025,fh,fw/2,0]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.1),frameGold);b.position.set(x,y,.05);group.add(b);}
-    let surface;
+    let surface,media=null;
     if(piece.type==='photo'){
       // Paspartú: la foto conserva su proporción dentro del marco, nunca se deforma.
       const passe=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),mat);passe.position.z=.012;group.add(passe);
@@ -221,6 +230,7 @@ function buildRoom() {
       paintScreen(null);
       const screenMap=new THREE.CanvasTexture(screenCanvas);screenMap.colorSpace=THREE.SRGBColorSpace;
       surface=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),new THREE.MeshBasicMaterial({map:screenMap,toneMapped:false}));surface.position.z=.015;group.add(surface);
+      media={group,surface,posterMap:screenMap,width:fw,height:fh,x:slot.x,z:slot.z,out:outward[slot.face],cy};
       if(piece.poster)lazy.push({group,load:()=>{const image=new Image();image.decoding='async';image.onload=()=>{paintScreen(image);screenMap.needsUpdate=true;};image.src=piece.poster;}});
     }
     // Foco cálido sobre la obra y un lavado de luz en el muro.
@@ -235,7 +245,7 @@ function buildRoom() {
     const world=group.position;
     const halo=[world.x+out[0]*.25,cy,world.z+out[2]*.25,Math.max(fw,fh)*1.15];
     const seenPos=[world.x+out[0]*.08,cy+fh/2+.36,world.z+out[2]*.08];
-    targets.push({id:piece.id,index,focus:new THREE.Vector3(world.x,portraitVideo?1.8:cy-.05,world.z),approach,hits:[surface,p],marker:null,glow:[frameGold],lift:group,rise:out.map(v=>v*.05),halo,seen:seenPos,piece});
+    targets.push({id:piece.id,index,focus:new THREE.Vector3(world.x,portraitVideo?1.8:cy-.05,world.z),approach,hits:[surface,p],marker:null,glow:[frameGold],lift:group,rise:out.map(v=>v*.05),halo,seen:seenPos,piece,media});
   });
   // Contemplar desde el pasillo abierto, sin mobiliario ni obstáculos invisibles.
   overviewTarget={id:'overview',focus:new THREE.Vector3(0,1.65,-12),approach:{x:0,z:3.2},hits:[],marker:null};
@@ -331,7 +341,15 @@ function guideTo(index,source=null) {
   goTo(pieceTargets[index],{source});
 }
 function goTo(target,{open=true,source=null}={}) {
+  if(playback&&playback.target!==target)stopVideo();
   closeNote(false);resume();
+  if(target.media){
+    const m=target.media,tan=Math.tan(THREE.MathUtils.degToRad(engine.camera.fov/2));
+    const distance=Math.max(1.5,m.height*1.12/(2*tan*.74),m.width*1.12/(2*tan*engine.camera.aspect*.88));
+    target.approach={x:THREE.MathUtils.clamp(m.x+m.out[0]*distance,BOUNDS.minX+.2,BOUNDS.maxX-.2),z:m.z+m.out[2]*distance};
+    target.focus.set(m.x,m.cy-.15,m.z);
+    $('#moments-screen').classList.add('viewing-video');
+  }else $('#moments-screen').classList.remove('viewing-video');
   if(target.index!==undefined)currentPiece=target.index;
   if(focused===target&&!engine.isFlying()){if(open)openTarget(target,source||undefined);return;}
   const previous=$('#moments-target-name').textContent;
@@ -345,6 +363,7 @@ function goTo(target,{open=true,source=null}={}) {
 }
 // Un paso atrás: al centro del pasillo, mirando hacia el fondo de la galería.
 function stepBack() {
+  stopVideo();
   closeNote(false);
   if(!engine)return;
   resume();
@@ -355,6 +374,7 @@ function stepBack() {
   engine.guideTo({id:'overview',focus:new THREE.Vector3(spot[0],1.75,spot[1]-6),approach:{x:spot[0],z:spot[1]},hits:[],marker:null},{select:false});
 }
 function walkTo(point) {
+  stopVideo();
   closeNote(false);
   const camera=engine.camera.position;
   let x=THREE.MathUtils.clamp(point.x,BOUNDS.minX,BOUNDS.maxX),z=THREE.MathUtils.clamp(point.z,BOUNDS.minZ,BOUNDS.maxZ);
@@ -378,6 +398,7 @@ function onSwipe(direction,restoreView) {
   const count=pieceTargets.length;goTo(pieceTargets[(focused.index+(direction==='left'?1:count-1))%count]);
 }
 function animate(dt) {
+  if(!playback&&!engine.isFlying()&&!focused?.media)$('#moments-screen').classList.remove('viewing-video');
   if(exitTarget){exitOpen+=((exitOpening?1:0)-exitOpen)*(reducedMotion.matches?1:Math.min(1,dt*4));for(const {hinge,side} of exitTarget.leaves)hinge.rotation.y=side*exitOpen*1.75;}
   const ease=reducedMotion.matches?1:Math.min(1,dt*8);
   for(const target of targets){
@@ -390,7 +411,7 @@ function animate(dt) {
     if(target.marker)target.marker.material.opacity=contemplating?0:Math.max(engine.getSelected()===target?.9:.16,.16+h*.74);
   }
   if(ping&&ping.userData.t<1){ping.userData.t=Math.min(1,ping.userData.t+dt*1.4);const t=ping.userData.t;ping.scale.setScalar(1+t*2.2);ping.material.opacity=(1-t)*.8;}
-  if(focused&&!engine.isFlying()&&Math.hypot(engine.camera.position.x-focused.approach.x,engine.camera.position.z-focused.approach.z)>.6)focused=null;
+  if(focused&&!engine.isFlying()&&Math.hypot(engine.camera.position.x-focused.approach.x,engine.camera.position.z-focused.approach.z)>.6){focused=null;stopVideo();}
   if(!engine.isFlying())loadNearby.tick=(loadNearby.tick||0)+dt;
   if(loadNearby.tick>.5){loadNearby.tick=0;loadNearby();}
 }
@@ -438,31 +459,69 @@ function showPhotoNote(piece,index,source) {
     image?.addEventListener('error',()=>{const replacement=document.createElement('p');replacement.className='missing-memory-image';replacement.textContent='Esta fotografía no está disponible por ahora.';image.replaceWith(replacement);},{once:true});
   });
 }
-/* Videos: portada y botón; el archivo se carga sólo al pedirlo y pausa el ambiente mientras suena. */
-function openVideo(piece,index,source) {
-  discover(piece);
-  const dimensions=piece.aspectRatio,ratio=Array.isArray(dimensions)&&dimensions.every(value=>Number.isFinite(value)&&value>0)?dimensions[0]/dimensions[1]:16/9;
-  const portrait=ratio<1;
-  let resumedAmbient=false;
-  Museum.openContent({className:`moments-video${portrait?' moments-video-portrait':''}`,source,html:`<div class="moments-video-layout"><div class="memory-heading"><p class="eyebrow">${escape(piece.mediaLabel||'VIDEO')} · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2>${piece.phrase?`<p class="moments-video-phrase">${escape(text(piece.phrase))}</p>`:''}</div>
-    <div class="moments-player" style="--video-ratio:${ratio}">${piece.src?`<video id="moments-video" preload="none" playsinline aria-label="${escape(piece.title)}" ${piece.poster?`poster="${escape(piece.poster)}"`:''}></video><button id="moments-play" class="moments-play" type="button" aria-label="Reproducir ${escape(piece.title)}"><span aria-hidden="true">▶</span></button>`:`<p class="missing-memory-image">Este video llegará pronto.</p>`}</div>
-    <div class="moments-video-copy">
-    <p class="room-note-dedication moments-dedication">${escape(text(piece.dedication||''))}</p>
-    ${mediaCredit(piece)}
-    <div class="moments-player-actions">${piece.src&&document.fullscreenEnabled!==false?'<button id="moments-fullscreen" class="text-button" type="button" hidden>Pantalla completa <span aria-hidden="true">⤢</span></button>':''}<p id="moments-video-status" role="status"></p></div></div></div>`,
-    onClose:()=>{const video=$('#moments-video');if(video){video.pause();video.removeAttribute('src');video.load();}if(resumedAmbient)Museum.restoreAmbient();}});
-  if(!piece.src)return;
-  const video=$('#moments-video'),play=$('#moments-play'),full=$('#moments-fullscreen');
-  play.addEventListener('click',async()=>{
-    if(!video.src){video.src=piece.src;video.controls=true;}
-    resumedAmbient=await Museum.suspendAmbient()||resumedAmbient;
-    play.hidden=true;if(full)full.hidden=false;
-    try{await video.play();}catch{$('#moments-video-status').textContent='No se pudo reproducir el video. La dedicatoria sigue aquí para ti.';play.hidden=false;}
-  });
-  video.addEventListener('error',()=>{if(!video.src)return;$('#moments-video-status').textContent='Este video no está disponible por ahora.';play.hidden=true;});
-  full?.addEventListener('click',()=>{const request=video.requestFullscreen||video.webkitRequestFullscreen||video.webkitEnterFullscreen;try{request?.call(video);}catch{/* Sin pantalla completa. */}});
-  play.focus();
+/* El video ocupa el propio cuadro 3D; no abre notas ni diálogos. */
+function stopVideo() {
+  const session=playback;playback=null;
+  videoControls.hidden=true;$('#moments-screen').classList.remove('viewing-video');
+  if(!session)return;
+  session.video.pause();session.video.removeAttribute('src');session.video.load();session.video.remove();
+  if(session.target?.media){const m=session.target.media;m.surface.material.map=m.posterMap;m.surface.material.color.set('#ffffff');m.surface.material.needsUpdate=true;m.group.remove(session.mesh);session.mesh.geometry.dispose();session.mesh.material.dispose();session.texture.dispose();}
+  if(session.ambient)Museum.restoreAmbient();
 }
+function syncVideoControls() {
+  if(!playback)return;
+  const video=playback.video;
+  $('#room-video-play').textContent=video.ended?'Repetir':video.paused?'Reproducir':'Pausar';
+  $('#room-video-sound').textContent=video.muted?'Sin sonido':'Sonido';
+  $('#room-video-sound').setAttribute('aria-label',video.muted?'Activar sonido del video':'Silenciar video');
+  $('#room-video-seek').value=Number.isFinite(video.duration)&&video.duration>0?video.currentTime/video.duration*100:0;
+}
+async function toggleVideo() {
+  const session=playback;if(!session)return;
+  if(!session.video.paused){session.video.pause();return;}
+  if(!session.video.src)session.video.src=session.piece.src;
+  const playing=session.video.play().then(()=>true,()=>false);
+  const ambient=await Museum.suspendAmbient();
+  if(playback!==session){if(ambient)Museum.restoreAmbient();return;}
+  session.ambient=ambient||session.ambient;
+  const started=await playing;
+  if(playback===session)$('#room-video-status').textContent=started?'':'Pulsa Reproducir para iniciar el video.';
+  syncVideoControls();
+}
+function openVideo(piece,index,source) {
+  const target=pieceTargets[index];
+  if(engine&&!fallback&&focused!==target){goTo(target,{source});return;}
+  if(playback?.target===target){toggleVideo();return;}
+  stopVideo();discover(piece);
+  if(!piece.src){Museum.notify('Este video llegará pronto.');return;}
+  const video=document.createElement('video');video.playsInline=true;video.preload='none';video.setAttribute('aria-label',piece.title);
+  video.className=fallback?'room-video-fallback':'room-video-source';
+  if(!fallback)video.setAttribute('aria-hidden','true');
+  if(piece.poster)video.poster=piece.poster;
+  $('#moments-stage').append(video);
+  const session={target,piece,video,ambient:false,texture:null,mesh:null};playback=session;
+  if(target?.media){
+    const m=target.media,texture=new THREE.VideoTexture(video);texture.colorSpace=THREE.SRGBColorSpace;
+    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(m.width,m.height),new THREE.MeshBasicMaterial({map:texture,toneMapped:false}));mesh.position.z=.021;mesh.visible=false;m.group.add(mesh);
+    session.texture=texture;session.mesh=mesh;
+    video.addEventListener('loadedmetadata',()=>{
+      if(playback!==session)return;
+      const ratio=video.videoWidth/video.videoHeight;let w=m.width,h=w/ratio;if(h>m.height){h=m.height;w=h*ratio;}
+      mesh.geometry.dispose();mesh.geometry=new THREE.PlaneGeometry(w,h);
+    });
+    video.addEventListener('playing',()=>{if(playback!==session)return;mesh.visible=true;m.surface.material.map=null;m.surface.material.color.set('#1f1814');m.surface.material.needsUpdate=true;});
+  }
+  for(const event of ['play','pause','ended','timeupdate','volumechange'])video.addEventListener(event,syncVideoControls);
+  video.addEventListener('error',()=>{if(playback===session)Museum.notify('No se pudo cargar este video. Puedes seguir explorando.');});
+  videoControls.hidden=false;$('#moments-screen').classList.add('viewing-video');syncVideoControls();
+  $('#room-video-play').focus({preventScroll:true});
+}
+$('#room-video-play').addEventListener('click',toggleVideo);
+$('#room-video-sound').addEventListener('click',()=>{if(playback)playback.video.muted=!playback.video.muted;});
+$('#room-video-seek').addEventListener('input',event=>{if(playback&&Number.isFinite(playback.video.duration))playback.video.currentTime=playback.video.duration*Number(event.target.value)/100;});
+$('#room-video-back').addEventListener('click',()=>{stepBack();$('#moments-stage').focus({preventScroll:true});});
+videoControls.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();stepBack();$('#moments-stage').focus({preventScroll:true});}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)playback?.video.pause();});
 function openClue(source=$('#moments-stage')) {
   const added=Museum.findClue(room.clue.id);buzz(14);
   showNote({eyebrow:added?'PISTA ENCONTRADA':'UNA PISTA YA ENCONTRADA',title:'Una cámara diminuta',source,body:`<p class="room-note-description">Una pequeña cámara dorada, escondida en el muro de «La belleza de lo cotidiano».</p><p class="room-note-dedication">${escape(room.clue.message)}</p><p class="room-note-reward" role="status">Pistas encontradas: ${Museum.getProgress().clues.length} de ${config.clueIds.length}</p>`});
@@ -481,7 +540,7 @@ function celebrate() {
 /* Contemplar la sala: cámara fija con buena vista, controles ocultos y un botón para volver. */
 function startContemplating() {
   if(contemplating||!engine)return;
-  closeNote(false);contemplating=true;
+  stopVideo();closeNote(false);contemplating=true;
   $('#moments-screen').classList.add('contemplating');
   $('#moments-stop-contemplating').hidden=false;
   engine.setLocked(true);
@@ -498,12 +557,12 @@ function stopContemplating() {
 function contemplate(source) {
   if(fallback||!engine)return;
   if(contemplating){stopContemplating();return;}
-  closeNote(false);resume();focused=null;
+  stopVideo();closeNote(false);resume();focused=null;
   const ok=engine.guideTo(overviewTarget,{select:false,onArrive:startContemplating});
   if(!ok)startContemplating();
 }
 function openExit() {
-  closeNote(false);
+  stopVideo();closeNote(false);
   if(exitOpening)return;
   exitOpening=true;
   setTimeout(async()=>{await Museum.returnToLobby();exitOpening=false;exitOpen=0;},reducedMotion.matches?0:750);
@@ -542,16 +601,16 @@ $('#moments-stage').addEventListener('keydown',event=>{
 });
 document.querySelectorAll('[data-moments-tour]').forEach(button=>button.addEventListener('click',()=>{Museum.closeOverlay();setTimeout(()=>guideTo(Number(button.dataset.momentsTour)),0);}));
 $('#moments-help').addEventListener('click',event=>openHelp(event.currentTarget));
-$('#moments-back').addEventListener('click',()=>{stopContemplating();Museum.returnToLobby();});
+$('#moments-back').addEventListener('click',()=>{stopVideo();stopContemplating();Museum.returnToLobby();});
 $('#moments-passport').addEventListener('click',event=>Museum.openPassport(event.currentTarget));
 $('#moments-clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#moments-accessible-clue').addEventListener('click',event=>openClue(event.currentTarget));
 document.addEventListener('museum:progress',updateProgress);
-document.addEventListener('museum:overlay',event=>{if(event.detail)closeNote(false);engine?.setPaused(event.detail);});
+document.addEventListener('museum:overlay',event=>{if(event.detail){stopVideo();closeNote(false);}engine?.setPaused(event.detail);});
 // Al salir de la sala se detiene el dibujo, se cierra la contemplación y no queda ningún video activo.
 document.addEventListener('museum:screen',event=>{
   const here=event.detail===ROOM_ID;
-  if(!here){closeNote(false);stopContemplating();$('.moments-stamp')?.remove();}
+  if(!here){stopVideo();closeNote(false);stopContemplating();$('.moments-stamp')?.remove();}
   engine?.setActive(here);
 });
 updateProgress();

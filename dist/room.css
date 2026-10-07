@@ -172,6 +172,15 @@ dialog:has(.moments-photo),dialog:has(.moments-video){width:min(860px,calc(100% 
 .moments-player video{display:block;width:100%;height:100%;object-fit:contain;background:#1f1814}
 .moments-play{position:absolute;inset:0;margin:auto;width:84px;height:84px;border-radius:50%;background:#fbf7edeb;border:2px solid #c9a564;color:#4a3c2c;font-size:28px;box-shadow:0 10px 30px #0006;display:flex;align-items:center;justify-content:center;padding-left:6px}
 .moments-play:hover{background:#fff}
+.viewing-video .room-overlay{opacity:0;pointer-events:none}
+.room-video-source{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.room-video-descriptions{border-top:1px solid var(--line);padding-top:20px;margin-top:20px}.room-video-descriptions h3{font-family:var(--serif);font-size:22px;margin:15px 0 8px}.room-video-descriptions .room-note-dedication{margin:8px 0 15px;font-size:17px;text-align:left}
+.room-video-controls{position:absolute;z-index:4;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100% - 24px)}
+.room-video-controls[hidden]{display:none}
+.room-video-controls button{min-height:44px;padding:8px 15px;border:1px solid #b9a17780;border-radius:999px;background:#f8f2e6ed;color:#5d4a33;font-size:12px;white-space:nowrap}
+.room-video-controls input{width:110px;min-width:45px;accent-color:#a17d40}
+.room-video-fallback{position:absolute;inset:85px 12px 165px;width:calc(100% - 24px);height:calc(100% - 250px);object-fit:contain;background:#1f1814}
+@media(max-width:600px){.room-video-controls{bottom:calc(92px + env(safe-area-inset-bottom));gap:5px}.room-video-controls button{padding:8px 10px;font-size:11px}.room-video-controls input{width:65px}}
 .moments-dedication{text-align:center;max-width:560px;margin:18px auto 0}
 .moments-video-phrase{font-family:var(--serif);font-style:italic;color:#8c754e;line-height:1.6;margin:14px 0}
 .moments-video-portrait .moments-video-layout{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);column-gap:32px;align-items:center;padding:8px 0}
