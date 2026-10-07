@@ -32,7 +32,7 @@ const targets=[],pieceTargets=[],lazy=[];
 $('#moments-subtitle').textContent=room.subtitle;
 // Contador discreto bajo el título, como parte del rótulo de la sala.
 $('#moments-screen .room-overlay').append($('#moments-counter'));
-$('#moments-tour').innerHTML=exhibits.map((piece,index)=>`<button class="tour-stop" data-moments-tour="${index}" type="button"><span class="tour-number">${String(index+1).padStart(2,'0')}</span><span>${escape(piece.title)}<small>${escape(room.zones[piece.zone]||'')} · ${piece.type==='video'?'video':'fotografía'}</small></span><span class="tour-check" aria-label="Sin descubrir">○</span></button>`).join('');
+$('#moments-tour').innerHTML=exhibits.map((piece,index)=>`<button class="tour-stop" data-moments-tour="${index}" type="button"><span class="tour-number">${String(index+1).padStart(2,'0')}</span><span>${escape(piece.title)}<small>${escape(room.zones[piece.zone]||'')} · ${escape(piece.mediaLabel?.toLowerCase()||(piece.type==='video'?'video':'fotografía'))}</small></span><span class="tour-check" aria-label="Sin descubrir">○</span></button>`).join('');
 
 function updateProgress() {
   const progress=Museum.getProgress(),found=progress.discoveries[ROOM_ID]||[];
@@ -96,7 +96,7 @@ function buildRoom() {
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),material);mesh.position.set(x,y,z);mesh.receiveShadow=true;scene.add(mesh);return mesh;
   }
   const length=FRONT-BACK,midZ=(FRONT+BACK)/2;
-  // Suelo: espejo bajo un mármol con losas, filete dorado y una rosa de los vientos por zona.
+  // Suelo: espejo bajo un mármol con losas y filete dorado, sin círculos centrales.
   const floorMap=texture(788,2048,(g,w,h)=>{
     const u=x=>(x+WIDTH/2)/WIDTH*w,v=z=>(FRONT-z)/length*h;
     g.fillStyle='#eadfca';g.fillRect(0,0,w,h);
@@ -105,9 +105,6 @@ function buildRoom() {
     for(let x=-5;x<=5;x+=2.5){g.beginPath();g.moveTo(u(x),0);g.lineTo(u(x),h);g.stroke();}
     for(let z=FRONT;z>=BACK;z-=2.5){g.beginPath();g.moveTo(0,v(z));g.lineTo(w,v(z));g.stroke();}
     g.strokeStyle='#b59a6c';g.lineWidth=8;g.strokeRect(u(-4.6),v(FRONT-.4),u(4.6)-u(-4.6),v(BACK+.4)-v(FRONT-.4));
-    for(const zone of ZONES){const cz=(zone.start+zone.end)/2,cx=w/2,cy=v(cz),r=w*.2;
-      g.strokeStyle='#b59a6c';g.lineWidth=5;g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.stroke();g.lineWidth=2;g.beginPath();g.arc(cx,cy,r*.94,0,Math.PI*2);g.stroke();
-      g.save();g.translate(cx,cy);for(let i=0;i<8;i++){g.rotate(Math.PI/4);g.fillStyle=i%2?'rgba(160,128,84,.5)':'rgba(120,94,62,.4)';g.beginPath();g.moveTo(0,0);g.lineTo(14,40);g.lineTo(0,r*.9);g.lineTo(-14,40);g.closePath();g.fill();}g.restore();}
   });
   box(WIDTH,.12,length,0,-.061,midZ,new THREE.MeshStandardMaterial({color:'#8a8378',roughness:.4}));
   const mirror=new Reflector(new THREE.PlaneGeometry(WIDTH,length),{textureWidth:small?384:768,textureHeight:small?1024:2048,color:0x8a8378,clipBias:.003});
@@ -159,7 +156,7 @@ function buildRoom() {
       g.strokeStyle='#beaa85';g.lineWidth=4;g.strokeRect(2,2,w-4,h-4);g.strokeStyle='rgba(245,236,212,.7)';g.lineWidth=8;g.strokeRect(8,8,w-16,h-16);
       g.fillStyle='#a28b61';for(const [sx,sy] of [[24,24],[w-24,24],[24,h-24],[w-24,h-24]]){g.beginPath();g.arc(sx,sy,5,0,Math.PI*2);g.fill();}
       g.textAlign='center';g.fillStyle='#9a7b45';g.font='500 20px "Segoe UI", Arial, sans-serif';g.letterSpacing='5px';
-      let eyebrow=`${piece.type==='video'?'VIDEO':'OBRA'} ${String(index+1).padStart(2,'0')}  ·  ${piece.date.toUpperCase()}`;while(g.measureText(eyebrow).width>w-80)eyebrow=eyebrow.slice(0,-2);
+      let eyebrow=`${piece.mediaLabel||(piece.type==='video'?'VIDEO':'OBRA')} ${String(index+1).padStart(2,'0')}  ·  ${piece.date.toUpperCase()}`;while(g.measureText(eyebrow).width>w-80)eyebrow=eyebrow.slice(0,-2);
       g.fillText(eyebrow,w/2,58);g.letterSpacing='0px';
       let size=50;g.font=`italic ${size}px Georgia, "Times New Roman", serif`;while(g.measureText(piece.title).width>w-90){size-=2;g.font=`italic ${size}px Georgia, "Times New Roman", serif`;}
       g.fillStyle='#4a3c2c';g.fillText(piece.title,w/2,128);
@@ -169,12 +166,9 @@ function buildRoom() {
     map.anisotropy=4;
     return new THREE.Mesh(new THREE.PlaneGeometry(width,width*300/1024),new THREE.MeshBasicMaterial({map,toneMapped:false}));
   }
-  function marker(x,z,radius=.7) {
-    const mesh=new THREE.Mesh(new THREE.RingGeometry(radius,radius+.025,48),new THREE.MeshBasicMaterial({color:'#b89b66',transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false}));mesh.rotation.x=-Math.PI/2;mesh.position.set(x,.01,z);scene.add(mesh);return mesh;
-  }
   // Ubicaciones: dos muros laterales por zona y el muro del fondo de cada zona.
-  const SIZES={landscape:[2.6,1.95],portrait:[1.65,2.35],square:[2.0,2.0],wide:[3.0,1.85],screen:[2.4,1.42],bigscreen:[3.2,1.86]};
-  const sizeFor=(piece,index)=>piece.type==='video'?(piece.zone===2?'bigscreen':'screen'):piece.frame||['landscape','portrait','square','landscape','portrait','wide'][index%6];
+  const SIZES={landscape:[2.6,1.95],portrait:[1.65,2.35],square:[2.0,2.0],wide:[3.0,1.85],screen:[2.4,1.42],bigscreen:[3.2,1.86],portraitScreen:[1.45,1.45*976/576]};
+  const sizeFor=(piece,index)=>piece.frame||(piece.type==='video'?(piece.zone===2?'bigscreen':'screen'):['landscape','portrait','square','landscape','portrait','wide'][index%6]);
   function slotsFor(zone) {
     const {start,end}=ZONES[zone],span=start-end,far=zone===2?BACK+.1:PARTITIONS[zone]+.17;
     const walls=[{x:-4.9,z:start-span*.33,face:'left'},{x:4.9,z:start-span*.58,face:'right'},{x:-4.9,z:start-span*.74,face:'left'},{x:4.9,z:start-span*.22,face:'right'}];
@@ -193,6 +187,7 @@ function buildRoom() {
   const frameMaterials=[];
   exhibits.forEach((piece,index)=>{
     const slot=placeFor(piece),[fw,fh]=SIZES[sizeFor(piece,index)],group=new THREE.Group();
+    const portraitVideo=piece.type==='video'&&fh>fw;
     const cy=piece.type==='video'?2.25:2.15;
     group.position.set(slot.x,cy,slot.z);group.rotation.y=rotations[slot.face];scene.add(group);
     const frameGold=goldTrim.clone();frameMaterials.push(frameGold);
@@ -217,10 +212,10 @@ function buildRoom() {
       },undefined,()=>{/* Si falta la imagen, el marco conserva su paspartú. */})});
     } else {
       // Pantalla enmarcada: portada con botón de reproducción; el video se carga sólo al pedirlo.
-      const screenCanvas=document.createElement('canvas');screenCanvas.width=640;screenCanvas.height=360;
-      const paintScreen=image=>{const g=screenCanvas.getContext('2d');g.fillStyle='#1f1814';g.fillRect(0,0,640,360);if(image){const r=Math.max(640/image.width,360/image.height);g.drawImage(image,(640-image.width*r)/2,(360-image.height*r)/2,image.width*r,image.height*r);}
-        g.fillStyle='rgba(30,20,12,.28)';g.fillRect(0,0,640,360);g.beginPath();g.arc(320,180,52,0,Math.PI*2);g.fillStyle='rgba(251,247,237,.92)';g.fill();g.strokeStyle='#c9a564';g.lineWidth=4;g.stroke();
-        g.beginPath();g.moveTo(305,152);g.lineTo(305,208);g.lineTo(352,180);g.closePath();g.fillStyle='#4a3c2c';g.fill();};
+      const portrait=fh>fw,screenCanvas=document.createElement('canvas');screenCanvas.width=portrait?576:640;screenCanvas.height=Math.round(screenCanvas.width*fh/fw);
+      const paintScreen=image=>{const g=screenCanvas.getContext('2d'),w=screenCanvas.width,h=screenCanvas.height,cx=w/2,cy=portrait?h*.86:h/2;g.fillStyle='#1f1814';g.fillRect(0,0,w,h);if(image){const r=Math.min(w/image.width,h/image.height);g.drawImage(image,(w-image.width*r)/2,(h-image.height*r)/2,image.width*r,image.height*r);}
+        g.beginPath();g.arc(cx,cy,portrait?42:52,0,Math.PI*2);g.fillStyle='rgba(251,247,237,.92)';g.fill();g.strokeStyle='#c9a564';g.lineWidth=4;g.stroke();
+        g.beginPath();g.moveTo(cx-12,cy-22);g.lineTo(cx-12,cy+22);g.lineTo(cx+25,cy);g.closePath();g.fillStyle='#4a3c2c';g.fill();};
       paintScreen(null);
       const screenMap=new THREE.CanvasTexture(screenCanvas);screenMap.colorSpace=THREE.SRGBColorSpace;
       surface=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),new THREE.MeshBasicMaterial({map:screenMap,toneMapped:false}));surface.position.z=.015;group.add(surface);
@@ -233,12 +228,12 @@ function buildRoom() {
     if(slot.face==='far'&&piece.type==='video'){p.position.set(0,-fh/2-.42,.03);}else{p.position.set(0,-fh/2-.42,.03);}
     group.add(p);
     // Puntos de acceso y orientación de la cámara.
-    const out=outward[slot.face],distance=piece.type==='video'?2.9:2.7;
+    const out=outward[slot.face],distance=portraitVideo?3.6:piece.type==='video'?2.9:2.7;
     const approach={x:THREE.MathUtils.clamp(slot.x+out[0]*distance,BOUNDS.minX+.2,BOUNDS.maxX-.2),z:slot.z+out[2]*distance};
-    const world=group.position,mx=approach.x,mz=approach.z;
+    const world=group.position;
     const halo=[world.x+out[0]*.25,cy,world.z+out[2]*.25,Math.max(fw,fh)*1.15];
     const seenPos=[world.x+out[0]*.08,cy+fh/2+.36,world.z+out[2]*.08];
-    targets.push({id:piece.id,index,focus:new THREE.Vector3(world.x,cy-.05,world.z),approach,hits:[surface,p],marker:marker(mx,mz,.55),glow:[frameGold],lift:group,rise:out.map(v=>v*.05),halo,seen:seenPos,piece});
+    targets.push({id:piece.id,index,focus:new THREE.Vector3(world.x,portraitVideo?1.8:cy-.05,world.z),approach,hits:[surface,p],marker:null,glow:[frameGold],lift:group,rise:out.map(v=>v*.05),halo,seen:seenPos,piece});
   });
   // Contemplar desde el pasillo abierto, sin mobiliario ni obstáculos invisibles.
   overviewTarget={id:'overview',focus:new THREE.Vector3(0,1.65,-12),approach:{x:0,z:3.2},hits:[],marker:null};
@@ -277,7 +272,7 @@ function buildRoom() {
     const plate=new THREE.Mesh(new THREE.PlaneGeometry(1.15,.36),new THREE.MeshBasicMaterial({map:plateMap,toneMapped:false}));plate.position.set(0,H+1.05,.06);door.add(plate);
     const lamp=new THREE.PointLight('#ffd9a0',1.6,4,1.6);lamp.position.set(0,3.9,.9);door.add(lamp);
     const doorHit=new THREE.Mesh(new THREE.BoxGeometry(W+.3,H+1.4,.12),new THREE.MeshBasicMaterial({visible:false}));doorHit.position.set(0,(H+1.4)/2,.1);door.add(doorHit);
-    exitTarget={id:'exit',focus:new THREE.Vector3(0,1.45,FRONT-.2),approach:{x:0,z:FRONT-2.7},hits:[doorHit,...leaves.map(item=>item.leaf),plate,transom],marker:marker(0,FRONT-1,.62),glow:[leafMaterial],lift:plate,rise:[0,.04,0],halo:[0,1.5,FRONT-.4,2.6],leaves};
+    exitTarget={id:'exit',focus:new THREE.Vector3(0,1.45,FRONT-.2),approach:{x:0,z:FRONT-2.7},hits:[doorHit,...leaves.map(item=>item.leaf),plate,transom],marker:null,glow:[leafMaterial],lift:plate,rise:[0,.04,0],halo:[0,1.5,FRONT-.4,2.6],leaves};
     targets.push(exitTarget);
   }
   pieceTargets.push(...targets.filter(target=>target.index!==undefined));
@@ -444,12 +439,15 @@ function showPhotoNote(piece,index,source) {
 /* Videos: portada y botón; el archivo se carga sólo al pedirlo y pausa el ambiente mientras suena. */
 function openVideo(piece,index,source) {
   discover(piece);
+  const dimensions=piece.aspectRatio,ratio=Array.isArray(dimensions)&&dimensions.every(value=>Number.isFinite(value)&&value>0)?dimensions[0]/dimensions[1]:16/9;
+  const portrait=ratio<1;
   let resumedAmbient=false;
-  Museum.openContent({className:'moments-video',source,html:`<div class="memory-heading"><p class="eyebrow">VIDEO · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2></div>
-    <div class="moments-player">${piece.src?`<video id="moments-video" preload="none" playsinline ${piece.poster?`poster="${escape(piece.poster)}"`:''}></video><button id="moments-play" class="moments-play" type="button" aria-label="Reproducir ${escape(piece.title)}"><span aria-hidden="true">▶</span></button>`:`<p class="missing-memory-image">Este video llegará pronto.</p>`}</div>
+  Museum.openContent({className:`moments-video${portrait?' moments-video-portrait':''}`,source,html:`<div class="moments-video-layout"><div class="memory-heading"><p class="eyebrow">${escape(piece.mediaLabel||'VIDEO')} · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2>${piece.phrase?`<p class="moments-video-phrase">${escape(text(piece.phrase))}</p>`:''}</div>
+    <div class="moments-player" style="--video-ratio:${ratio}">${piece.src?`<video id="moments-video" preload="none" playsinline aria-label="${escape(piece.title)}" ${piece.poster?`poster="${escape(piece.poster)}"`:''}></video><button id="moments-play" class="moments-play" type="button" aria-label="Reproducir ${escape(piece.title)}"><span aria-hidden="true">▶</span></button>`:`<p class="missing-memory-image">Este video llegará pronto.</p>`}</div>
+    <div class="moments-video-copy">
     <p class="room-note-dedication moments-dedication">${escape(text(piece.dedication||''))}</p>
     ${mediaCredit(piece)}
-    <div class="moments-player-actions">${piece.src&&document.fullscreenEnabled!==false?'<button id="moments-fullscreen" class="text-button" type="button" hidden>Pantalla completa <span aria-hidden="true">⤢</span></button>':''}<p id="moments-video-status" role="status"></p></div>`,
+    <div class="moments-player-actions">${piece.src&&document.fullscreenEnabled!==false?'<button id="moments-fullscreen" class="text-button" type="button" hidden>Pantalla completa <span aria-hidden="true">⤢</span></button>':''}<p id="moments-video-status" role="status"></p></div></div></div>`,
     onClose:()=>{const video=$('#moments-video');if(video){video.pause();video.removeAttribute('src');video.load();}if(resumedAmbient)Museum.restoreAmbient();}});
   if(!piece.src)return;
   const video=$('#moments-video'),play=$('#moments-play'),full=$('#moments-fullscreen');

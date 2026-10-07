@@ -89,7 +89,9 @@ El vestíbulo utiliza puertas de vidrio con apertura lateral; la sala 01 utiliza
 
 La galería conserva sus tres zonas y ocho recuerdos. Se retiraron las tres bancas, sus superficies interactivas y sus colisiones. «Contemplar» ofrece una vista desde el pasillo despejado. La cámara secreta está en el muro derecho al entrar a «La belleza de lo cotidiano»; la ayuda indica su nueva ubicación.
 
-Los ocho recursos son ejemplos descargados de Pexels, con créditos en las notas y las vistas ampliadas. Las fotografías se sirven localmente a 1600 píxeles de ancho; los videos se optimizaron a 1280 × 720, conservando su duración y proporción, y sus portadas se extrajeron del propio clip. Los dos clips no tienen sonido audible original; se indica en sus créditos. No se presentan como recuerdos personales de Daniel y Sofía.
+Las seis fotografías y el video del aniversario son ejemplos descargados de Pexels, con créditos en las notas y las vistas ampliadas. Las fotografías se sirven localmente a 1600 píxeles de ancho; el video del aniversario está optimizado a 1280 × 720 y no tiene sonido audible original, como indican sus créditos. No se presentan como recuerdos personales de Daniel y Sofía.
+
+«Una canción que me lleva a ti» sustituye el clip de risas con el video de WhatsApp aportado por el usuario: se conserva completo, sin modificar el audio ni el archivo original, a 576 × 976 y 56,83 segundos. Su cuadro es vertical y mantiene toda la imagen; el reproductor muestra la dedicatoria a un lado en escritorio y debajo en móvil. Conserva el identificador `sonaba` para respetar el progreso existente. Se retiraron los círculos decorativos y los aros persistentes del suelo de la sala; la señal breve de un toque para caminar sigue disponible.
 
 | Recuerdo | Archivo en dist/assets/sala02 | Fuente y autor |
 | --- | --- | --- |
@@ -97,9 +99,9 @@ Los ocho recursos son ejemplos descargados de Pexels, con créditos en las notas
 | Nuestro lugar favorito | aventuras-lugar.jpg | [hubbugaye: dos cafés junto a la ventana](https://www.pexels.com/photo/cozy-coffee-cups-by-a-window-in-urban-setting-29392194/) |
 | Un día sin planes | cotidiano-sin-planes.jpg | [RDNE Stock project: libros y fruta en un pícnic](https://www.pexels.com/photo/a-stack-of-books-and-fruits-on-a-picnic-blanket-5530673/) |
 | La felicidad también era esto | cotidiano-felicidad.jpg | [Kadir Avşar: mesa para dos con pasta y vino](https://www.pexels.com/photo/a-table-with-two-plates-of-pasta-and-wine-24869084/) |
-| Así sonaba nuestra felicidad | video-felicidad.mp4 y video-felicidad-portada.jpg | [Alex Green: pareja riendo en casa](https://www.pexels.com/video/a-couple-laughing-5698956/) |
+| Una canción que me lleva a ti | cancion-para-ti.mp4 y cancion-para-ti-portada.jpg | Video de WhatsApp aportado por el usuario, con audio original. Portada extraída del propio clip. |
 | Celebrarte siempre | celebrar-pastel.jpg | [Snap Spark: pastel con velas encendidas](https://www.pexels.com/photo/delightful-birthday-cake-with-candles-lit-33930868/) |
 | Otro recuerdo para guardar | celebrar-luces.jpg | [Trev W. Adams: fuegos artificiales sobre la ciudad](https://www.pexels.com/photo/fireworks-in-city-12304696/) |
 | Un pedacito de nosotros | video-pedacito.mp4 y video-pedacito-portada.jpg | [Jep Gambardella: abrazo al atardecer](https://www.pexels.com/video/couple-hugging-each-other-during-sunset-5102615/) |
 
-Todos se distribuyen bajo la [licencia Pexels](https://www.pexels.com/license/). Para sustituirlos por recuerdos propios, reemplaza los archivos o edita `momentsRoom.exhibits[].src`, `poster`, `alt` y `credit` en dist/config.js. Elimina `credit` al usar contenido personal. Los videos sólo se descargan al pulsar reproducir.
+Los recursos de Pexels se distribuyen bajo su [licencia](https://www.pexels.com/license/); el video aportado por el usuario conserva su contenido original y no se atribuye a Pexels. Para sustituir recursos, reemplaza los archivos o edita `momentsRoom.exhibits[].src`, `poster`, `alt`, `aspectRatio`, `frame`, `mediaLabel` y `credit` en dist/config.js. Elimina `credit` al usar contenido personal. Los videos sólo se descargan al pulsar reproducir.
