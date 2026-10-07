@@ -254,3 +254,10 @@ dialog:has(.moments-photo),dialog:has(.moments-video){width:min(860px,calc(100% 
 }
 @media(prefers-reduced-motion:reduce){#little-note.inspecting{animation:none}}
 body:has(#little-note.inspecting) .site-header{visibility:hidden}
+/* Sala 03: sin botones visibles al examinar; pista breve de gestos. */
+#little-note.inspecting .inspect-sr-controls{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;z-index:2}
+#little-note.inspecting .inspect-sr-controls .sr-only-focusable:focus{min-height:40px;padding:6px 14px;border:1px solid #b9a17780;border-radius:999px;background:#fbf7ed;color:#5d4a33;font-size:12px}
+.inspect-hint{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:1;margin:0;padding:7px 16px;border:1px solid #b9a17766;border-radius:999px;background:#f8f2e6cc;backdrop-filter:blur(6px);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#5d4a33;white-space:nowrap;pointer-events:none;transition:opacity .8s}
+.inspect-hint.gone{opacity:0}
+#little-note.inspecting .inspect-view{position:relative}
+@media(max-width:760px){.inspect-hint{font-size:8px;letter-spacing:.8px;bottom:12px;max-width:calc(100% - 24px);white-space:normal;text-align:center}}

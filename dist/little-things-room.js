@@ -532,18 +532,24 @@ function mountViewer(piece,container) {
   const v=ensureViewer();
   if(v.holder){v.scene.remove(v.holder);v.holder.traverse(node=>{node.geometry?.dispose?.();});}
   v.holder=buildObject(piece,.55);v.scene.add(v.holder);resetView();
-  const canvas=v.renderer.domElement;canvas.className='inspect-canvas';canvas.tabIndex=0;canvas.setAttribute('role','img');canvas.setAttribute('aria-label',`Modelo 3D de ${piece.title}. Usa las flechas para girarlo y + o − para acercarlo.`);
+  const canvas=v.renderer.domElement;canvas.className='inspect-canvas';canvas.tabIndex=0;canvas.setAttribute('role','img');canvas.setAttribute('aria-label',`Modelo 3D de ${piece.title}. Usa las flechas para girarlo, + o − para acercarlo y 0 para restablecer la vista.`);
   container.prepend(canvas);
   let drag=null;const pointers=new Map();let pinch=null;
-  canvas.onpointerdown=event=>{event.stopPropagation();try{canvas.setPointerCapture(event.pointerId);}catch{/* Puntero ya liberado. */}pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(pointers.size===2){const [a,b]=[...pointers.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);}else drag={x:event.clientX,y:event.clientY};};
+  canvas.onpointerdown=event=>{event.stopPropagation();try{canvas.setPointerCapture(event.pointerId);}catch{/* Puntero ya liberado. */}pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(pointers.size===2){const [a,b]=[...pointers.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);}else drag={x:event.clientX,y:event.clientY,moved:0};hideHint();};
   canvas.onpointermove=event=>{event.stopPropagation();if(!pointers.has(event.pointerId))return;pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
     if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()],d=Math.hypot(a.x-b.x,a.y-b.y);rotateView(0,0,(pinch-d)*.006);pinch=d;return;}
-    if(drag){rotateView((event.clientX-drag.x)*.012,(event.clientY-drag.y)*-.008);drag={x:event.clientX,y:event.clientY};}};
-  canvas.onpointerup=canvas.onpointercancel=event=>{event.stopPropagation();pointers.delete(event.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null;};
-  canvas.onwheel=event=>{event.preventDefault();rotateView(0,0,Math.sign(event.deltaY)*.12);};
-  canvas.onkeydown=event=>{const k=event.key;const map={ArrowLeft:[-.3,0,0],ArrowRight:[.3,0,0],ArrowUp:[0,.2,0],ArrowDown:[0,-.2,0],'+':[0,0,-.15],'=':[0,0,-.15],'-':[0,0,.15]};if(map[k]){event.preventDefault();event.stopPropagation();rotateView(...map[k]);}};
+    if(drag){rotateView((event.clientX-drag.x)*-.012,(event.clientY-drag.y)*.008);drag.moved+=Math.abs(event.clientX-drag.x)+Math.abs(event.clientY-drag.y);drag.x=event.clientX;drag.y=event.clientY;}};
+  let lastTap=0;
+  canvas.onpointerup=canvas.onpointercancel=event=>{event.stopPropagation();
+    // Doble toque o doble clic sin arrastrar: vuelve a la vista inicial.
+    if(event.type==='pointerup'&&drag&&drag.moved<10&&pointers.size===1){const now=performance.now();if(now-lastTap<320){resetView();lastTap=0;}else lastTap=now;}
+    pointers.delete(event.pointerId);if(pointers.size<2)pinch=null;if(!pointers.size)drag=null;};
+  canvas.onwheel=event=>{event.preventDefault();hideHint();rotateView(0,0,Math.sign(event.deltaY)*.12);};
+  canvas.onkeydown=event=>{const k=event.key;const map={ArrowLeft:[.3,0,0],ArrowRight:[-.3,0,0],ArrowUp:[0,-.2,0],ArrowDown:[0,.2,0],'+':[0,0,-.15],'=':[0,0,-.15],'-':[0,0,.15]};if(k==='0'||k==='r'||k==='R'){event.preventDefault();event.stopPropagation();resetView();return;}if(map[k]){event.preventDefault();event.stopPropagation();rotateView(...map[k]);}};
   v.running=true;cancelAnimationFrame(v.raf);v.raf=requestAnimationFrame(renderViewer);
 }
+// Pista breve de los gestos: aparece y se desvanece sola.
+function hideHint(){const hint=$('#little-note .inspect-hint');if(hint)hint.classList.add('gone');}
 function unmountViewer() {
   if(!viewer.renderer)return;
   viewer.running=false;cancelAnimationFrame(viewer.raf);viewer.renderer.domElement.remove();
@@ -571,16 +577,16 @@ function openInspection(index,source=$('#little-stage')) {
   const audio=piece.audio?`<div class="optional-audio inspect-audio"><button id="little-play-audio" class="button secondary" type="button">▶ ${escape(text(piece.audioLabel||'Escuchar este recuerdo'))}</button><p id="little-audio-status" role="status"></p></div>`:'';
   showNote({source,inspect:true,onClose:()=>{unmountViewer();stopAudio();},body:`
     <div class="inspect-view"><div class="inspect-stage" id="little-inspect-stage">${fallback?'<p class="inspect-fallback" aria-hidden="true">✧</p>':''}</div>
-    ${fallback?'':`<div class="inspect-controls" role="group" aria-label="Girar el objeto">
-      <button type="button" data-view="left" aria-label="Girar a la izquierda">↺</button><button type="button" data-view="up" aria-label="Inclinar hacia arriba">↑</button><button type="button" data-view="down" aria-label="Inclinar hacia abajo">↓</button><button type="button" data-view="right" aria-label="Girar a la derecha">↻</button><button type="button" data-view="in" aria-label="Acercar">+</button><button type="button" data-view="out" aria-label="Alejar">−</button>
-      <button type="button" data-view="reset" class="inspect-reset">Restablecer vista</button></div>`}</div>
+    ${fallback?'':`<p class="inspect-hint" aria-hidden="true">${matchMedia('(pointer: coarse)').matches?'Arrastra para girar · pellizca para acercar · toca dos veces para restablecer':'Arrastra para girar · usa la rueda para acercar · doble clic para restablecer'}</p><div class="inspect-sr-controls" role="group" aria-label="Girar el objeto">
+      <button type="button" class="sr-only-focusable" data-view="left" aria-label="Girar a la izquierda">↺</button><button type="button" class="sr-only-focusable" data-view="up" aria-label="Inclinar hacia arriba">↑</button><button type="button" class="sr-only-focusable" data-view="down" aria-label="Inclinar hacia abajo">↓</button><button type="button" class="sr-only-focusable" data-view="right" aria-label="Girar a la derecha">↻</button><button type="button" class="sr-only-focusable" data-view="in" aria-label="Acercar">+</button><button type="button" class="sr-only-focusable" data-view="out" aria-label="Alejar">−</button>
+      <button type="button" data-view="reset" class="sr-only-focusable">Restablecer vista</button></div>`}</div>
     <div class="inspect-band"><span class="inspect-grip" aria-hidden="true"></span><p class="eyebrow">OBJETO ${String(index+1).padStart(2,'0')}${piece.date?` · ${escape(piece.date)}`:''}</p>
     <h2 id="little-note-title" tabindex="-1">${escape(piece.title)}</h2>
     <p class="room-note-description">${escape(text(piece.description||''))}</p>
     <p class="room-note-dedication">${escape(text(piece.dedication||''))}</p>
     ${piece.message?`<p class="room-note-description inspect-message">${escape(text(piece.message))}</p>`:''}
     ${photo}${audio}</div>`});
-  if(!fallback)mountViewer(piece,$('#little-inspect-stage'));
+  if(!fallback){mountViewer(piece,$('#little-inspect-stage'));setTimeout(hideHint,reducedMotion.matches?6000:3800);}
   $('#little-note').querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{
     const action=button.dataset.view;
     if(action==='reset')resetView();else rotateView(...{left:[-.4,0,0],right:[.4,0,0],up:[0,.2,0],down:[0,-.2,0],in:[0,0,-.2],out:[0,0,.2]}[action]);
