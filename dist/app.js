@@ -79,7 +79,7 @@
   }
   // Puertas con nota: cubren la pantalla, cambian lo que hay detrás y se abren cuando la escena está lista (máximo 4 s).
   let doorsBusy=false;
-  async function playDoors({lines,cover,ready,minimum=1900,variant='',plate=null}) {
+  async function playDoors({lines,cover,ready,minimum=1900,variant='',plate=null,label=null,title=null}) {
     if(doorsBusy) return false;
     doorsBusy=true;
     const doors = $('#door-transition'), line=$('#door-note-line');
@@ -87,8 +87,8 @@
     // Cada sala puede tener su propia puerta y su propia placa.
     doors.dataset.variant=variant;
     $('#door-monogram').textContent=plate||config.initials;
-    $('#door-room-label').textContent=variant==='room-01'?'SALA 01 · LOS COMIENZOS':'EL MUSEO DE NOSOTROS';
-    $('#door-room-title').textContent=variant==='room-01'?config.beginningRoom.title:'Una historia para recorrer.';
+    $('#door-room-label').textContent=label||(variant==='room-01'?'SALA 01 · LOS COMIENZOS':'EL MUSEO DE NOSOTROS');
+    $('#door-room-title').textContent=title||(variant==='room-01'?config.beginningRoom.title:'Una historia para recorrer.');
     line.textContent=lines[0];
     doors.hidden = false;
     $('#main').inert = true;
@@ -109,6 +109,13 @@
     $('#main').inert = false;
     doorsBusy=false;
     return true;
+  }
+  // Volver desde una sala: la puerta del museo se cierra, cambia la escena y se abre en el vestíbulo.
+  async function returnToLobby() {
+    if(screen!=='room'){showScreen('lobby');return;}
+    if(dialog.open) closeDialog();
+    const opened=await playDoors({lines:['Cerrando la sala…','Volviendo al vestíbulo…','Bienvenida de nuevo.'],cover:()=>showScreen('lobby',false),ready:()=>null,minimum:1100,label:'EL MUSEO DE NOSOTROS',title:'El vestíbulo'});
+    if(opened){$('#lobby-title').setAttribute('tabindex','-1');$('#lobby-title').focus({preventScroll:true});} else showScreen('lobby');
   }
   async function enterMuseum() {
     if (transitioning) return;
@@ -231,7 +238,7 @@
     if(room.requires && !room.requires.every(item=>state.completed.has(item))) { notify(config.texts.lockedRoom); return; }
     closeDialog();
     try {
-      const result = await roomHandlers.get(id)({config, returnToLobby:()=>showScreen('lobby')});
+      const result = await roomHandlers.get(id)({config, returnToLobby});
       if(result?.completed === true && progressStore.completeRoom(id)) progressChanged();
     } catch { notify(config.texts.roomSoon); }
   }
@@ -252,7 +259,7 @@
       return result;
     },
     findClue:id=>{const added=progressStore.findClue(id);if(added)progressChanged();return added;},
-    returnToLobby:()=>showScreen('lobby'),
+    returnToLobby,
     playDoors,
     openTutorial:(kind,source)=>openTutorial(source,kind),
     tutorialSeen,

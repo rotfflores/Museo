@@ -10,6 +10,7 @@ const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&l
 const text=value=>value.replace(/\{(sender|recipient)\}/g,(_,key)=>config[key]);
 let engine=null,initialized=false,selected=null,currentPiece=0,fallback=false;
 const targets=[],pieceTargets=[];
+let exitTarget=null,exitOpen=0,exitOpening=false;
 // Estado de la mirada: la pieza que se contempla, hacia dónde vuela la cámara y qué brilla bajo el dedo o el mouse.
 let focused=null,flyingTo=null,hoverTarget=null,ping=null;
 const overview={id:'overview',focus:new THREE.Vector3(0,1.9,-5.6),approach:{x:0,z:3.4},hits:[],marker:null};
@@ -36,8 +37,8 @@ function updateProgress() {
 function setTarget(target) {
   selected=target;
   // Sin pieza a la vista, la píldora muestra la introducción de la sala.
-  $('#target-name').textContent=target ? target.id==='key' ? 'Un pequeño detalle dorado' : room.exhibits[target.index].title : room.introduction;
-  $('#view-memory').textContent=target?target.id==='key'?'Recoger la llave':`Ver el recuerdo: ${room.exhibits[target.index].title}`:'Ir al recuerdo más cercano';
+  $('#target-name').textContent=target ? target.id==='key' ? 'Un pequeño detalle dorado' : target.id==='exit' ? 'La puerta al vestíbulo' : room.exhibits[target.index].title : room.introduction;
+  $('#view-memory').textContent=target?target.id==='key'?'Recoger la llave':target.id==='exit'?'Volver al vestíbulo':`Ver el recuerdo: ${room.exhibits[target.index].title}`:'Ir al recuerdo más cercano';
   $('#gallery-stage').dataset.target=target?.id||'';
 }
 function fallbackMode() {
@@ -240,7 +241,51 @@ function buildRoom() {
   scene.add(keyGroup);
   const keyHit=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),new THREE.MeshBasicMaterial({visible:false}));keyHit.position.copy(keyGroup.position);scene.add(keyHit);
   const keyTarget={id:'key',focus:keyGroup.position.clone(),approach:{x:keyGroup.position.x*.77,z:keyGroup.position.z+1.3},hits:[keyHit],marker:null,glow:[gold],lift:keyGroup,rise:[0,.04,0],halo:[keyGroup.position.x,keyGroup.position.y,keyGroup.position.z,.7]};targets.push(keyTarget);
-  pieceTargets.push(...targets.filter(target=>target.id!=='key'));
+  // Puerta de regreso al vestíbulo: detrás de la cámara, en el muro por donde se entra.
+  {
+    const door=new THREE.Group();door.position.set(0,0,5.76);door.rotation.y=Math.PI;scene.add(door);
+    const W=1.4,H=2.45;
+    const ring=(w,h,grow,inner)=>{const o=new THREE.Shape();o.moveTo(-w/2-grow,-.02);o.lineTo(w/2+grow,-.02);o.lineTo(w/2+grow,h+grow);o.lineTo(-w/2-grow,h+grow);o.lineTo(-w/2-grow,-.02);const i=new THREE.Path();i.moveTo(-w/2-inner,0);i.lineTo(-w/2-inner,h+inner);i.lineTo(w/2+inner,h+inner);i.lineTo(w/2+inner,0);i.lineTo(-w/2-inner,0);o.holes.push(i);return o;};
+    const extrude=(shape,depth)=>new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelSize:.015,bevelThickness:.015,bevelSegments:2,curveSegments:32});
+    const outer=new THREE.Mesh(extrude(ring(W,H,.26,.12),.12),wood);outer.castShadow=outer.receiveShadow=true;door.add(outer);
+    const trimRing=new THREE.Mesh(extrude(ring(W,H,.12,.0),.16),goldTrim);door.add(trimRing);
+    // Luz cálida detrás de las hojas y en el montante de medio punto.
+    const beyond=new THREE.Mesh(new THREE.PlaneGeometry(W,H),new THREE.MeshBasicMaterial({color:'#ffe4b4',toneMapped:false}));beyond.position.set(0,H/2,.004);door.add(beyond);
+    const transomShape=new THREE.Shape();transomShape.moveTo(-W/2,0);transomShape.absarc(0,0,W/2,Math.PI,0,true);transomShape.lineTo(-W/2,0);
+    const transom=new THREE.Mesh(new THREE.ShapeGeometry(transomShape,32),new THREE.MeshBasicMaterial({color:'#ffe0a8',toneMapped:false}));transom.position.set(0,H+.12,.02);door.add(transom);
+    const transomRim=new THREE.Mesh(new THREE.TorusGeometry(W/2+.04,.035,10,48,Math.PI),goldTrim);transomRim.position.set(0,H+.12,.05);door.add(transomRim);
+    for(let i=1;i<4;i++){const bar=new THREE.Mesh(new THREE.BoxGeometry(.018,W/2,.02),goldTrim);const a=Math.PI*i/4;bar.position.set(Math.cos(a)*W/4,H+.12+Math.sin(a)*W/4,.04);bar.rotation.z=a-Math.PI/2;door.add(bar);}
+    // Hojas de madera tallada que giran sobre sus bisagras.
+    const leafMap=texture(256,512,(g,w,h)=>{
+      const grad=g.createLinearGradient(0,0,w,0);grad.addColorStop(0,'#3e2516');grad.addColorStop(.5,'#5e3a22');grad.addColorStop(1,'#3e2516');g.fillStyle=grad;g.fillRect(0,0,w,h);
+      for(let i=0;i<70;i++){g.strokeStyle=`rgba(30,16,8,${.08+rand()*.12})`;g.lineWidth=1;g.beginPath();const x=rand()*w;g.moveTo(x,0);g.bezierCurveTo(x+(rand()-.5)*20,h*.33,x+(rand()-.5)*20,h*.66,x+(rand()-.5)*14,h);g.stroke();}
+      for(const [y,ph] of [[40,230],[300,170]]){g.strokeStyle='#b38a4e';g.lineWidth=3;g.strokeRect(34,y,w-68,ph);g.strokeStyle='rgba(20,10,5,.55)';g.lineWidth=6;g.strokeRect(44,y+10,w-88,ph-20);}
+    });
+    const leafMaterial=new THREE.MeshStandardMaterial({map:leafMap,roughness:.55});
+    const leaves=[];
+    for(const side of [-1,1]) {
+      const hinge=new THREE.Group();hinge.position.set(side*W/2,0,.03);door.add(hinge);
+      const leaf=new THREE.Mesh(new THREE.BoxGeometry(W/2-.01,H-.01,.06),leafMaterial);leaf.position.set(-side*(W/4),H/2,0);leaf.castShadow=true;hinge.add(leaf);
+      const handle=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.34,10),goldTrim);handle.position.set(-side*(W/2-.12),1.2,.06);hinge.add(handle);
+      leaves.push({hinge,side,leaf});
+    }
+    // Placa "Vestíbulo" con tornillos, como las de las piezas.
+    const plateMap=texture(512,160,(g,w,h)=>{
+      const grad=g.createLinearGradient(0,0,w,h);grad.addColorStop(0,'#efe5d0');grad.addColorStop(1,'#e0d0b3');g.fillStyle=grad;g.fillRect(0,0,w,h);
+      g.strokeStyle='#beaa85';g.lineWidth=4;g.strokeRect(2,2,w-4,h-4);g.fillStyle='#a28b61';for(const [x,y] of [[18,18],[w-18,18],[18,h-18],[w-18,h-18]]){g.beginPath();g.arc(x,y,5,0,Math.PI*2);g.fill();}
+      g.textAlign='center';g.fillStyle='#9a7b45';g.font='500 18px "Segoe UI", Arial, sans-serif';g.letterSpacing='6px';g.fillText('SALIDA',w/2,52);g.letterSpacing='0px';
+      g.fillStyle='#4a3c2c';g.font='italic 54px Georgia, "Times New Roman", serif';g.fillText('Vestíbulo',w/2,118);
+    });
+    plateMap.anisotropy=8;
+    const plate=new THREE.Mesh(new THREE.PlaneGeometry(1.15,.36),new THREE.MeshBasicMaterial({map:plateMap,toneMapped:false}));plate.position.set(0,H+1.05,.06);door.add(plate);
+    const lamp=new THREE.PointLight('#ffd9a0',1.6,4,1.6);lamp.position.set(0,3.9,.9);door.add(lamp);
+    // Zona de toque invisible que cubre toda la puerta: el centro cae justo entre las dos hojas.
+    const doorHit=new THREE.Mesh(new THREE.BoxGeometry(W+.3,H+1.4,.12),new THREE.MeshBasicMaterial({visible:false}));doorHit.position.set(0,(H+1.4)/2,.1);door.add(doorHit);
+    const hits=[doorHit,...leaves.map(item=>item.leaf),plate,transom];
+    exitTarget={id:'exit',focus:new THREE.Vector3(0,1.45,5.8),approach:{x:0,z:3.3},hits,marker:marker(0,5.0,.62),glow:[leafMaterial],lift:plate,rise:[0,.04,0],halo:[0,1.5,5.62,2.6],leaves};
+    targets.push(exitTarget);
+  }
+  pieceTargets.push(...targets.filter(target=>target.index!==undefined));
   // Brillo dorado, un halo y una pequeña ✧ sobre las piezas ya vistas.
   const sparkle=texture(128,128,(g,w,h)=>{g.textAlign='center';g.textBaseline='middle';g.font='92px Georgia, "Segoe UI Symbol", serif';g.shadowColor='rgba(255,226,160,.9)';g.shadowBlur=18;g.fillStyle=g.strokeStyle='#c9a564';g.lineWidth=5;g.lineJoin='round';g.strokeText('✧',w/2,h/2+4);g.fillText('✧',w/2,h/2+4);});
   for(const target of targets) {
@@ -308,7 +353,7 @@ function goTo(target,{open=true,source=null}={}) {
   if(target.id!=='key')currentPiece=target.index;
   if(focused===target&&!engine.isFlying()){if(open)openTarget(target,source||undefined);return;}
   const previous=$('#target-name').textContent;
-  if(target.id!=='key')$('#target-name').textContent=`Hacia: ${room.exhibits[target.index].title}`;
+  if(target.id!=='key')$('#target-name').textContent=target.id==='exit'?'Hacia: el vestíbulo':`Hacia: ${room.exhibits[target.index].title}`;
   flyingTo=target;focused=null;
   const ok=engine.guideTo(target,{onArrive:()=>{flyingTo=null;focused=target;if(open)openTarget(target,source||undefined);}});
   if(ok)return;
@@ -342,12 +387,13 @@ function onTap(target,point) {
 }
 function onSwipe(direction,restoreView) {
   interacted();
-  if(!focused||focused.id==='key')return;
+  if(!focused||focused.index===undefined)return;
   restoreView();
   if(direction==='down'){stepBack();return;}
   goTo(pieceTargets[(focused.index+(direction==='left'?1:2))%3]);
 }
 function animate(dt) {
+  if(exitTarget){exitOpen+=((exitOpening?1:0)-exitOpen)*(reducedMotion.matches?1:Math.min(1,dt*4));for(const {hinge,side} of exitTarget.leaves)hinge.rotation.y=side*exitOpen*1.75;}
   const ease=reducedMotion.matches?1:Math.min(1,dt*8);
   for(const target of targets) {
     const goal=hoverTarget===target||flyingTo===target?1:0;
@@ -429,7 +475,15 @@ function openKey(source=$('#gallery-stage')) {
   showNote({eyebrow:added?'PISTA ENCONTRADA':'TU PRIMERA LLAVE',title:'La llave del comienzo',source,body:`<p class="room-note-description">Una pequeña llave dorada: la primera de cinco pistas para la vitrina secreta.</p><p class="room-note-dedication">${escape(room.clue.message)}</p><p class="room-note-reward" role="status">Pistas encontradas: ${Museum.getProgress().clues.length} de 5</p>`});
   updateProgress();
 }
-function openTarget(target=selected,source){if(!target)return;if(target.id==='key')openKey(source);else openPiece(target.index,source);}
+// Al llegar a la puerta, las hojas se abren y la misma transición del botón Vestíbulo lleva de regreso.
+function openExit() {
+  closeNote(false);
+  if(exitOpening)return;
+  exitOpening=true;
+  setTimeout(async()=>{await Museum.returnToLobby();exitOpening=false;exitOpen=0;},reducedMotion.matches?0:750);
+}
+function openTarget(target=selected,source){if(!target)return;if(target.id==='exit')openExit();else if(target.id==='key')openKey(source);else openPiece(target.index,source);}
+$('#exit-door').addEventListener('click',event=>{if(fallback||!engine||!exitTarget){Museum.returnToLobby();return;}goTo(exitTarget,{source:event.currentTarget});});
 Museum.registerRoom('beginning',enterRoom);
 // "Recuerdo" abre la pieza que se mira o, si no hay ninguna, lleva a la más cercana.
 $('#view-memory').addEventListener('click',event=>{
@@ -452,10 +506,10 @@ $('#gallery-stage').addEventListener('keydown',event=>{
   const step=event.key==='<'||event.key===','?2:event.key==='>'||event.key==='.'?1:0;
   if(!step)return;
   event.preventDefault();
-  guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+step)%3);
+  guideTo(((focused&&focused.index!==undefined?focused.index:currentPiece)+step)%3);
 });
-$('#step-prev').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+2)%3,event.currentTarget));
-$('#step-next').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+1)%3,event.currentTarget));
+$('#step-prev').addEventListener('click',event=>guideTo(((focused&&focused.index!==undefined?focused.index:currentPiece)+2)%3,event.currentTarget));
+$('#step-next').addEventListener('click',event=>guideTo(((focused&&focused.index!==undefined?focused.index:currentPiece)+1)%3,event.currentTarget));
 {
   const coarse=matchMedia('(pointer: coarse)').matches,parts=coarse?['Toca una pieza','Desliza para avanzar']:['Haz clic en una pieza','Arrastra para mirar'];
   $('#gallery-hint').replaceChildren(...[['span',parts[0]],['b','·'],['span',parts[1]]].map(([tag,value])=>{const part=document.createElement(tag);part.textContent=value;return part;}));
