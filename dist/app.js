@@ -77,26 +77,24 @@
     if(window.MuseumScene?.ready) return Promise.resolve();
     return Promise.race([new Promise(resolve=>document.addEventListener('museum:scene-ready',resolve,{once:true})),wait(4000)]);
   }
-  async function enterMuseum() {
-    if (transitioning) return;
-    transitioning = true;
-    $('#enter-museum').disabled = true;
+  // Puertas con nota: cubren la pantalla, cambian lo que hay detrás y se abren cuando la escena está lista (máximo 4 s).
+  let doorsBusy=false;
+  async function playDoors({lines,cover,ready,minimum=1900}) {
+    if(doorsBusy) return false;
+    doorsBusy=true;
     const doors = $('#door-transition'), line=$('#door-note-line');
-    doors.classList.remove('open','ready');
-    doors.style.setProperty('--note-count',doorLines.length);
-    line.textContent=doorLines[0];
+    doors.classList.remove('open','ready','loading');
+    line.textContent=lines[0];
     doors.hidden = false;
     $('#main').inert = true;
-    state.entered = true;
-    save();
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     doors.classList.add('loading');
-    showScreen('lobby', false);
+    try { await cover?.(); } catch { /* La escena detrás de las puertas tiene su propia alternativa. */ }
     let index=0;
-    const ticker=setInterval(()=>{index=Math.min(index+1,doorLines.length-1);line.textContent=doorLines[index];},900);
-    await Promise.all([sceneReady(),wait(reducedMotion.matches?300:1900)]);
+    const ticker=setInterval(()=>{index=Math.min(index+1,lines.length-1);line.textContent=lines[index];},900);
+    await Promise.all([Promise.race([Promise.resolve(ready?.()),wait(4000)]),wait(reducedMotion.matches?300:minimum)]);
     clearInterval(ticker);
-    line.textContent=doorLines[doorLines.length-1];
+    line.textContent=lines[lines.length-1];
     doors.classList.add('ready');
     await wait(reducedMotion.matches?0:450);
     doors.classList.add('open');
@@ -104,6 +102,16 @@
     doors.hidden = true;
     doors.classList.remove('open','ready','loading');
     $('#main').inert = false;
+    doorsBusy=false;
+    return true;
+  }
+  async function enterMuseum() {
+    if (transitioning) return;
+    transitioning = true;
+    $('#enter-museum').disabled = true;
+    state.entered = true;
+    save();
+    await playDoors({lines:doorLines,cover:()=>showScreen('lobby', false),ready:sceneReady});
     $('#enter-museum').disabled = false;
     transitioning = false;
     showScreen('lobby');
@@ -114,8 +122,13 @@
   }
   // Mini tutorial de gestos: tres pasos con una mano animada.
   const coarsePointer=window.matchMedia('(pointer: coarse)');
-  function tutorialSteps() {
+  function tutorialSteps(kind) {
     const touch=coarsePointer.matches;
+    if(kind==='room') return [
+      {scene:'piece',title:'Toca una pieza para acercarte',text:'La cámara se desliza hasta la vitrina, el cuadro o los anillos, y el recuerdo se abre al llegar.'},
+      {scene:'floor',title:'Toca el suelo para caminar',text:touch?'Llegas a ese punto rodeando los muebles. Arrastra para mirar y desliza hacia abajo para dar un paso atrás.':'Llegas a ese punto rodeando los muebles. También puedes usar W, A, S, D o las flechas; Escape da un paso atrás.'},
+      {scene:'swipe',title:'Desliza a los lados para pasar de un recuerdo a otro',text:touch?'Mientras contemplas una pieza, desliza hacia la izquierda o la derecha. Los botones ‹ › del menú hacen lo mismo.':'Mientras contemplas una pieza, arrastra rápido hacia un lado o usa los botones ‹ › del menú.'}
+    ];
     return [
       {scene:'look',title:'Arrastra para mirar alrededor',text:touch?'Desliza el dedo hacia los lados y recorre la rotonda con la mirada.':'Mantén pulsado el mouse y arrástralo hacia los lados para recorrer la rotonda.'},
       {scene:'door',title:'Toca una puerta para entrar a una sala',text:'La cámara vuela hasta ella y la cruza contigo. Dentro, toca una pieza para acercarte.'},
@@ -125,16 +138,20 @@
   const tutorialArt={
     look:'<svg viewBox="0 0 220 120"><path d="M20 108V58a22 22 0 0 1 44 0v50M88 108V48a22 22 0 0 1 44 0v60M156 108V58a22 22 0 0 1 44 0v50"/><path class="tutorial-floor" d="M6 108h208"/></svg>',
     door:'<svg viewBox="0 0 220 120"><path d="M80 110V50a30 30 0 0 1 60 0v60"/><path class="tutorial-glow" d="M90 110V52a20 20 0 0 1 40 0v58Z"/><path class="tutorial-floor" d="M30 110h160"/></svg>',
+    piece:'<svg viewBox="0 0 220 120"><path d="M84 110V78h52v32M78 78h64M86 78V46h48v32"/><path class="tutorial-glow" d="M90 76V50h40v26Z"/><path class="tutorial-floor" d="M30 110h160"/></svg>',
+    floor:'<svg viewBox="0 0 220 120"><path d="M40 40h140M40 40v60M180 40v60"/><ellipse class="tutorial-floor" cx="110" cy="100" rx="86" ry="14"/><ellipse class="tutorial-glow" cx="110" cy="100" rx="18" ry="5"/></svg>',
+    swipe:'<svg viewBox="0 0 220 120"><path d="M22 34h50v50H22ZM85 26h50v66H85ZM148 34h50v50h-50Z"/><path class="tutorial-floor" d="M14 108h192"/></svg>',
     heart:'<svg viewBox="0 0 220 120"><path class="tutorial-heart" d="M110 92c-26-17-38-30-38-45 0-11 8-19 18-19 9 0 15 5 20 13 5-8 11-13 20-13 10 0 18 8 18 19 0 15-12 28-38 45Z"/><path class="tutorial-floor" d="M70 108h80"/></svg>'
   };
-  function openTutorial(source) {
-    const steps=tutorialSteps();let step=0;
+  function tutorialSeen(kind){return kind==='room'?state.tutorialRoomSeen:state.tutorialSeen;}
+  function openTutorial(source,kind='lobby') {
+    const steps=tutorialSteps(kind);let step=0;
     const render=()=>{
       const item=steps[step],last=step===steps.length-1;
       $('#dialog-content').innerHTML=`<div class="tutorial" data-scene="${item.scene}"><p class="eyebrow">CÓMO MOVERTE · ${step+1} DE ${steps.length}</p><div class="tutorial-stage" aria-hidden="true">${tutorialArt[item.scene]}<span class="tutorial-finger"><i></i></span></div><h2 id="dialog-title">${item.title}</h2><p class="tutorial-text">${item.text}</p><div class="tutorial-dots" aria-hidden="true">${steps.map((_,index)=>`<i class="${index===step?'on':''}"></i>`).join('')}</div><div class="tutorial-actions"><button class="text-button" data-tutorial="skip" type="button">Saltar</button><button class="button primary" data-tutorial="${last?'done':'next'}" type="button">${last?'Entendido':'Siguiente'}</button></div></div>`;
       $('[data-tutorial="next"],[data-tutorial="done"]',dialog).focus();
     };
-    openContent({className:'tutorial-dialog',source,html:'',onClose:()=>{state.tutorialSeen=true;save();}});
+    openContent({className:'tutorial-dialog',source,html:'',onClose:()=>{if(kind==='room')state.tutorialRoomSeen=true;else state.tutorialSeen=true;save();}});
     render();
     $('#dialog-content').onclick=event=>{
       const action=event.target.closest('[data-tutorial]')?.dataset.tutorial;
@@ -231,6 +248,9 @@
     },
     findClue:id=>{const added=progressStore.findClue(id);if(added)progressChanged();return added;},
     returnToLobby:()=>showScreen('lobby'),
+    playDoors,
+    openTutorial:(kind,source)=>openTutorial(source,kind),
+    tutorialSeen,
     openMap:source=>openDialog('map',source||$('#open-map')),
     openPassport:source=>openDialog('passport',source||$('#open-passport'))
   });

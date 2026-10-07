@@ -98,21 +98,29 @@
       </nav>
     </section>
     <section id="room-screen" class="screen room-screen" hidden aria-labelledby="room-title">
-      <div class="room-topline"><button id="room-back" class="text-button">← Volver al vestíbulo</button><span class="eyebrow">SALA 01 · LOS COMIENZOS</span><div class="room-tools"><button id="room-map" class="room-tool" aria-label="Consultar mapa"><svg class="icon"><use href="#icon-map"/></svg><span>Mapa</span></button><button id="room-passport" class="room-tool" aria-label="Abrir pasaporte"><svg class="icon"><use href="#icon-book"/></svg><span>Pasaporte</span></button></div></div>
-      <div class="room-heading"><h1 id="room-title"></h1><p id="room-subtitle"></p></div>
+      <div class="lobby-heading room-heading">
+        <p class="eyebrow">SALA 01 · LOS COMIENZOS</p><h1 id="room-title"></h1><p id="room-subtitle" class="room-subtitle"></p>
+        <div class="room-status"><p id="room-discovery-count" role="status">Recuerdos descubiertos: 0 de 3</p><span aria-hidden="true">·</span><p id="room-clue-count" role="status">Pistas encontradas: 0 de 5</p><button id="clue-hint" class="text-button" type="button">Necesito una pista <span aria-hidden="true">✧</span></button><button id="accessible-decoration" class="text-button" type="button" hidden>Explorar los detalles de la columna</button></div>
+        <div id="room-completed" class="room-completed" hidden><span aria-hidden="true">✧</span><p>Este comienzo ya tiene su sello.</p><button id="completed-lobby" class="text-button" type="button">Volver al vestíbulo</button><button id="completed-map" class="text-button" type="button">Seguir explorando <span aria-hidden="true">↗</span></button></div>
+      </div>
       <div id="gallery-stage" class="gallery-stage" role="region" aria-label="Sala 3D. Toca o haz clic en una pieza para acercarte y abrirla, toca el suelo para caminar, arrastra para mirar y desliza a los lados para cambiar de pieza. Con teclado: W, A, S, D o las flechas para caminar, Q o E para girar, Enter para abrir y Escape para retroceder." tabindex="0">
         <div id="gallery-fallback" class="gallery-fallback" hidden><p>Recorre esta sala a través de sus tres recuerdos.</p><span aria-hidden="true">✧</span></div>
         <div class="gallery-vignette" aria-hidden="true"></div>
-        <div class="gallery-caption"><span class="eyebrow">EXPOSICIÓN 01</span><p id="gallery-caption-text"></p></div>
-        <div id="look-target" class="look-target" aria-live="polite"><span id="target-name">Un comienzo para cada recuerdo</span><div class="piece-stepper"><button id="step-prev" class="piece-step" aria-label="Pieza anterior">‹</button><button id="view-memory" class="button primary" disabled>Ver recuerdo</button><button id="step-next" class="piece-step" aria-label="Pieza siguiente">›</button></div></div>
+        <div class="gallery-caption" hidden><span class="eyebrow">EXPOSICIÓN 01</span><p id="gallery-caption-text"></p></div>
+        <div id="look-target" class="look-target" aria-live="polite"><span id="target-name">Un comienzo para cada recuerdo</span></div>
         <div id="gallery-navigation" class="gallery-navigation" aria-label="Controles para caminar"><button data-walk="forward" aria-label="Caminar hacia delante">↑</button><div><button data-walk="left" aria-label="Caminar hacia la izquierda">←</button><button data-walk="backward" aria-label="Caminar hacia atrás">↓</button><button data-walk="right" aria-label="Caminar hacia la derecha">→</button></div><div class="turn-controls"><button data-turn="left" aria-label="Girar a la izquierda">↶</button><button data-turn="right" aria-label="Girar a la derecha">↷</button></div></div>
-        <p id="gallery-hint" class="gallery-hint" aria-hidden="true"></p>
-        <button id="toggle-controls" class="toggle-controls" aria-expanded="false" aria-controls="gallery-navigation">Controles</button>
+        <p id="gallery-hint" class="gallery-hint" aria-hidden="true" hidden></p>
       </div>
-      <div class="room-bottomline"><p id="room-discovery-count" role="status">Recuerdos descubiertos: 0 de 3</p><p id="room-clue-count" role="status">Pistas encontradas: 0 de 5</p></div>
-      <nav class="exhibit-tour" aria-label="Recorrido guiado por las tres piezas"></nav>
-      <div class="room-guidance"><p>Acércate a una pieza o elige una parada para recorrer la sala.</p><button id="clue-hint" class="text-button">Necesito una pista <span aria-hidden="true">✧</span></button><button id="accessible-decoration" class="text-button" hidden>Explorar los detalles de la columna</button></div>
-      <div id="room-completed" class="room-completed" hidden><span aria-hidden="true">✧</span><p>Este comienzo ya tiene su sello.</p><button id="completed-lobby" class="text-button">Volver al vestíbulo</button><button id="completed-map" class="button primary">Seguir explorando <svg class="icon"><use href="#icon-arrow"/></svg></button></div>
+      <nav class="exhibit-tour" aria-label="Recorrido guiado por las tres piezas" hidden></nav>
+      <nav id="room-dock" class="lobby-dock room-dock" aria-label="Sala 01">
+        <button id="room-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="step-prev" class="dock-button dock-step" type="button" aria-label="Pieza anterior"><span aria-hidden="true">‹</span></button>
+        <button id="view-memory" class="dock-button dock-primary" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-flower"/></svg><span>Recuerdo</span></button>
+        <button id="step-next" class="dock-button dock-step" type="button" aria-label="Pieza siguiente"><span aria-hidden="true">›</span></button>
+        <button id="room-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="room-passport-count">0/6</small></span></button>
+        <button id="toggle-controls" class="dock-button" type="button" aria-expanded="false" aria-controls="gallery-navigation"><span class="dock-glyph" aria-hidden="true">✥</span><span>Controles</span></button>
+        <button id="room-help" class="dock-button dock-help" type="button" aria-label="Cómo moverse por la sala"><span aria-hidden="true">?</span></button>
+      </nav>
     </section>
   </main>
   <footer class="site-footer"><span id="stage-label">01 <span class="footer-line"></span> LA INVITACIÓN</span><span>HECHO DE RECUERDOS, <em>Y DE TI.</em></span></footer>

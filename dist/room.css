@@ -44,3 +44,63 @@
 @media(prefers-reduced-motion:reduce){.gallery-hint{animation:none}}
 .without-webgl .toggle-controls,.without-webgl .gallery-hint{display:none}
 @media(hover:none) and (pointer:coarse){.controls-open .look-target{max-width:calc(100% - 165px)}.controls-open .look-target>span{font-size:12px}}
+
+/* ===== Sala 01 a pantalla completa, con los mismos componentes del vestíbulo ===== */
+body.room-view{overflow:hidden;overscroll-behavior:none}
+body.room-view .site-footer{display:none}
+body.room-view .site-header{position:fixed;top:0;left:0;right:0;max-width:none;z-index:20;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;padding-top:env(safe-area-inset-top);padding-left:max(64px,env(safe-area-inset-left));padding-right:max(64px,env(safe-area-inset-right));height:calc(112px + env(safe-area-inset-top));pointer-events:none}
+body.room-view .site-header>*{pointer-events:auto}
+.room-screen{max-width:none;height:100svh;margin:0;padding:0;overflow:hidden}
+.room-screen:after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 52%,transparent 62%,#46362430 100%),linear-gradient(0deg,#f4f0e7c7 0,#f4f0e700 22%)}
+.room-screen .gallery-stage{position:fixed;inset:0;width:100vw;height:100svh;border:0;border-radius:0;box-shadow:none;background:#efe6d6;z-index:0}
+.room-screen .gallery-stage:before,.room-screen .gallery-vignette{display:none}
+.lobby-heading.room-heading{padding:calc(env(safe-area-inset-top) + 30px) 24px 80px}
+.lobby-heading.room-heading h1{font-size:clamp(30px,3.2vw,48px);margin:8px auto 4px;max-width:16ch}
+.lobby-heading.room-heading .room-subtitle{font-family:var(--serif);font-style:italic;font-size:14px;color:#817057;margin:0 auto;max-width:520px}
+.room-status{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 10px;margin-top:10px;pointer-events:auto}
+.room-heading .room-status p{font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:.4px;color:#7c7263;margin:0}
+.room-status>span{color:#b89b66;font-size:10px}
+.room-status .text-button,.room-completed .text-button{min-height:32px;padding:4px 12px;font-size:10px;border:1px solid #b9a17766;border-radius:999px;background:#f8f2e6b3;backdrop-filter:blur(6px)}
+.room-heading .room-completed{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 10px;margin:8px auto 0;padding:0;border:0;pointer-events:auto}
+.room-heading .room-completed[hidden]{display:none}
+.room-heading .room-completed>span{font-size:15px;color:var(--gold)}
+.room-heading .room-completed>p{font-family:var(--serif);font-style:italic;font-size:13px;color:#64775a;margin:0}
+#completed-lobby{display:none}
+/* La píldora de la pieza, centrada sobre el dock. */
+.room-screen .look-target{left:50%;right:auto;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(560px,calc(100% - 32px));align-items:center;z-index:3}
+.room-screen .controls-open .look-target,.room-screen .look-target{max-width:min(560px,calc(100% - 32px))}
+.room-screen .look-target>span{text-align:center;font-size:15px;padding:7px 18px}
+.room-screen .gallery-navigation{display:none;right:max(20px,env(safe-area-inset-right));bottom:calc(160px + env(safe-area-inset-bottom));opacity:.7;z-index:3}
+.room-screen .controls-open .gallery-navigation{display:flex}
+.room-screen .gallery-navigation button,.room-screen .gallery-navigation .turn-controls button{width:38px;height:38px}
+/* Dock de la sala: mismo componente que el del vestíbulo. */
+.room-dock .dock-glyph{font-family:var(--serif);font-size:17px;line-height:1;color:#9a7b45}
+.room-dock .dock-step{width:40px;min-width:40px;padding:0;justify-content:center;font-family:var(--serif);font-size:24px;line-height:1;color:#8c754e}
+.room-dock .dock-primary{background:var(--wood);color:#fbf3e4;box-shadow:inset 0 0 0 1px #c9a56455}
+.room-dock .dock-primary:hover{background:#5b4433}
+.room-dock .dock-primary .icon{color:#e2c88f}
+.room-dock .dock-button[aria-expanded="true"]{background:#e9d9b6}
+@media(max-width:850px){body.room-view .site-header{height:calc(95px + env(safe-area-inset-top));padding-left:max(30px,env(safe-area-inset-left));padding-right:max(30px,env(safe-area-inset-right))}.lobby-heading.room-heading{padding-top:calc(env(safe-area-inset-top) + 88px)}}
+@media(max-width:600px){
+  body.room-view .site-header{height:calc(76px + env(safe-area-inset-top));padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+  .lobby-heading.room-heading{padding:calc(env(safe-area-inset-top) + 74px) 18px 56px}
+  .lobby-heading.room-heading h1{font-size:32px}
+  .lobby-heading.room-heading .room-subtitle{font-size:12px}
+  .room-status{gap:2px 8px;margin-top:6px}
+  .room-heading .room-status p{font-size:9px}
+  .room-screen .look-target{bottom:calc(88px + env(safe-area-inset-bottom))}
+  .room-screen .look-target>span{font-size:13px}
+  .room-screen .gallery-navigation{right:12px;bottom:calc(140px + env(safe-area-inset-bottom))}
+  .room-dock .dock-step{flex:0 0 32px;width:32px;min-width:32px;font-size:22px}
+  .room-dock .dock-button{font-size:9.5px}
+}
+/* Sello: se estampa en una página del pasaporte con un soplo de polvo dorado. */
+.stamp-reward{position:relative}
+.stamp-page{position:relative;width:190px;margin:0 auto 18px;padding:22px 0;background:repeating-linear-gradient(0deg,transparent 0 19px,#d7cbb766 19px 20px),linear-gradient(160deg,#fbf7ed,#efe4cc);border:1px solid #beaa85;box-shadow:0 10px 24px #46362422,inset 0 0 0 4px #fffaf0aa}
+.stamp-page .new-stamp{margin:0 auto;background:radial-gradient(circle,#fbf7edee,#f1e6cfee);animation:stamp-press .95s cubic-bezier(.2,.8,.2,1) both}
+.stamp-page:after{content:'';position:absolute;inset:-40px;pointer-events:none;opacity:0;background-image:radial-gradient(circle,#e2b86b 0 1.6px,transparent 2.6px),radial-gradient(circle,#ffe2a8 0 1.1px,transparent 2px);background-size:37px 43px,61px 53px;background-position:0 0,19px 23px;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0,transparent 62%);mask-image:radial-gradient(circle at 50% 50%,#000 0,transparent 62%);animation:stamp-dust 1.9s .45s ease-out both}
+@keyframes stamp-press{0%{opacity:0;transform:rotate(-12deg) scale(2.1) translateY(-26px);filter:blur(2px)}55%{opacity:1;transform:rotate(-12deg) scale(.9);filter:none;box-shadow:inset 0 0 0 5px var(--paper),inset 0 0 0 6px #718366,0 0 0 10px #71836622}70%{transform:rotate(-12deg) scale(1.05)}100%{transform:rotate(-12deg) scale(1)}}
+@keyframes stamp-dust{0%{opacity:0;transform:scale(.5)}30%{opacity:1}100%{opacity:0;transform:scale(1.35) translateY(-24px)}}
+@media(prefers-reduced-motion:reduce){.stamp-page .new-stamp,.stamp-page:after{animation:none}.stamp-page:after{opacity:0}}
+.lobby-heading.room-heading>.eyebrow{font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:2.6px;color:var(--muted);margin:0}@media(max-width:600px){.lobby-heading.room-heading>.eyebrow{font-size:7px;letter-spacing:1.3px}}
+.room-screen .look-target,.room-screen .controls-open .look-target{left:16px;right:16px;transform:none;width:auto;max-width:none;align-items:center;pointer-events:none}.room-screen .look-target>span{max-width:min(560px,100%);pointer-events:auto}

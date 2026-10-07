@@ -12,7 +12,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
   const canvas=renderer.domElement;canvas.className='gallery-canvas';canvas.setAttribute('aria-hidden','true');container.prepend(canvas);
   const view={yaw:0,pitch:-.03},keys=new Set(),pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();
   const meshes=targets.flatMap(target=>target.hits);
-  let active=false,paused=false,running=false,raf=0,last=0,drag=null,flight=null,selected=null,pointerInside=false,hovered=null;
+  let active=false,paused=false,running=false,raf=0,last=0,drag=null,flight=null,selected=null,pointerInside=false,hovered=null,rendered=false;
   const resolveTarget=object=>targets.find(target=>target.hits.includes(object));
   function setTarget(target) {
     if(selected===target)return;
@@ -66,6 +66,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
       look();select();onFrame?.(dt,now);
     }
     renderer.render(scene,camera);
+    if(!rendered){rendered=true;container.dispatchEvent(new CustomEvent('gallery:ready'));}
     raf=requestAnimationFrame(frame);
   }
   function sync() {
@@ -73,7 +74,7 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
     if(should&&!running){running=true;last=performance.now();raf=requestAnimationFrame(frame);}
     if(!should&&running){running=false;cancelAnimationFrame(raf);}
   }
-  function resize(){const w=container.clientWidth,h=container.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?100:60;camera.updateProjectionMatrix();}
+  function resize(){const w=container.clientWidth,h=container.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=camera.aspect<.75?88:camera.aspect<1.1?72:60;camera.updateProjectionMatrix();}
   const observer=new ResizeObserver(resize);observer.observe(container);
   function pick(event,objects) {
     const rect=canvas.getBoundingClientRect();

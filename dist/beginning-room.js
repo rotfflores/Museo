@@ -25,6 +25,8 @@ function updateProgress() {
   $('#room-discovery-count').textContent=`Recuerdos descubiertos: ${discovered.length} de 3`;
   $('#room-clue-count').textContent=`Pistas encontradas: ${progress.clues.length} de 5`;
   $('#room-completed').hidden=!progress.completed.includes('beginning');
+  $('#room-passport-count').textContent=`${progress.completed.length}/6`;
+  $('#room-passport').setAttribute('aria-label',`Pasaporte de recuerdos, ${progress.completed.length} de 6 salas completadas`);
   for(const target of pieceTargets)target.seen.visible=discovered.includes(target.id);
   document.querySelectorAll('[data-tour]').forEach(button=>{
     const done=discovered.includes(room.exhibits[Number(button.dataset.tour)].id);
@@ -34,9 +36,10 @@ function updateProgress() {
 }
 function setTarget(target) {
   selected=target;
-  $('#target-name').textContent=target ? target.id==='key' ? 'Un pequeño detalle dorado' : room.exhibits[target.index].title : 'Acércate a una pieza para descubrirla';
-  $('#view-memory').textContent=target?.id==='key'?'Recoger llave':'Ver recuerdo';
-  $('#view-memory').disabled=!target;
+  // Sin pieza a la vista, la píldora muestra la introducción de la sala.
+  $('#target-name').textContent=target ? target.id==='key' ? 'Un pequeño detalle dorado' : room.exhibits[target.index].title : room.introduction;
+  $('#view-memory span').textContent=target?.id==='key'?'Llave':'Recuerdo';
+  $('#view-memory').setAttribute('aria-label',target?target.id==='key'?'Recoger la llave':`Ver el recuerdo: ${room.exhibits[target.index].title}`:'Ir al recuerdo más cercano');
   $('#gallery-stage').dataset.target=target?.id||'';
 }
 function fallbackMode() {
@@ -259,6 +262,7 @@ function buildRoom() {
     for(let i=0;i<COUNT;i++){let y=p.getY(i)+speeds[i]*dt;if(y>5.2)y=0;p.setY(i,y);p.setX(i,p.getX(i)+Math.sin(t*.3+i)*.0008);}
     p.needsUpdate=true;
   };
+  firstFrame=new Promise(resolve=>$('#gallery-stage').addEventListener('gallery:ready',resolve,{once:true}));
   engine=createGallery({container:$('#gallery-stage'),scene,camera,obstacles,targets,floor,onTarget:setTarget,onActivate:target=>openTarget(target),onUnavailable:fallbackMode,onTap,onSwipe,onHover:target=>{hoverTarget=target;},onBack:()=>{if(focused)stepBack();},onFrame:animate});
   engine.renderer.toneMappingExposure=.88;engine.renderer.shadowMap.enabled=true;engine.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const pmrem=new THREE.PMREMGenerator(engine.renderer),environment=new RoomEnvironment();
@@ -267,14 +271,21 @@ function buildRoom() {
   setTarget(null);
 }
 
-function enterRoom() {
-  Museum.showRoom();
-  if(!initialized) {
-    initialized=true;
-    try{buildRoom();}catch{fallbackMode();}
-  }
-  engine?.setActive(true);updateProgress();
-  if(fallback)setTarget({id:room.exhibits[currentPiece].id,index:currentPiece});
+let firstFrame=null;
+async function enterRoom() {
+  const cover=()=>{
+    Museum.showRoom();
+    if(!initialized) {
+      initialized=true;
+      try{buildRoom();}catch{fallbackMode();}
+    }
+    engine?.setActive(true);updateProgress();
+    if(fallback)setTarget({id:room.exhibits[currentPiece].id,index:currentPiece});
+  };
+  const opened=await Museum.playDoors({lines:['Encendiendo la sala…','Desempolvando los recuerdos…','Abriendo la vitrina…'],cover,ready:()=>fallback?null:firstFrame,minimum:1500});
+  if(!opened)cover();
+  $('#room-title').focus({preventScroll:true});
+  if(!Museum.tutorialSeen('room'))Museum.openTutorial('room',$('#room-help'));
 }
 function guideTo(index,source=null) {
   currentPiece=index;
@@ -356,7 +367,7 @@ function conversationMarkup(piece) {
   return `<div class="conversation-paper"><div class="conversation-header"><span>${escape(config.couple)}</span><small>${escape(piece.date)}</small></div>${piece.messages.map(message=>`<div class="message-bubble ${message.from==='sender'?'sent':'received'}"><span>${escape(config[message.from]||message.from)}</span><p>${escape(text(message.text))}</p><small>${escape(message.time||'')}</small></div>`).join('')}<p class="conversation-note">Conversación de demostración</p></div>`;
 }
 function symbolMarkup() {return '<div class="symbol-composition" aria-label="Dos piezas entrelazadas"><span></span><span></span><i aria-hidden="true">✧</i></div>';}
-function rewardMarkup(){return `<div class="stamp-reward" role="status"><div class="new-stamp"><span>SALA 01</span><b>✧</b><span>AQUÍ COMENZÓ TODO</span></div><p>${escape(room.completionMessage)}</p><div><button data-completion="lobby" class="text-button">Volver al vestíbulo</button><button data-completion="map" class="button primary">Seguir explorando ↗</button></div></div>`;}
+function rewardMarkup(){return `<div class="stamp-reward" role="status"><div class="stamp-page" aria-hidden="true"><div class="new-stamp"><span>SALA 01</span><b>✧</b><span>AQUÍ COMENZÓ TODO</span></div></div><p>${escape(room.completionMessage)}</p><div><button data-completion="lobby" class="text-button">Volver al vestíbulo</button><button data-completion="map" class="button primary">Seguir explorando ↗</button></div></div>`;}
 function openPiece(index,source=$('#view-memory')) {
   const piece=room.exhibits[index];currentPiece=index;
   const progress=Museum.discoverPiece('beginning',piece.id);
@@ -368,7 +379,7 @@ function openPiece(index,source=$('#view-memory')) {
   Museum.openContent({className:'memory-overlay',source,html:`<div class="memory-heading"><p class="eyebrow">PIEZA 0${index+1} · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2></div>${artwork}<blockquote class="memory-dedication">“${escape(piece.dedication)}”</blockquote>${media}${progress.newlyCompleted?rewardMarkup():''}<div class="memory-footer"><p>${escape(config.sender)} <span>para</span> ${escape(config.recipient)}</p><button id="next-piece" class="text-button">${index<2?'Ir a la siguiente pieza':'Volver a la primera pieza'} →</button></div>`});
   $('#next-piece').addEventListener('click',()=>{Museum.closeOverlay();setTimeout(()=>guideTo((index+1)%3),0);});
   document.querySelectorAll('[data-completion]').forEach(button=>button.addEventListener('click',()=>{
-    if(button.dataset.completion==='map')Museum.openMap($('#room-map'));
+    if(button.dataset.completion==='map')Museum.openMap($('#room-passport'));
     else{Museum.closeOverlay();Museum.returnToLobby();}
   }));
   document.querySelectorAll('.memory-overlay img').forEach(image=>image.addEventListener('error',()=>{
@@ -394,9 +405,18 @@ function openKey(source=$('#view-memory')) {
 }
 function openTarget(target=selected,source){if(!target)return;if(target.id==='key')openKey(source);else openPiece(target.index,source);}
 Museum.registerRoom('beginning',enterRoom);
-$('#view-memory').addEventListener('click',()=>openTarget());
+// "Recuerdo" abre la pieza que se mira o, si no hay ninguna, lleva a la más cercana.
+$('#view-memory').addEventListener('click',event=>{
+  if(selected){openTarget(selected,event.currentTarget);return;}
+  if(fallback||!engine){guideTo(currentPiece,event.currentTarget);return;}
+  const camera=engine.camera.position,nearest=[...pieceTargets].sort((a,b)=>camera.distanceTo(a.focus)-camera.distanceTo(b.focus))[0];
+  goTo(nearest,{source:event.currentTarget});
+});
+$('#room-help').addEventListener('click',event=>Museum.openTutorial('room',event.currentTarget));
 $('#step-prev').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+2)%3,event.currentTarget));
 $('#step-next').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+1)%3,event.currentTarget));
+// Caminar con botones: visible al inicio en computadora, oculto en pantallas táctiles.
+if(!matchMedia('(pointer: coarse)').matches){$('#gallery-stage').classList.add('controls-open');$('#toggle-controls').setAttribute('aria-expanded','true');}
 $('#toggle-controls').addEventListener('click',event=>{const open=$('#gallery-stage').classList.toggle('controls-open');event.currentTarget.setAttribute('aria-expanded',String(open));interacted();});
 {
   const coarse=matchMedia('(pointer: coarse)').matches,parts=coarse?['Toca una pieza','Desliza para avanzar']:['Haz clic en una pieza','Arrastra para mirar'];
@@ -417,7 +437,6 @@ $('#toggle-controls').addEventListener('click',event=>{const open=$('#gallery-st
 document.querySelectorAll('[data-tour]').forEach(button=>button.addEventListener('click',()=>guideTo(Number(button.dataset.tour),button)));
 $('#gallery-stage').addEventListener('gallery:arrived',()=>{document.querySelectorAll('.guiding-stop').forEach(button=>button.classList.remove('guiding-stop'));});
 $('#room-back').addEventListener('click',Museum.returnToLobby);
-$('#room-map').addEventListener('click',event=>Museum.openMap(event.currentTarget));
 $('#room-passport').addEventListener('click',event=>Museum.openPassport(event.currentTarget));
 $('#clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#accessible-decoration').addEventListener('click',event=>openKey(event.currentTarget));
