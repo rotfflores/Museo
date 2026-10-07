@@ -272,3 +272,43 @@ body:has(#little-note.inspecting) .site-header{visibility:hidden}
 .you-song-note{font-size:12px;color:#8a7a62;margin-top:14px}
 .you-cover{margin:12px 0}.you-cover img{width:120px;height:120px;object-fit:cover;border-radius:6px;box-shadow:0 6px 18px rgba(60,40,20,.18)}
 @media(max-width:600px){.lobby-heading.room-overlay>p#you-counter{font-size:8px;letter-spacing:1.1px;margin-top:5px}.lobby-heading.room-overlay #you-subtitle{font-size:12px}}
+
+/* Barra compartida y notas breves para contemplar las obras en la sala. */
+.room-screen>.room-dock{display:none!important}
+#lobby-dock{z-index:18;animation:none}
+#lobby-dock .dock-button{padding-inline:12px}
+#ambient-toggle[aria-pressed="true"]{background:#e8dfcf;color:#897b67}
+.dock-back>span:first-child{font-family:var(--serif);font-size:22px;color:#9a7b45}
+.room-screen.viewing-art>.room-overlay,.room-screen.viewing-art>.room-heading{opacity:0;pointer-events:none}
+.room-note{bottom:calc(100px + env(safe-area-inset-bottom));padding:18px 21px;max-height:33svh}
+.room-note .eyebrow{font-size:7px;margin-bottom:8px}
+.room-note h2{font-size:23px;margin-bottom:8px}
+.room-note-dedication{font-size:16px;line-height:1.4;margin:8px 0 0}
+.room-note-description{margin:6px 0;line-height:1.45}
+.room-note .media-credit{margin-top:8px!important;font-size:9px!important}
+.media-credit summary{cursor:pointer;width:fit-content}
+.media-credit a{display:inline-block;margin-top:4px}
+.you-steps{margin-top:8px!important}
+.you-steps button{font-size:11px;padding:8px 0}
+.you-audio{margin-top:12px!important}
+.you-audio .button{min-height:40px;padding:8px 16px}
+.you-audio p:empty{display:none}
+.museum-player{position:fixed;z-index:18;bottom:calc(91px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:min(330px,calc(100vw - 32px));padding:7px 10px 7px 16px;background:#fbf7edf0;border:1px solid #b9a17780;border-radius:999px;box-shadow:0 5px 18px #46362420;backdrop-filter:blur(12px)}
+#museum-player-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#78664c}
+.museum-player button{width:32px;height:32px;border-radius:50%;background:#efe5d4;color:#78664c;font-size:15px;flex-shrink:0}
+body:has(.museum-player:not([hidden])) .room-note{bottom:calc(151px + env(safe-area-inset-bottom))}
+body:has(.museum-player:not([hidden])) .room-video-controls{bottom:calc(149px + env(safe-area-inset-bottom))}
+@media(max-width:600px){
+  #lobby-dock{max-width:470px;min-height:66px}
+  #lobby-dock .dock-button{padding:6px 1px;gap:4px;font-size:9px}
+  #lobby-dock .dock-button .icon{width:18px;height:18px}
+  #lobby-dock .dock-help{min-width:34px;width:34px;flex-basis:34px;margin:0 2px;font-size:17px}
+  #lobby-dock .dock-button small{font-size:8px}
+  #lobby-dock .dock-back{flex:0 0 32px}
+  #lobby-dock .dock-back>span:last-child{font-size:8px}
+  .room-note{left:16px;right:16px;bottom:calc(93px + env(safe-area-inset-bottom));max-height:29svh;padding:16px 19px}
+  .room-note h2{font-size:21px}
+  .room-note-dedication{font-size:15px}
+  .museum-player{bottom:calc(89px + env(safe-area-inset-bottom))}
+  .room-note .room-note-reward{margin-top:8px;padding-top:8px}
+}

@@ -1,7 +1,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 import {Reflector} from './vendor/Reflector.js';
-import {createGallery} from './gallery-engine.js';
+import {createGallery,focusArtwork} from './gallery-engine.js';
 import {isWalkable,WALK_BOUNDS} from './navigation.mjs';
 
 const Museum=window.Museum,config=window.MUSEUM_CONFIG,room=config.beginningRoom;
@@ -173,7 +173,9 @@ function buildRoom() {
   const glassMaterial=new THREE.MeshStandardMaterial({color:'#e6efe9',transparent:true,opacity:.1,roughness:.05,metalness:.1,depthWrite:false});
   const glass=box(2,.95,1.3,-3.55,1.48,-1.5,glassMaterial);glass.receiveShadow=false;
   for(const x of [-4.5,-2.6]) for(const z of [-2.12,-.88])box(.025,.95,.025,x,1.48,z,goldTrim);
-  box(2.05,.035,1.35,-3.55,1.96,-1.5,goldTrim);
+  // Un borde abierto deja visible la captura al acercar la cámara a la vitrina.
+  for(const z of [-2.16,-.84])box(2.05,.025,.025,-3.55,1.96,z,goldTrim);
+  for(const x of [-4.56,-2.54])box(.025,.025,1.35,x,1.96,-1.5,goldTrim);
   const conversation=texture(512,640,(g,w,h)=>{
     g.fillStyle='#faf2df';g.fillRect(0,0,w,h);g.fillStyle='#93764b';g.font='20px Georgia';g.textAlign='center';g.fillText('nuestro primer mensaje',w/2,56);
     room.exhibits[0].messages.slice(0,4).forEach((message,index)=>{
@@ -191,7 +193,7 @@ function buildRoom() {
     letter.material.map=sceneMap;letter.material.needsUpdate=true;conversation.dispose();map.dispose();
   },undefined,()=>{/* La conversación configurada permanece si falta la captura. */});
   const casePlaque=plaque(room.exhibits[0],0,-3.55,.67,-.77,2);
-  targets.push({id:'message',index:0,focus:new THREE.Vector3(-3.55,1.45,-1.5),approach:{x:-3.55,z:1.1},hits:[glass,letter,casePlaque],marker:marker(-3.55,-1.5,1.05),glow:[letter.material],lift:letter,rise:[0,.06,0],halo:[-3.55,1.4,-1.5,1.9],seen:[-3.55,2.25,-1.5]});
+  targets.push({id:'message',index:0,artwork:{x:-3.55,y:1.45,z:-1.5,width:.85,height:1.5,out:[0,0,1]},focus:new THREE.Vector3(-3.55,1.45,-1.5),approach:{x:-3.55,z:1.1},hits:[glass,letter,casePlaque],marker:marker(-3.55,-1.5,1.05),glow:[letter.material],lift:letter,rise:[0,.06,0],halo:[-3.55,1.4,-1.5,1.9],seen:[-3.55,2.25,-1.5]});
   // Pieza 02: una obra enmarcada. Su foto sólo se carga cuando se entra en la sala.
   const placeholder=texture(768,512,(g,w,h)=>{
     const grad=g.createLinearGradient(0,0,0,h);grad.addColorStop(0,'#b7bba6');grad.addColorStop(1,'#e8c897');g.fillStyle=grad;g.fillRect(0,0,w,h);
@@ -208,7 +210,7 @@ function buildRoom() {
   for(const y of [1.39,3.61])box(3.33,.025,.17,0,y,-5.64,goldTrim);
   box(1.2,.06,.22,0,3.98,-5.35,goldTrim);
   const photoPlaque=plaque(room.exhibits[1],1,0,.87,-5.72,3);
-  targets.push({id:'first-date',index:1,focus:new THREE.Vector3(0,2.3,-5.75),approach:{x:0,z:-2.65},hits:[picture,photoPlaque],marker:marker(0,-3.95,.5),glow:[picture.material],lift:picture,rise:[0,.03,.04],halo:[0,2.5,-5.5,3.2],seen:[0,4.4,-5.6]});
+  targets.push({id:'first-date',index:1,artwork:{x:0,y:2.5,z:-5.75,width:3.7,height:2.6,out:[0,0,1]},focus:new THREE.Vector3(0,2.3,-5.75),approach:{x:0,z:-2.65},hits:[picture,photoPlaque],marker:marker(0,-3.95,.5),glow:[picture.material],lift:picture,rise:[0,.03,.04],halo:[0,2.5,-5.5,3.2],seen:[0,4.4,-5.6]});
   const pictureUrl=room.exhibits[1].photo||room.exhibits[1].placeholder;
   if(pictureUrl)new THREE.TextureLoader().load(pictureUrl,map=>{
     const original=map.image;
@@ -350,6 +352,7 @@ function resume(){if(!$('#museum-dialog').open)engine?.setPaused(false);}
 function goTo(target,{open=true,source=null}={}) {
   closeNote(false);
   resume();
+  focusArtwork(engine.camera,target,WALK_BOUNDS);$('#room-screen').classList.toggle('viewing-art',!!target.artwork);
   if(target.id!=='key')currentPiece=target.index;
   if(focused===target&&!engine.isFlying()){if(open)openTarget(target,source||undefined);return;}
   const previous=$('#target-name').textContent;
@@ -415,7 +418,7 @@ function interacted() {
 }
 function mediaCredit(credit) {
   if(!credit)return '';
-  return `<p class="media-credit">Imagen de ejemplo · <a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="${escape(credit.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escape(credit.license)}</a></p>`;
+  return `<details class="media-credit"><summary>Imagen de ejemplo</summary><a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="${escape(credit.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escape(credit.license)}</a></details>`;
 }
 function conversationMarkup(piece) {
   if(piece.screenshot)return `<figure class="conversation-capture"><img src="${escape(piece.screenshot)}" alt="${escape(piece.screenshotAlt)}" decoding="async">${mediaCredit(piece.screenshotCredit)}</figure>`;
@@ -423,8 +426,8 @@ function conversationMarkup(piece) {
 }
 let noteSource=null;
 function closeNote(restoreFocus=true) {
-  const note=$('#room-note');if(note.hidden)return;
-  note.querySelectorAll('audio,video').forEach(media=>{media.pause();media.currentTime=0;});
+  const note=$('#room-note');$('#room-screen').classList.remove('viewing-art');if(note.hidden)return;
+  note.querySelectorAll('video').forEach(video=>{Museum.pauseMedia(video);Museum.releaseMedia(video);video.removeAttribute('src');video.load();});
   note.hidden=true;$('#room-note-content').replaceChildren();
   if(restoreFocus)(noteSource?.isConnected&&!noteSource.closest('[hidden]')?noteSource:$('#gallery-stage')).focus({preventScroll:true});
   noteSource=null;
@@ -436,38 +439,24 @@ function showNote({eyebrow,title,body,source=$('#gallery-stage')}) {
 }
 $('#close-room-note').addEventListener('click',()=>closeNote());
 $('#room-note').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeNote();}});
-function showPieceNote(piece,index,progress,source,media='') {
-  showNote({eyebrow:`PIEZA 0${index+1} · ${piece.date}`,title:piece.title,source,body:`<p class="room-note-description">${escape(piece.description)}</p><p class="room-note-dedication">${escape(piece.dedication)}</p>${index===0?'<button id="expand-message" class="button secondary room-note-expand" type="button">Ver captura en grande <span aria-hidden="true">↗</span></button>'+mediaCredit(piece.screenshotCredit):index===1?mediaCredit(piece.photoCredit):''}${media}${progress.newlyCompleted?'<p class="room-note-reward" role="status">✧ Sala completada. Tu pasaporte ya tiene un nuevo sello.</p>':''}`});
-  bindPieceMedia(piece);
-  if(index!==0)return;
-  $('#expand-message').addEventListener('click',event=>{
-    Museum.openContent({className:'expanded-conversation',source:event.currentTarget,onClose:()=>{if(!$('#room-screen').hidden)showPieceNote(piece,index,progress,source,media);},html:`<div class="memory-heading"><p class="eyebrow">PIEZA 01 · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2></div>${conversationMarkup(piece)}`});
-    const image=$('.expanded-conversation img');
-    image?.addEventListener('error',()=>{const replacement=document.createElement('p');replacement.className='missing-memory-image';replacement.textContent='Esta captura no está disponible por ahora. Puedes cerrar esta vista y seguir leyendo la nota.';image.replaceWith(replacement);},{once:true});
+function showPieceNote(piece,index,progress,source) {
+  const video=piece.video?`<div class="optional-video"><button id="play-memory-video" class="button secondary">▶ Reproducir video</button><video id="memory-video" preload="none" playsinline ${piece.videoPoster?`poster="${escape(piece.videoPoster)}"`:''} hidden></video></div>`:'';
+  showNote({eyebrow:piece.date,title:piece.title,source,body:`<p class="room-note-dedication">${escape(piece.description)}</p>${mediaCredit(index===0?piece.screenshotCredit:piece.photoCredit)}${piece.audio?'<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ Escuchar</button><p id="media-status" role="status"></p></div>':''}${video}`});
+  $('#room-screen').classList.toggle('viewing-art',index<2);
+  Museum.bindAudioButton($('#play-memory-audio'),{src:piece.audio,title:piece.title,label:`▶ ${text(piece.audioLabel||'Escuchar')}`,status:$('#media-status')});
+  $('#play-memory-video')?.addEventListener('click',async event=>{
+    const element=$('#memory-video'),button=event.currentTarget;if(!element.paused){Museum.pauseMedia(element);button.textContent='▶ Reproducir video';return;}
+    element.hidden=false;element.controls=true;element.src=piece.video;
+    const started=await Museum.playMedia(element,{title:piece.title,kind:'video',onStop:()=>{element.pause();element.removeAttribute('src');element.load();}});
+    if(started&&button.isConnected)button.textContent='Ⅱ Pausar';
   });
-}
-function bindPieceMedia(piece) {
-  if(piece.audio) {
-    const audio=$('#memory-audio'),button=$('#play-memory-audio');
-    button.addEventListener('click',async()=>{try{if(audio.paused){await audio.play();button.textContent='Ⅱ Pausar audio';}else{audio.pause();button.textContent=`▶ ${text(piece.audioLabel)}`;}}catch{$('#media-status').textContent='No se pudo reproducir el audio. Puedes seguir disfrutando del recuerdo.';}});
-    audio.addEventListener('ended',()=>{button.textContent=`▶ ${text(piece.audioLabel)}`;});
-    audio.addEventListener('error',()=>{$('#media-status').textContent='Este audio no está disponible por ahora.';button.hidden=true;});
-  }
-  if(piece.video) {
-    const video=$('#memory-video'),button=$('#play-memory-video');
-    button.addEventListener('click',async()=>{video.hidden=false;video.controls=true;try{await video.play();button.hidden=true;}catch{$('#media-status').textContent='No se pudo reproducir el video. La dedicatoria sigue aquí para ti.';}});
-    video.addEventListener('error',()=>{video.hidden=true;button.hidden=true;$('#media-status').textContent='Este video no está disponible por ahora.';});
-  }
 }
 function openPiece(index,source=$('#gallery-stage')) {
   closeNote(false);
   const piece=room.exhibits[index];currentPiece=index;
   const progress=Museum.discoverPiece('beginning',piece.id);
   buzz(progress.newlyCompleted?[30,60,45]:14);
-  let media='';
-  if(piece.audio)media=`<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ ${escape(text(piece.audioLabel))}</button><audio id="memory-audio" preload="none" src="${escape(piece.audio)}"></audio><p id="media-status" role="status"></p></div>`;
-  if(piece.video)media=`<div class="optional-video"><button id="play-memory-video" class="button secondary">▶ Ver nuestro video</button><video id="memory-video" preload="none" playsinline ${piece.videoPoster?`poster="${escape(piece.videoPoster)}"`:''} src="${escape(piece.video)}" hidden></video><p id="media-status" role="status"></p></div>`;
-  showPieceNote(piece,index,progress,source,media);
+  showPieceNote(piece,index,progress,source);
   updateProgress();
 }
 function openKey(source=$('#gallery-stage')) {

@@ -3,7 +3,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 import {Reflector} from './vendor/Reflector.js';
-import {createGallery} from './gallery-engine.js';
+import {createGallery,focusArtwork} from './gallery-engine.js';
 import {isWalkable} from './navigation.mjs';
 
 const Museum=window.Museum,config=window.MUSEUM_CONFIG,room=config.youRoom;
@@ -174,7 +174,7 @@ function buildRoom() {
     const plaque=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3*300/1024),new THREE.MeshBasicMaterial({map:plaqueTexture(`RETRATO ${String(index+1).padStart(2,'0')}`,piece.title,text(piece.phrase||'')),toneMapped:false}));plaque.position.set(0,-fh/2-.42,.03);group.add(plaque);
     const spot=new THREE.SpotLight('#ffdcaa',small?14:20,7,.42,.8,1.5);const a=arcPoint(angle,RADIUS-2.2);spot.position.set(a.x,4.4,a.z);spot.target.position.set(p.x,2.4,p.z);scene.add(spot,spot.target);
     const approach=arcPoint(angle,RADIUS-2.95),focus=new THREE.Vector3(p.x,2.3,p.z);
-    const target={id:piece.id,index,focus,approach,hits:[surface,plaque],marker:marker(approach.x,approach.z),glow:[frameMaterial],lift:group,rise:[-Math.sin(angle)*.05,0,Math.cos(angle)*.05],halo:[p.x*.97,2.4,p.z*.97,2.6],seen:[p.x*.98,2.4+fh/2+.35,p.z*.98]};
+    const target={id:piece.id,index,focus,approach,artwork:{x:p.x,y:2.4,z:p.z,width:fw+.26,height:fh+.26,out:[-Math.sin(angle),0,Math.cos(angle)]},hits:[surface,plaque],marker:marker(approach.x,approach.z),glow:[frameMaterial],lift:group,rise:[-Math.sin(angle)*.05,0,Math.cos(angle)*.05],halo:[p.x*.97,2.4,p.z*.97,2.6],seen:[p.x*.98,2.4+fh/2+.35,p.z*.98]};
     targets.push(target);portraitTargets.push(target);
   });
   // Tres estaciones de escucha: tocadiscos sobre pedestales junto a sus retratos.
@@ -214,7 +214,7 @@ function buildRoom() {
     cloth.userData.base=cloth.position.clone();
     easelSpot=new THREE.SpotLight('#ffe2b4',small?10:14,7,.45,.8,1.4);easelSpot.position.set(0,4.3,2.3);easelSpot.target.position.set(0,1.3,EASEL.z);easelSpot.userData={off:small?10:14,on:small?42:60};scene.add(easelSpot,easelSpot.target);
     const hit=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.7,.25),new THREE.MeshBasicMaterial({visible:false}));hit.position.set(0,1.4,.12);easel.add(hit);
-    easelTarget={id:'easel',focus:new THREE.Vector3(0,1.3,EASEL.z),approach:{x:0,z:1.9},hits:[hit,centerPlaque,photo],marker:marker(0,1.6,.6),glow:[],lift:centerPlaque,rise:[0,.02,0],halo:[0,1.3,EASEL.z+.4,2.3]};
+    easelTarget={id:'easel',artwork:{x:0,y:1.32,z:EASEL.z+.1,width:1.31,height:1.58,out:[0,0,1]},focus:new THREE.Vector3(0,1.3,EASEL.z),approach:{x:0,z:1.9},hits:[hit,centerPlaque,photo],marker:marker(0,1.6,.6),glow:[],lift:centerPlaque,rise:[0,.02,0],halo:[0,1.3,EASEL.z+.4,2.3]};
     targets.push(easelTarget);
     // Cuarta pista: una pequeña estrella dorada en la base del caballete, accesible desde el principio.
     const star=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?.022:.055,a=i/10*Math.PI*2-Math.PI/2;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i)star.lineTo(x,y);else star.moveTo(x,y);}star.closePath();
@@ -298,6 +298,7 @@ function rememberPose() {
 }
 function goTo(target,{open=true,source=null}={}) {
   closeNote(false,false);resume();
+  focusArtwork(engine.camera,target,BOUNDS);$('#you-screen').classList.toggle('viewing-art',!!target.artwork);
   if(target.index!==undefined)currentPortrait=target.index;
   if(target.id!=='exit')rememberPose();
   if(focused===target&&!engine.isFlying()){if(open)openTarget(target,source||undefined);return;}
@@ -351,7 +352,7 @@ function animate(dt) {
     if(easelSpot)easelSpot.intensity=easelSpot.userData.off+(easelSpot.userData.on-easelSpot.userData.off)*k;
     if(revealT>=1){revealing=false;cloth.visible=false;revealDone?.();revealDone=null;}
   }
-  for(const target of stationTargets)if(target.record&&media.station===target.song&&media.audio&&!media.audio.paused&&!reducedMotion.matches)target.record.rotation.y+=dt*3.5;
+  for(const target of stationTargets)if(target.record&&Museum.audioPlaying(songs[target.song].audio)&&!reducedMotion.matches)target.record.rotation.y+=dt*3.5;
   const ease=reducedMotion.matches?1:Math.min(1,dt*8);
   for(const target of targets){
     const goal=!noteOpen&&(hoverTarget===target||flyingTo===target)?1:0;
@@ -366,34 +367,11 @@ function animate(dt) {
   if(focused&&!noteOpen&&!engine.isFlying()&&Math.hypot(engine.camera.position.x-focused.approach.x,engine.camera.position.z-focused.approach.z)>.6){focused=null;returnPose=null;}
 }
 
-/* Un solo control de medios: narraciones y canciones nunca suenan a la vez; el ambiente se pausa y se restaura. */
-const media={audio:null,ambient:false,button:null,label:'',station:null};
-function stopMedia() {
-  const current=media.audio;if(!current)return;
-  current.pause();current.removeAttribute('src');current.load();
-  if(media.button?.isConnected)media.button.textContent=media.label;
-  if(media.ambient)Museum.restoreAmbient();
-  Object.assign(media,{audio:null,ambient:false,button:null,label:'',station:null});
-}
-async function toggleMedia(src,button,label,status,station=null) {
-  if(media.audio&&media.button===button){const audio=media.audio;if(audio.paused){try{await audio.play();if(media.audio===audio)button.textContent='Ⅱ Pausar';}catch{if(media.audio===audio)status.textContent='No se pudo reproducir el audio.';}}else{audio.pause();button.textContent=label;}return;}
-  stopMedia();
-  const audio=new Audio();audio.preload='none';audio.src=src;
-  Object.assign(media,{audio,button,label,station});
-  audio.addEventListener('ended',()=>{if(media.audio===audio)stopMedia();});
-  audio.addEventListener('error',()=>{if(media.audio!==audio)return;status.textContent='Este audio no está disponible por ahora.';button.hidden=true;stopMedia();});
-  // Iniciar desde el gesto del visitante mantiene la reproducción disponible en móviles.
-  const playback=audio.play();
-  Museum.suspendAmbient().then(wasPlaying=>{if(!wasPlaying)return;if(media.audio)media.ambient=true;else Museum.restoreAmbient();});
-  try{await playback;if(media.audio===audio)button.textContent='Ⅱ Pausar';}catch{if(media.audio===audio){status.textContent='No se pudo reproducir el audio.';stopMedia();}}
-}
-
 /* Notas laterales: las mismas de las salas 01 y 02. Mientras están abiertas, la cámara no se mueve. */
 let noteSource=null,revealDone=null;
 function closeNote(restoreFocus=true,returnBack=true) {
-  const note=$('#you-note');
+  const note=$('#you-note');$('#you-screen').classList.remove('viewing-art');
   if(note.hidden)return;
-  stopMedia();
   note.hidden=true;$('#you-note-content').replaceChildren();noteOpen=false;engine?.setLocked(false);
   if(restoreFocus)(noteSource?.isConnected&&!noteSource.closest('[hidden]')?noteSource:$('#you-stage')).focus({preventScroll:true});
   noteSource=null;
@@ -402,7 +380,7 @@ function closeNote(restoreFocus=true,returnBack=true) {
   if(returnBack&&engine&&pose){focused=null;resume();engine.guideTo({id:'return',focus:pose.focus,approach:{x:pose.x,z:pose.z},hits:[],marker:null},{select:false});}
 }
 function showNote({eyebrow,title,body,source=$('#you-stage')}) {
-  stopMedia();noteSource=source;
+  noteSource=source;
   $('#you-note-content').innerHTML=`<p class="eyebrow">${escape(eyebrow)}</p><h2 id="you-note-title" tabindex="-1">${escape(title)}</h2>${body}`;
   $('#you-note').hidden=false;noteOpen=true;engine?.setLocked(true);$('#you-note-title').focus({preventScroll:true});
 }
@@ -416,38 +394,29 @@ function discover(id) {
   return progress;
 }
 function photoCredit(piece) {
-  return piece?.credit?`<p class="media-credit">Fotografía de ejemplo · <a href="${escape(piece.credit.url)}" target="_blank" rel="noopener noreferrer">${escape(piece.credit.author)} / Pexels</a></p>`:'';
+  return piece?.credit?`<details class="media-credit"><summary>Fotografía de ejemplo</summary><a href="${escape(piece.credit.url)}" target="_blank" rel="noopener noreferrer">${escape(piece.credit.author)} / Pexels</a></details>`:'';
 }
-function enlarge(src,alt,title,eyebrow,body,source,reopen) {
-  const piece=[...portraits,center].find(item=>item?.photo===src);
-  Museum.openContent({className:'moments-photo',source,onClose:()=>{if(!$('#you-screen').hidden)reopen();},html:`<figure class="moments-photo-figure"><img src="${escape(src)}" alt="${escape(alt||title)}" decoding="async"><figcaption><p class="eyebrow">${escape(eyebrow)}</p><h2 id="dialog-title">${escape(title)}</h2><p>${escape(body)}</p>${photoCredit(piece)}</figcaption></figure>`});
-  const image=$('.moments-photo img');
-  image?.addEventListener('error',()=>{const replacement=document.createElement('p');replacement.className='missing-memory-image';replacement.textContent='Esta fotografía no está disponible por ahora.';image.replaceWith(replacement);},{once:true});
-}
-// Un retrato: título, dedicatoria completa, narración opcional, foto ampliada y paso al anterior o siguiente.
+// La cámara muestra el retrato; la nota conserva solo una frase breve.
 function openPortrait(index,source=$('#you-stage')) {
   const piece=portraits[index];currentPortrait=index;
   discover(piece.id);
   const count=portraits.length;
   showNote({eyebrow:`RETRATO ${String(index+1).padStart(2,'0')} DE ${String(count).padStart(2,'0')}`,title:piece.title,source,body:`
-    <p class="room-note-dedication">${escape(text(piece.dedication||''))}</p>
+    <p class="room-note-dedication">${escape(text(piece.phrase||piece.dedication||''))}</p>
     ${piece.audio?`<div class="optional-audio you-audio"><button id="you-play-audio" class="button secondary" type="button">▶ ${escape(text(piece.audioLabel||'Escuchar'))}</button><p id="you-audio-status" role="status"></p></div>`:''}
-    ${piece.photo?'<button id="you-enlarge" class="button secondary room-note-expand" type="button">Ver fotografía ampliada <span aria-hidden="true">↗</span></button>':''}
     ${photoCredit(piece)}
     ${count>1?`<div class="you-steps"><button id="you-note-prev" class="text-button" type="button">‹ Anterior</button><button id="you-note-next" class="text-button" type="button">Siguiente ›</button></div>`:''}`});
   const keep=returnPose;
-  $('#you-play-audio')?.addEventListener('click',event=>toggleMedia(piece.audio,event.currentTarget,`▶ ${text(piece.audioLabel||'Escuchar')}`,$('#you-audio-status')));
-  $('#you-enlarge')?.addEventListener('click',event=>{const pose=returnPose;enlarge(piece.photo,piece.alt,piece.title,`RETRATO ${String(index+1).padStart(2,'0')}`,text(piece.dedication||''),event.currentTarget,()=>{returnPose=pose;openPortrait(index,source);});});
-  $('#you-note-prev')?.addEventListener('click',()=>{returnPose=keep;openPortrait((index+count-1)%count,source);});
-  $('#you-note-next')?.addEventListener('click',()=>{returnPose=keep;openPortrait((index+1)%count,source);});
+  Museum.bindAudioButton($('#you-play-audio'),{src:piece.audio,title:piece.title,label:`▶ ${text(piece.audioLabel||'Escuchar')}`,status:$('#you-audio-status')});
+  $('#you-note-prev')?.addEventListener('click',()=>{returnPose=keep;guidePortrait((index+count-1)%count,source);});
+  $('#you-note-next')?.addEventListener('click',()=>{returnPose=keep;guidePortrait((index+1)%count,source);});
 }
 // La obra central: pendiente, lista para descubrirse o ya revelada.
 function openCenter(source=$('#you-stage')) {
   if(!center)return;
   if(centerRevealed()){
-    showNote({eyebrow:'LA OBRA CENTRAL',title:center.title,source,body:`<p class="room-note-dedication">${escape(text(center.dedication||''))}</p>${center.photo?'<button id="you-enlarge" class="button secondary room-note-expand" type="button">Ver fotografía ampliada <span aria-hidden="true">↗</span></button>':''}${photoCredit(center)}`});
-    $('#you-enlarge')?.addEventListener('click',event=>{const pose=returnPose;enlarge(center.photo,center.alt,center.title,'LA OBRA CENTRAL',text(center.dedication||''),event.currentTarget,()=>{returnPose=pose;openCenter(source);});});
-    return;
+    showNote({eyebrow:'LA OBRA CENTRAL',title:center.title,source,body:`<p class="room-note-dedication">Me encanta compartir mi vida contigo.</p>${photoCredit(center)}`});
+      return;
   }
   const ready=portraitsFound()>=portraits.length;
   showNote({eyebrow:'LA OBRA CENTRAL',title:center.title,source,body:`<p class="room-note-description">${escape(text(center.plaque||''))}</p>
@@ -468,9 +437,9 @@ function openSong(index,source=$('#you-stage')) {
     ${song.cover?`<figure class="you-cover"><img src="${escape(song.cover)}" alt="Portada de ${escape(song.title)}" loading="lazy" decoding="async"></figure>`:''}
     <p class="room-note-dedication">${escape(text(song.dedication||''))}</p>
     <div class="optional-audio you-audio">${song.audio?`<button id="you-play-song" class="button secondary" type="button">▶ Escuchar</button>`:''}${song.link?`<a class="button ${song.audio?'text-button':'secondary'} you-song-link" href="${escape(song.link)}" target="_blank" rel="noopener noreferrer">Abrir canción <span aria-hidden="true">↗</span></a>`:''}<p id="you-song-status" role="status"></p></div>
-    <p class="you-song-note">Escúchala aquí, a tu ritmo. Las canciones son opcionales y no cambian tu recorrido.</p>`});
+    `});
   $('#you-note .you-cover img')?.addEventListener('error',event=>event.currentTarget.closest('figure').remove(),{once:true});
-  $('#you-play-song')?.addEventListener('click',event=>toggleMedia(song.audio,event.currentTarget,'▶ Escuchar',$('#you-song-status'),index));
+  Museum.bindAudioButton($('#you-play-song'),{src:song.audio,title:`${song.title} · ${song.artist}`,status:$('#you-song-status')});
 }
 function openClue(source=$('#you-stage')) {
   const added=Museum.findClue(room.clue.id);buzz(14);
@@ -530,12 +499,11 @@ $('#you-passport').addEventListener('click',event=>Museum.openPassport(event.cur
 $('#you-clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#you-accessible-clue').addEventListener('click',event=>openClue(event.currentTarget));
 document.addEventListener('museum:progress',updateProgress);
-document.addEventListener('museum:overlay',event=>{if(event.detail){stopMedia();}engine?.setPaused(event.detail);});
-// Al salir de la sala: se cierra la nota, se detiene cualquier audio y deja de dibujarse.
+document.addEventListener('museum:overlay',event=>{engine?.setPaused(event.detail);});
+// Al salir se cierra la nota; la canción continúa en el reproductor compartido.
 document.addEventListener('museum:screen',event=>{
   const here=event.detail===ROOM_ID;
-  if(!here){closeNote(false,false);stopMedia();$('#you-screen .moments-stamp')?.remove();}
+  if(!here){closeNote(false,false);$('#you-screen .moments-stamp')?.remove();}
   engine?.setActive(here);
 });
-document.addEventListener('visibilitychange',()=>{if(document.hidden)media.audio?.pause();});
 updateProgress();

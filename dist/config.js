@@ -23,9 +23,9 @@ window.MUSEUM_CONFIG = {
   },
   resources: {
     /* Una ruta local, por ejemplo assets/ambiente.mp3, o null. */
-    ambientAudio: null,
+    ambientAudio: "assets/barbie-rapunzel-background.mp3",
     /* Un ambiente instrumental suave generado en el navegador. */
-    synthesizedAmbient: true,
+    synthesizedAmbient: false,
     volume: 0.12
   },
   rooms: [
@@ -232,11 +232,11 @@ window.MUSEUM_CONFIG = {
     /* "near" indica junto a qué retrato (1 a 5) va cada estación. Audios aportados por el usuario. */
     songs: [
       { id: "cancion-inicio", near: 1, title: "When I Look at You", artist: "Miley Cyrus", cover: null, audio: "assets/sala04/when-i-look-at-you.mp3", link: null,
-        dedication: "Cuando el día se vuelve difícil, mirarte me devuelve la calma. Guardé esta canción aquí porque me recuerda lo bonito que es encontrarte y sentir que estoy en casa." },
+        dedication: "Mirarte me devuelve la calma. Contigo me siento en casa." },
       { id: "cancion-ti", near: 3, title: "Just the Way You Are", artist: "Bruno Mars", cover: null, audio: "assets/sala04/just-the-way-you-are.mp3", link: null,
-        dedication: "Me encantas en tus días de risa y también en los que dudas de ti. No tienes que cambiar nada para ser especial para mí; ojalá esta canción te recuerde lo mucho que admiro tu manera de ser." },
+        dedication: "Me encantas tal como eres, incluso cuando tú misma lo olvidas." },
       { id: "cancion-juntos", near: 5, title: "Perfect", artist: "Ed Sheeran", cover: null, audio: "assets/sala04/perfect.mp3", link: null,
-        dedication: "La guardé pensando en nosotros: en un baile sin prisa, en tenerte cerca y en todos los días que todavía quiero compartir contigo. Hoy, como entonces, te sigo eligiendo." }
+        dedication: "Un baile contigo y todos los días que quiero compartir a tu lado." }
     ]
   }
 };

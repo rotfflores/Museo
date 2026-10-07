@@ -3,7 +3,7 @@
 import * as THREE from './vendor/three.module.min.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 import {Reflector} from './vendor/Reflector.js';
-import {createGallery} from './gallery-engine.js';
+import {createGallery,focusArtwork} from './gallery-engine.js';
 import {isWalkable} from './navigation.mjs';
 
 const Museum=window.Museum,config=window.MUSEUM_CONFIG,room=config.momentsRoom;
@@ -245,7 +245,7 @@ function buildRoom() {
     const world=group.position;
     const halo=[world.x+out[0]*.25,cy,world.z+out[2]*.25,Math.max(fw,fh)*1.15];
     const seenPos=[world.x+out[0]*.08,cy+fh/2+.36,world.z+out[2]*.08];
-    targets.push({id:piece.id,index,focus:new THREE.Vector3(world.x,portraitVideo?1.8:cy-.05,world.z),approach,hits:[surface,p],marker:null,glow:[frameGold],lift:group,rise:out.map(v=>v*.05),halo,seen:seenPos,piece,media});
+    targets.push({id:piece.id,index,focus:new THREE.Vector3(world.x,portraitVideo?1.8:cy-.05,world.z),approach,hits:[surface,p],marker:null,glow:[frameGold],lift:group,rise:out.map(v=>v*.05),halo,seen:seenPos,piece,media,artwork:piece.type==='photo'?{x:slot.x,y:cy,z:slot.z,width:fw+.2,height:fh+.2,out}:null});
   });
   // Contemplar desde el pasillo abierto, sin mobiliario ni obstáculos invisibles.
   overviewTarget={id:'overview',focus:new THREE.Vector3(0,1.65,-12),approach:{x:0,z:3.2},hits:[],marker:null};
@@ -342,7 +342,7 @@ function guideTo(index,source=null) {
 }
 function goTo(target,{open=true,source=null}={}) {
   if(playback&&playback.target!==target)stopVideo();
-  closeNote(false);resume();
+  closeNote(false);resume();focusArtwork(engine.camera,target,BOUNDS);$('#moments-screen').classList.toggle('viewing-art',!!target.artwork);
   if(target.media){
     const m=target.media,tan=Math.tan(THREE.MathUtils.degToRad(engine.camera.fov/2));
     const distance=Math.max(1.5,m.height*1.12/(2*tan*.74),m.width*1.12/(2*tan*engine.camera.aspect*.88));
@@ -419,7 +419,7 @@ function animate(dt) {
 /* Notas laterales: las mismas de la sala 01, sin ventanas sobre la fotografía. */
 let noteSource=null;
 function closeNote(restoreFocus=true) {
-  const note=$('#moments-note');if(note.hidden)return;
+  const note=$('#moments-note');$('#moments-screen').classList.remove('viewing-art');if(note.hidden)return;
   note.hidden=true;$('#moments-note-content').replaceChildren();
   if(restoreFocus)(noteSource?.isConnected&&!noteSource.closest('[hidden]')?noteSource:$('#moments-stage')).focus({preventScroll:true});
   noteSource=null;
@@ -448,16 +448,12 @@ function openPiece(index,source=$('#moments-stage')) {
 }
 function mediaCredit(piece) {
   const credit=piece.credit;if(!credit)return '';
-  return `<p class="media-credit">${piece.type==='video'?'Video':'Fotografía'} de ejemplo · <a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="https://www.pexels.com/license/" target="_blank" rel="noopener noreferrer">Pexels</a>${credit.note?`<br>${escape(credit.note)}`:''}</p>`;
+  return `<details class="media-credit"><summary>${piece.type==='video'?'Video':'Fotografía'} de ejemplo</summary><a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="https://www.pexels.com/license/" target="_blank" rel="noopener noreferrer">Pexels</a>${credit.note?`<br>${escape(credit.note)}`:''}</details>`;
 }
 function showPhotoNote(piece,index,source) {
-  showNote({eyebrow:`${room.zones[piece.zone]||'SALA 02'} · ${piece.date}`,title:piece.title,source,body:`<p class="room-note-description">${escape(text(piece.phrase||''))}</p><p class="room-note-dedication">${escape(text(piece.anecdote||''))}</p><button id="moments-enlarge" class="button secondary room-note-expand" type="button">Ver fotografía ampliada <span aria-hidden="true">↗</span></button>${mediaCredit(piece)}`});
-  $('#moments-enlarge').addEventListener('click',event=>{
-    // La fotografía ampliada va en su propia vista; el texto queda debajo, nunca encima de la imagen.
-    Museum.openContent({className:'moments-photo',source:event.currentTarget,onClose:()=>{if(!$('#moments-screen').hidden)showPhotoNote(piece,index,source);},html:`<figure class="moments-photo-figure"><img src="${escape(piece.src)}" alt="${escape(piece.alt||piece.title)}" decoding="async"><figcaption><p class="eyebrow">${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2><p>${escape(text(piece.anecdote||''))}</p>${mediaCredit(piece)}</figcaption></figure>`});
-    const image=$('.moments-photo img');
-    image?.addEventListener('error',()=>{const replacement=document.createElement('p');replacement.className='missing-memory-image';replacement.textContent='Esta fotografía no está disponible por ahora.';image.replaceWith(replacement);},{once:true});
-  });
+  $('#moments-screen').classList.add('viewing-art');
+  showNote({eyebrow:piece.date,title:piece.title,source,body:`<p class="room-note-dedication">${escape(text(piece.phrase||''))}</p>${mediaCredit(piece)}`});
+  $('#moments-screen').classList.add('viewing-art');
 }
 /* El video ocupa el propio cuadro 3D; no abre notas ni diálogos. */
 function stopVideo() {
@@ -466,7 +462,7 @@ function stopVideo() {
   if(!session)return;
   session.video.pause();session.video.removeAttribute('src');session.video.load();session.video.remove();
   if(session.target?.media){const m=session.target.media;m.surface.material.map=m.posterMap;m.surface.material.color.set('#ffffff');m.surface.material.needsUpdate=true;m.group.remove(session.mesh);session.mesh.geometry.dispose();session.mesh.material.dispose();session.texture.dispose();}
-  if(session.ambient)Museum.restoreAmbient();
+  Museum.releaseMedia(session.video);
 }
 function syncVideoControls() {
   if(!playback)return;
@@ -478,13 +474,9 @@ function syncVideoControls() {
 }
 async function toggleVideo() {
   const session=playback;if(!session)return;
-  if(!session.video.paused){session.video.pause();return;}
+  if(!session.video.paused){Museum.pauseMedia(session.video);return;}
   if(!session.video.src)session.video.src=session.piece.src;
-  const playing=session.video.play().then(()=>true,()=>false);
-  const ambient=await Museum.suspendAmbient();
-  if(playback!==session){if(ambient)Museum.restoreAmbient();return;}
-  session.ambient=ambient||session.ambient;
-  const started=await playing;
+  const started=await Museum.playMedia(session.video,{title:session.piece.title,kind:'video',onStop:stopVideo});
   if(playback===session)$('#room-video-status').textContent=started?'':'Pulsa Reproducir para iniciar el video.';
   syncVideoControls();
 }
@@ -517,7 +509,7 @@ function openVideo(piece,index,source) {
   $('#room-video-play').focus({preventScroll:true});
 }
 $('#room-video-play').addEventListener('click',toggleVideo);
-$('#room-video-sound').addEventListener('click',()=>{if(playback)playback.video.muted=!playback.video.muted;});
+$('#room-video-sound').addEventListener('click',()=>{if(playback)Museum.toggleVideoSound(playback.video);});
 $('#room-video-seek').addEventListener('input',event=>{if(playback&&Number.isFinite(playback.video.duration))playback.video.currentTime=playback.video.duration*Number(event.target.value)/100;});
 $('#room-video-back').addEventListener('click',()=>{stepBack();$('#moments-stage').focus({preventScroll:true});});
 videoControls.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();stepBack();$('#moments-stage').focus({preventScroll:true});}});
@@ -606,7 +598,7 @@ $('#moments-passport').addEventListener('click',event=>Museum.openPassport(event
 $('#moments-clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#moments-accessible-clue').addEventListener('click',event=>openClue(event.currentTarget));
 document.addEventListener('museum:progress',updateProgress);
-document.addEventListener('museum:overlay',event=>{if(event.detail){stopVideo();closeNote(false);}engine?.setPaused(event.detail);});
+document.addEventListener('museum:overlay',event=>{if(event.detail){closeNote(false);}engine?.setPaused(event.detail);});
 // Al salir de la sala se detiene el dibujo, se cierra la contemplación y no queda ningún video activo.
 document.addEventListener('museum:screen',event=>{
   const here=event.detail===ROOM_ID;

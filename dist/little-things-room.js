@@ -555,12 +555,6 @@ function unmountViewer() {
   viewer.running=false;cancelAnimationFrame(viewer.raf);viewer.renderer.domElement.remove();
 }
 
-let audioState=null;
-function stopAudio() {
-  const state=audioState;audioState=null;if(!state)return;
-  state.audio.pause();state.audio.removeAttribute('src');state.audio.load();
-  if(state.ambient)Museum.restoreAmbient();
-}
 function discover(piece) {
   const progress=Museum.discoverPiece(ROOM_ID,piece.id);
   buzz(progress.newlyCompleted?[30,60,45]:14);
@@ -575,15 +569,14 @@ function openInspection(index,source=$('#little-stage')) {
   inspecting=piece;engine?.setLocked(true);syncExamine();
   const photo=piece.photo&&piece.object!=='photo'?`<figure class="inspect-photo"><img src="${escape(piece.photo)}" alt="${escape(piece.photoAlt||piece.title)}" loading="lazy" decoding="async"></figure>`:'';
   const audio=piece.audio?`<div class="optional-audio inspect-audio"><button id="little-play-audio" class="button secondary" type="button">▶ ${escape(text(piece.audioLabel||'Escuchar este recuerdo'))}</button><p id="little-audio-status" role="status"></p></div>`:'';
-  showNote({source,inspect:true,onClose:()=>{unmountViewer();stopAudio();},body:`
+  showNote({source,inspect:true,onClose:()=>{unmountViewer();},body:`
     <div class="inspect-view"><div class="inspect-stage" id="little-inspect-stage">${fallback?'<p class="inspect-fallback" aria-hidden="true">✧</p>':''}</div>
     ${fallback?'':`<p class="inspect-hint" aria-hidden="true">${matchMedia('(pointer: coarse)').matches?'Arrastra para girar · pellizca para acercar · toca dos veces para restablecer':'Arrastra para girar · usa la rueda para acercar · doble clic para restablecer'}</p><div class="inspect-sr-controls" role="group" aria-label="Girar el objeto">
       <button type="button" class="sr-only-focusable" data-view="left" aria-label="Girar a la izquierda">↺</button><button type="button" class="sr-only-focusable" data-view="up" aria-label="Inclinar hacia arriba">↑</button><button type="button" class="sr-only-focusable" data-view="down" aria-label="Inclinar hacia abajo">↓</button><button type="button" class="sr-only-focusable" data-view="right" aria-label="Girar a la derecha">↻</button><button type="button" class="sr-only-focusable" data-view="in" aria-label="Acercar">+</button><button type="button" class="sr-only-focusable" data-view="out" aria-label="Alejar">−</button>
       <button type="button" data-view="reset" class="sr-only-focusable">Restablecer vista</button></div>`}</div>
     <div class="inspect-band"><span class="inspect-grip" aria-hidden="true"></span><p class="eyebrow">OBJETO ${String(index+1).padStart(2,'0')}${piece.date?` · ${escape(piece.date)}`:''}</p>
     <h2 id="little-note-title" tabindex="-1">${escape(piece.title)}</h2>
-    <p class="room-note-description">${escape(text(piece.description||''))}</p>
-    <p class="room-note-dedication">${escape(text(piece.dedication||''))}</p>
+    <p class="room-note-dedication">${escape(text(piece.description||''))}</p>
     ${piece.message?`<p class="room-note-description inspect-message">${escape(text(piece.message))}</p>`:''}
     ${photo}${audio}</div>`});
   if(!fallback){mountViewer(piece,$('#little-inspect-stage'));setTimeout(hideHint,reducedMotion.matches?6000:3800);}
@@ -591,15 +584,7 @@ function openInspection(index,source=$('#little-stage')) {
     const action=button.dataset.view;
     if(action==='reset')resetView();else rotateView(...{left:[-.4,0,0],right:[.4,0,0],up:[0,.2,0],down:[0,-.2,0],in:[0,0,-.2],out:[0,0,.2]}[action]);
   }));
-  $('#little-play-audio')?.addEventListener('click',async event=>{
-    const button=event.currentTarget;
-    if(audioState&&!audioState.audio.paused){audioState.audio.pause();button.textContent=`▶ ${text(piece.audioLabel||'Escuchar este recuerdo')}`;return;}
-    if(!audioState){const element=new Audio(piece.audio);element.preload='none';audioState={audio:element,ambient:false};
-      element.addEventListener('ended',()=>{button.textContent=`▶ ${text(piece.audioLabel||'Escuchar este recuerdo')}`;const s=audioState;if(s?.ambient){s.ambient=false;Museum.restoreAmbient();}});
-      element.addEventListener('error',()=>{$('#little-audio-status').textContent='Este audio no está disponible por ahora.';button.hidden=true;});}
-    audioState.ambient=await Museum.suspendAmbient()||audioState.ambient;
-    try{await audioState.audio.play();button.textContent='Ⅱ Pausar';}catch{$('#little-audio-status').textContent='No se pudo reproducir el audio.';}
-  });
+  Museum.bindAudioButton($('#little-play-audio'),{src:piece.audio,title:piece.title,label:`▶ ${text(piece.audioLabel||'Escuchar')}`,status:$('#little-audio-status')});
 }
 // Al cerrar, el visitante vuelve a donde estaba antes de examinar.
 function closeInspection() {

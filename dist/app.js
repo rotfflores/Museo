@@ -14,6 +14,10 @@
   function save() {
     progressStore.save();
   }
+  const sharedDock=$('#lobby-dock');$('#main').append(sharedDock);
+  const miniPlayer=document.createElement('section');miniPlayer.className='museum-player';miniPlayer.hidden=true;miniPlayer.setAttribute('aria-label','Canción en reproducción');
+  miniPlayer.innerHTML='<span id="museum-player-title"></span><button id="museum-player-toggle" type="button" aria-label="Pausar canción">Ⅱ</button><button id="museum-player-stop" type="button" aria-label="Detener canción">×</button>';
+  $('#main').append(miniPlayer);
   function updatePassportCount() {
     $('#passport-preview-count').textContent=`${state.completed.size}/6`;
     $('#open-passport').setAttribute('aria-label',`Pasaporte de recuerdos, ${state.completed.size} de 6 salas completadas`);
@@ -32,6 +36,10 @@
   function showScreen(next, focus = true) {
     clearTimeout(invitationTimer);
     screen = next;
+    const inMuseum=['lobby','room','moments','little-things','you'].includes(next);
+    sharedDock.hidden=!inMuseum;$('#museum-back').hidden=next==='lobby';sharedDock.setAttribute('aria-label','Navegación del museo');
+    if(next==='lobby')sound.enter();else if(!inMuseum)sound.leave();
+    miniPlayer.hidden=!inMuseum||sound.state().kind!=='audio'||!sound.state().active;
     for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen'],['little-things','little-screen'],['you','you-screen']]) $(`#${id}`).hidden = name !== next;
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     labels.room='04 <span class="footer-line"></span> AQUÍ COMENZÓ TODO';
@@ -126,6 +134,7 @@
     if (transitioning) return;
     transitioning = true;
     $('#enter-museum').disabled = true;
+    sound.unlock();
     state.entered = true;
     save();
     await playDoors({lines:doorLines,cover:()=>showScreen('lobby', false),ready:sceneReady});
@@ -256,8 +265,12 @@
     getProgress:progressStore.getProgress,
     showRoom:()=>showScreen('room'),
     showView:name=>showScreen(name),
-    suspendAmbient,
-    restoreAmbient,
+    playMedia:(element,options)=>sound.play(element,options),
+    pauseMedia:element=>sound.pause(element),
+    releaseMedia:element=>sound.release(element),
+    toggleVideoSound:element=>sound.toggleMediaMuted(element),
+    bindAudioButton,
+    audioPlaying:src=>{const state=sound.state();return state.kind==='audio'&&state.playing&&state.active?.getAttribute('src')===src;},
     openContent,
     closeOverlay:closeDialog,
     notify,
@@ -275,65 +288,31 @@
     openMap:source=>openDialog('map',source||$('#open-map')),
     openPassport:source=>openDialog('passport',source||$('#open-passport'))
   });
-  const ambient = {playing:false,audio:null,context:null,gain:null,nodes:[]};
-  function updateSoundButton() {
-    $('#ambient-toggle').setAttribute('aria-pressed',String(ambient.playing));
-    $('#ambient-toggle span').textContent = ambient.playing ? 'Silenciar ambiente' : 'Activar ambiente';
+  let muted=false;try{muted=storage?.getItem('museum-sound-muted')==='1';}catch{}
+  const background=new Audio(config.resources.ambientAudio);background.preload='none';background.hidden=true;background.id='museum-background';document.body.append(background);
+  const sound=window.MuseumSound.create({background,volume:config.resources.volume,muted,onChange:renderSound});
+  function renderSound(state) {
+    const button=$('#ambient-toggle');button.setAttribute('aria-pressed',String(state.muted));button.setAttribute('aria-label',state.muted?'Activar todo el sonido':'Silenciar todo el sonido');$('span',button).textContent=state.muted?'Silencio':'Sonido';
+    document.querySelectorAll('[data-audio-src]').forEach(control=>{control.textContent=state.kind==='audio'&&state.active?.getAttribute('src')===control.dataset.audioSrc&&state.playing?'Ⅱ Pausar':control.dataset.audioLabel;});
+    miniPlayer.hidden=!['lobby','room','moments','little-things','you'].includes(screen)||!state.active||state.kind!=='audio';
+    $('#museum-player-title').textContent=state.title;
+    $('#museum-player-toggle').textContent=state.playing?'Ⅱ':'▶';$('#museum-player-toggle').setAttribute('aria-label',state.playing?'Pausar canción':'Reproducir canción');
   }
-  // Los videos pausan el ambiente y lo restauran sólo si estaba sonando antes.
-  let ambientSuspended=false;
-  async function suspendAmbient() {
-    if(!ambient.playing) return false;
-    try { ambient.audio?.pause(); if(ambient.context) await ambient.context.suspend(); } catch { /* Sin ambiente que pausar. */ }
-    ambient.playing=false; ambientSuspended=true; updateSoundButton();
-    return true;
+  function bindAudioButton(button,{src,title,label='▶ Escuchar',status=null}) {
+    if(!button||!src)return;button.dataset.audioSrc=src;button.dataset.audioLabel=label;renderSound(sound.state());
+    button.addEventListener('click',async()=>{
+      let current=sound.state(),audio=current.kind==='audio'&&current.active?.getAttribute('src')===src?current.active:null;
+      if(audio&&current.playing){sound.pause(audio);return;}
+      if(!audio){audio=new Audio(src);audio.preload='none';audio.hidden=true;audio.className='museum-audio-source';document.body.append(audio);}
+      const started=await sound.play(audio,{title,kind:'audio',onStop:()=>{audio.pause();audio.removeAttribute('src');audio.load();audio.remove();}});
+      if(started===false&&sound.state().active===audio){if(status?.isConnected)status.textContent='No se pudo reproducir el audio.';sound.stop();}
+    });
   }
-  async function restoreAmbient() {
-    if(!ambientSuspended) return;
-    ambientSuspended=false;
-    try { if(ambient.audio) await ambient.audio.play(); if(ambient.context) await ambient.context.resume(); ambient.playing=true; } catch { ambient.playing=false; }
-    updateSoundButton();
-  }
-  async function toggleAmbient() {
-    ambientSuspended=false;
-    const button = $('#ambient-toggle');
-    button.disabled = true;
-    try {
-      if(ambient.playing) {
-        ambient.audio?.pause();
-        if(ambient.context) await ambient.context.suspend();
-        ambient.playing = false;
-      } else if(config.resources.ambientAudio) {
-        if(!ambient.audio) { ambient.audio = new Audio(config.resources.ambientAudio); ambient.audio.loop = true; ambient.audio.volume = config.resources.volume; }
-        await ambient.audio.play();
-        ambient.playing = true;
-      } else if(config.resources.synthesizedAmbient && (window.AudioContext || window.webkitAudioContext)) {
-        if(!ambient.context) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          ambient.context = new AudioContext();
-          ambient.gain = ambient.context.createGain();
-          ambient.gain.gain.value = 0;
-          ambient.gain.connect(ambient.context.destination);
-          [130.81,196,261.63,329.63,392].forEach((frequency,index)=> {
-            const oscillator=ambient.context.createOscillator(), gain=ambient.context.createGain();
-            oscillator.type='sine'; oscillator.frequency.value=frequency; oscillator.detune.value=index%2 ? 3 : -3;
-            gain.gain.value=.12;
-            oscillator.connect(gain); gain.connect(ambient.gain); oscillator.start();
-            const drift=ambient.context.createOscillator(), driftGain=ambient.context.createGain();
-            drift.frequency.value=.045+index*.016; driftGain.gain.value=.055;
-            drift.connect(driftGain); driftGain.connect(gain.gain); drift.start();
-            ambient.nodes.push(oscillator,gain,drift,driftGain);
-          });
-        }
-        await ambient.context.resume();
-        ambient.gain.gain.setTargetAtTime(config.resources.volume,ambient.context.currentTime,.8);
-        ambient.playing=true;
-      } else { notify(config.texts.ambientUnavailable); }
-      state.soundPreferred = ambient.playing;
-      save();
-    } catch { ambient.playing=false; notify(config.texts.ambientUnavailable); }
-    finally { button.disabled=false; updateSoundButton(); }
-  }
+  function toggleSound(){sound.setMuted(!sound.state().muted);try{storage?.setItem('museum-sound-muted',sound.state().muted?'1':'0');}catch{}sound.unlock();}
+  $('#museum-player-toggle').addEventListener('click',()=>{const current=sound.state();if(current.playing)sound.pause();else if(current.active)sound.play(current.active);});
+  $('#museum-player-stop').addEventListener('click',()=>sound.stop());
+  $('#museum-back').addEventListener('click',returnToLobby);
+  renderSound(sound.state());
   document.querySelectorAll('[data-config]').forEach(node=>node.textContent=config[node.dataset.config]);
   $('#letter-title').textContent=config.texts.invitationTitle;
   $('#letter-body').textContent=config.texts.invitationBody;
@@ -351,7 +330,7 @@
   $('#open-passport').addEventListener('click',event=>openDialog('passport',event.currentTarget));
   $('#consult-ticket').addEventListener('click',event=>openDialog('ticket',event.currentTarget));
   $('#open-note').addEventListener('click',event=>openContent({className:'dialog-note',source:event.currentTarget,html:noteMarkup()}));
-  $('#replay-tutorial').addEventListener('click',event=>openTutorial(event.currentTarget));
+  $('#replay-tutorial').addEventListener('click',event=>{const help={room:'room-help',moments:'moments-help','little-things':'little-help',you:'you-help'}[screen];if(help)$('#'+help).click();else openTutorial(event.currentTarget);});
   // Deslizar hacia arriba desde el menú inferior abre el mapa.
   {
     const dock=$('#lobby-dock');let start=null,swallow=0;
@@ -363,9 +342,7 @@
     dock.addEventListener('click',event=>{if(performance.now()<swallow){event.stopPropagation();event.preventDefault();}},true);
   }
   $('#close-dialog').addEventListener('click',closeDialog);
-  $('#ambient-toggle').addEventListener('click',toggleAmbient);
+  $('#ambient-toggle').addEventListener('click',toggleSound);
   $('#dismiss-notice').addEventListener('click',()=>{$('#notice').hidden=true;});
-  /* Preference is remembered; browser audio still requires a fresh gesture. */
-  if(state.soundPreferred) $('#ambient-toggle').title='Elegiste ambiente en tu última visita. Toca para activarlo de nuevo.';
   resetInvitation(true);
 })();

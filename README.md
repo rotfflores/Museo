@@ -1,12 +1,12 @@
 # El Museo de Nosotros
 
-Experiencia en HTML, CSS y JavaScript. Conserva la invitación, el boleto y la rotonda 3D originales. La primera sala **Aquí comenzó todo** está completa; las otras cinco conservan su aviso de disponibilidad.
+Experiencia en HTML, CSS y JavaScript. Conserva la invitación, el boleto y la rotonda 3D originales. Están abiertas las primeras cuatro salas: **Aquí comenzó todo**, **Momentos que se quedaron**, **Pequeñas cosas, grandes recuerdos** y **Así te veo yo**.
 
 ## Ejecutar y verificar
 
 ```sh
 node preview.cjs
-node --test tests/museum.test.cjs
+node --test tests/museum.test.cjs tests/moments.test.cjs tests/little-things.test.cjs tests/you.test.cjs tests/sound.test.cjs
 ```
 
 Abre http://localhost:4173. Si el puerto está ocupado, usa la variable MUSEUM_PREVIEW_PORT. Los módulos de Three.js requieren HTTP. No se necesitan instalaciones ni fuentes externas. Sites sirve dist/.
@@ -17,7 +17,7 @@ Desde la puerta 01 de la rotonda, el botón del vestíbulo o el mapa se entra a 
 
 - Arrastra para mirar. En escritorio, usa WASD o flechas para caminar y Q/E para girar. Los botones de dirección y giro funcionan con puntero y teclado.
 - Elige una de las tres paradas para acercarte con un recorrido guiado que evita los objetos. Pulsa **Ver recuerdo** para abrirlo. Arrastrar nunca abre las piezas.
-- Los recuerdos, el mapa y el pasaporte detienen la cámara y el renderizado. Al cerrar mediante el botón, Escape o el exterior del diálogo, se conserva la posición. Todo audio/video de la pieza se pausa y vuelve al inicio.
+- Los recuerdos, el mapa y el pasaporte detienen la cámara y el renderizado. Al cerrar mediante el botón, Escape o el exterior del diálogo, se conserva la posición. La canción activa sigue sonando al cerrar la nota o consultar el mapa. El reproductor compartido permite pausarla o detenerla.
 - El sello se entrega una sola vez al abrir los tres recuerdos. No requiere escuchar medios ni encontrar la llave.
 - La llave se recoge con un toque sin arrastre o con **Recoger llave** al enfocarla. La ayuda sólo indica dónde buscar. Las pistas cuentan por separado.
 - Con movimiento reducido, los trayectos guiados son inmediatos y el sello aparece sin animación.
@@ -25,7 +25,7 @@ Desde la puerta 01 de la rotonda, el botón del vestíbulo o el mapa se entra a 
 
 ## Nuestra primera salida: captura y foto
 
-El recuerdo "Nuestra primera salida" muestra dos imágenes que se amplían al tocarlas. Para usar las reales, reemplaza estos archivos con el mismo nombre (o cambia la ruta en dist/config.js, campos chat y photo de la pieza first-date):
+La captura de WhatsApp y la foto de la primera salida se contemplan dentro de sus piezas 3D; la cámara se acerca y la nota muestra una descripción breve. Para usar las reales, reemplaza estos archivos con el mismo nombre (o cambia la ruta en dist/config.js, campos chat y photo de la pieza first-date):
 
 - dist/assets/primera-salida-chat.svg: captura de ejemplo hecha con los mensajes de la sala. Puedes poner, por ejemplo, primera-salida-chat.jpg y actualizar la ruta.
 - dist/assets/primera-salida.jpg: marcador "Aquí va la foto de nuestra primera salida". Guarda tu foto con ese mismo nombre. También aparece en el cuadro de la sala 3D.
@@ -70,10 +70,10 @@ Las pruebas verifican progreso parcial, persistencia, sello único, independenci
 
 ## Imágenes de demostración descargadas
 
-- Primera pieza: assets/whatsapp-demo.jpg, captura sin modificaciones de VincentLR, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:WhatsApp_Chatting_with_Dark_Mode.jpg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Aparece en la vitrina y en el recuerdo ampliable. Es una conversación de ejemplo con una invitación a salir.
-- Segunda pieza: assets/primera-salida-cafe.jpg, fotografía de Wesley Davi, [Pexels](https://www.pexels.com/photo/a-couple-on-a-date-in-a-cafe-looking-at-each-other-and-smiling-16122179/), [licencia Pexels](https://www.pexels.com/license/). Descarga a 1600 píxeles de ancho. Aparece en el cuadro y en el recuerdo ampliable.
+- Primera pieza: assets/whatsapp-demo.jpg, captura sin modificaciones de VincentLR, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:WhatsApp_Chatting_with_Dark_Mode.jpg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Aparece en la vitrina y en su obra 3D. Es una conversación de ejemplo con una invitación a salir.
+- Segunda pieza: assets/primera-salida-cafe.jpg, fotografía de Wesley Davi, [Pexels](https://www.pexels.com/photo/a-couple-on-a-date-in-a-cafe-looking-at-each-other-and-smiling-16122179/), [licencia Pexels](https://www.pexels.com/license/). Descarga a 1600 píxeles de ancho. Aparece en el cuadro y en su obra 3D.
 
-Los créditos se muestran debajo de cada imagen. Para sustituirlas por recuerdos personales, edita exhibits[0].screenshot y exhibits[1].photo en dist/config.js, y retira sus respectivos screenshotCredit/photoCredit. El campo chat de la segunda pieza sigue disponible para añadir otra captura. Los antiguos marcadores se conservan.
+Los créditos se consultan desde «Imagen de ejemplo» en cada nota. Para sustituirlas por recuerdos personales, edita exhibits[0].screenshot y exhibits[1].photo en dist/config.js, y retira sus respectivos screenshotCredit/photoCredit. El campo chat de la segunda pieza sigue disponible para añadir otra captura. Los antiguos marcadores se conservan.
 
 La transición de carga utiliza ahora vidrio esmerilado, perfiles finos de bronce, título de sala y apertura lateral. Respeta la preferencia de movimiento reducido.
 
@@ -122,15 +122,14 @@ Sala circular e íntima: seis vitrinas de madera oscura y cristal alrededor de l
 Galería semicircular de retratos: cinco marcos dorados en un ábside de color marfil y, en el centro, un caballete cubierto por una tela. Se entra por la puerta 04 del vestíbulo (el espejo ovalado) o desde el mapa. La puerta de regreso está detrás de la cámara.
 
 - **Retratos.** Al tocar un retrato se abre la nota lateral con:
-  - el título y la dedicatoria completa;
+  - el título y una frase breve;
   - la narración opcional;
-  - «Ver fotografía ampliada»;
   - «‹ Anterior / Siguiente ›».
 
   Mientras la nota está abierta la cámara no se mueve; al cerrarla, el visitante vuelve a donde estaba.
-- **Obra central.** Cuando los retratos están abiertos aparece «Descubrir la obra». La tela se retira (en movimiento reducido, con un fundido breve), se enciende el foco y se muestra la dedicatoria. Después se puede volver a abrir.
+- **Obra central.** Cuando los retratos están abiertos aparece «Descubrir la obra». La tela se retira (en movimiento reducido, con un fundido breve), se enciende el foco y la cámara enfoca la fotografía con una nota breve. Después se puede volver a abrir.
 - **Sello.** La sala se completa con todos los retratos y la obra central.
-- **Estaciones de escucha.** Hay tres, son opcionales y no cuentan para el sello. Cada una tiene «Escuchar» si tiene `audio` local, o «Abrir canción ↗» si tiene `link`; una canción sin `audio` ni `link` se oculta. Un solo control de medios evita que dos audios suenen a la vez, y el ambiente se pausa y se restaura.
+- **Estaciones de escucha.** Hay tres, son opcionales y no cuentan para el sello. Cada una tiene «Escuchar» si tiene `audio` local, o «Abrir canción ↗» si tiene `link`; una canción sin `audio` ni `link` se oculta. El control de sonido compartido da prioridad al último medio que se reproduce; el fondo se desvanece y regresa al pausar, detener o terminar.
 - **Pista secreta.** Es una pequeña estrella dorada en la base del caballete, a la derecha (id `you-star`). Se puede encontrar desde el principio.
 - **Personalizar.** Todo está en dist/config.js, en `youRoom`:
   - `portraits[]`: `id`, `title`, `phrase` (la placa), `dedication`, `photo`, `alt`, `credit` (`author` y `url`), `audio` y `audioLabel`;
@@ -138,7 +137,7 @@ Galería semicircular de retratos: cinco marcos dorados en un ábside de color m
   - `songs[]`: `near` (junto a qué retrato), `title`, `artist`, `cover`, `audio`, `link` y `dedication`.
 
   Las fotos cuentan en el límite de 25 (una ruta ya usada en otra sala no vuelve a contar) y las canciones en el máximo de 5 del museo.
-- **Contenido instalado.** Las seis fotografías de dist/assets/sala04/ son ejemplos de Pexels acordes con las descripciones: sonrisa, perfil sereno, manos entrelazadas, mirada junto a una ventana, atardecer y una pareja abrazada. Los créditos aparecen en las notas y en la fotografía ampliada. Se pueden reemplazar por fotografías personales.
+- **Contenido instalado.** Las seis fotografías de dist/assets/sala04/ son ejemplos de Pexels acordes con las descripciones: sonrisa, perfil sereno, manos entrelazadas, mirada junto a una ventana, atardecer y una pareja abrazada. Los créditos quedan en un desplegable breve de cada nota. Se pueden reemplazar por fotografías personales.
 - **Canciones.** Los tres MP3 proporcionados por el usuario se copiaron sin conversión: «When I Look at You», Miley Cyrus (4:06); «Just the Way You Are», Bruno Mars (3:40); y «Perfect», Ed Sheeran (4:24). Cada estación reproduce su archivo dentro de la sala y tiene una dedicatoria propia.
 
 ### Fuentes de las fotografías de la sala 04
@@ -153,3 +152,12 @@ Descargadas el 7 de octubre de 2026, bajo la [licencia de Pexels](https://www.pe
 | Contigo puedo ser yo | [behrouz sasani: retrato junto a una ventana](https://www.pexels.com/photo/portrait-of-a-woman-through-a-window-5590429/) |
 | Te sigo eligiendo | [rasul lotfi: retrato al atardecer](https://www.pexels.com/photo/woman-portrait-at-sunset-14411942/) |
 | Mi obra favorita | [Oğuz Uğur: pareja abrazada](https://www.pexels.com/photo/portrait-of-hugging-couple-20103982/) |
+
+## Sonido y navegación compartidos
+
+- «Barbie as Rapunzel song.mp3», aportada por el usuario, se conserva sin conversión en dist/assets/barbie-rapunzel-background.mp3. Comienza al entrar al vestíbulo y continúa por las salas en bucle, al volumen de resources.volume. Se inicia desde el gesto de entrada para admitir navegadores móviles.
+- dist/sound.js coordina un único audio o video en primer plano. El nuevo medio detiene al anterior; cerrar una nota, consultar el mapa o cambiar de sala mantiene la canción activa. Los videos del cuadro se detienen al alejarse de su obra o salir de la sala.
+- El fondo se silencia mediante un fundido de 650 ms mientras suena un medio y vuelve con otro fundido al pausar, terminar o detenerlo. Su posición sigue avanzando en silencio. «Silencio» afecta al fondo y al medio actual y se recuerda en este navegador.
+- La barra de Nota, Mapa, Pasaporte, Mi boleto, Sonido y Ayuda está en el vestíbulo y en las cuatro salas. En las salas añade «Salir». La ayuda abre el recorrido de la sala actual.
+- Las fotografías se contemplan mediante la cámara, con una frase breve y sin opción de ampliación. La canción activa dispone de un control compartido de pausa y cierre sobre la barra.
+- Las pruebas de sonido cubren los fundidos, la prioridad, el silencio global, la finalización y los intentos de reproducción pendientes o fallidos.

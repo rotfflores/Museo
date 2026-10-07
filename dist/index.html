@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="room.css">
   <script src="config.js" defer></script>
   <script src="progress.js" defer></script>
+  <script src="sound.js" defer></script>
   <script src="app.js" defer></script>
   <script type="module" src="scene3d.js"></script>
   <script type="module" src="beginning-room.js"></script>
@@ -30,7 +31,6 @@
   </defs></svg>
   <header class="site-header">
     <a class="brand" href="#invitacion" aria-label="El Museo de Nosotros, volver a la invitación"><span class="brand-mark" aria-hidden="true">M<span>N</span></span><span>EL MUSEO<br>DE NOSOTROS</span></a>
-    <button id="ambient-toggle" class="ambient-button" type="button" aria-pressed="false"><svg class="icon"><use href="#icon-sound"/></svg><span>Activar ambiente</span><i aria-hidden="true"></i></button>
   </header>
   <main id="main">
     <section id="invitation" class="screen invitation-screen" aria-labelledby="invitation-title">
@@ -92,11 +92,13 @@
         <div class="scene-label">VESTÍBULO <span>·</span> D & S</div>
       </div>
       <nav id="lobby-dock" class="lobby-dock" aria-label="Vestíbulo">
+        <button id="museum-back" class="dock-button dock-back" type="button" aria-label="Volver al vestíbulo" hidden><span aria-hidden="true">←</span><span>Salir</span></button>
         <span class="dock-handle" aria-hidden="true"></span>
         <button id="open-note" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-flower"/></svg><span>Nota</span></button>
         <button id="open-map" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-map"/></svg><span>Mapa</span></button>
         <button id="open-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="passport-preview-count">0/6</small></span></button>
         <button id="consult-ticket" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-ticket"/></svg><span>Mi boleto</span></button>
+        <button id="ambient-toggle" class="dock-button" type="button" aria-pressed="false" aria-label="Silenciar todo el sonido"><svg class="icon" aria-hidden="true"><use href="#icon-sound"/></svg><span>Sonido</span></button>
         <button id="replay-tutorial" class="dock-button dock-help" type="button" aria-label="Cómo moverse por el museo"><span aria-hidden="true">?</span></button>
       </nav>
     </section>

@@ -2,6 +2,15 @@
 import * as THREE from './vendor/three.module.min.js';
 import {moveWithCollisions,planPath,WALK_BOUNDS} from './navigation.mjs';
 
+// Encuadra la obra dentro de la cámara, dejando espacio para la nota y la barra inferior.
+export function focusArtwork(camera,target,bounds) {
+  const art=target.artwork;if(!art)return;
+  const tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const distance=Math.max(1.4,art.height/(2*tan*.65),art.width/(2*tan*camera.aspect*.86));
+  target.approach={x:THREE.MathUtils.clamp(art.x+art.out[0]*distance,bounds.minX+.2,bounds.maxX-.2),z:THREE.MathUtils.clamp(art.z+art.out[2]*distance,bounds.minZ+.2,bounds.maxZ-.2)};
+  target.focus.set(art.x,art.y-art.height*.06,art.z);
+}
+
 export function createGallery({container,scene,camera,obstacles,targets,onTarget,onActivate,onUnavailable,onTap,onSwipe,onHover,onBack,onFrame,floor,bounds=WALK_BOUNDS}) {
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});
