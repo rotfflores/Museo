@@ -1,0 +1,198 @@
+(() => {
+  'use strict';
+  const config = window.MUSEUM_CONFIG;
+  const $ = (selector, parent = document) => parent.querySelector(selector);
+  const key = `museum-of-us:${config.id}:v1`;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const format = text => text.replace(/\{(sender|recipient)\}/g, (_, name) => config[name]);
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch { /* Storage can be unavailable in private browsers. */ }
+  const state = { entered: saved.entered === true, completed: new Set(Array.isArray(saved.completed) ? saved.completed.filter(id => config.rooms.some(room => room.id === id)) : []), soundPreferred: saved.soundPreferred === true };
+  let screen = 'invitation', transitioning = false, opener = null, noticeTimer, invitationTimer;
+  const roomHandlers = new Map();
+  function save() {
+    try { localStorage.setItem(key, JSON.stringify({entered:state.entered, completed:[...state.completed], soundPreferred:state.soundPreferred})); } catch { /* All interactions still work without storage. */ }
+  }
+  function notify(message) {
+    clearTimeout(noticeTimer);
+    (dialog.open ? dialog : document.body).append($('#notice'));
+    $('#notice-text').textContent = message;
+    $('#notice').hidden = false;
+    noticeTimer = setTimeout(() => { $('#notice').hidden = true; }, 7000);
+  }
+  function showScreen(next, focus = true) {
+    clearTimeout(invitationTimer);
+    screen = next;
+    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby']]) $(`#${id}`).hidden = name !== next;
+    const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
+    $('#stage-label').innerHTML = labels[next];
+    window.scrollTo({top:0,behavior:'instant'});
+    if (focus) {
+      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next} h1`);
+      heading.setAttribute('tabindex','-1');
+      heading.focus({preventScroll:true});
+    }
+  }
+  function resetInvitation(showResume = true) {
+    clearTimeout(invitationTimer);
+    $('#invitation').classList.remove('has-letter');
+    $('#envelope-wrap').classList.remove('opening');
+    $('#envelope').disabled = false;
+    $('#envelope').setAttribute('aria-expanded','false');
+    $('#letter').hidden = true;
+    $('#return-visit').hidden = !(showResume && state.entered);
+    $('#envelope-wrap').hidden = showResume && state.entered;
+    showScreen('invitation');
+  }
+  function openInvitation() {
+    $('#envelope').disabled = true;
+    $('#envelope').setAttribute('aria-expanded','true');
+    $('#envelope-wrap').classList.add('opening');
+    invitationTimer = setTimeout(() => {
+      $('#envelope-wrap').hidden = true;
+      $('#invitation').classList.add('has-letter');
+      $('#letter').hidden = false;
+      $('#letter').focus({preventScroll:true});
+    }, reducedMotion.matches ? 0 : 1350);
+  }
+  function ticketMarkup() {
+    return `<article class="ticket" aria-label="Boleto personalizado"><div class="ticket-main"><div class="ticket-top"><span>EXPOSICIÓN PRIVADA · ENTRADA PERSONAL</span><svg class="icon" aria-hidden="true"><use href="#icon-ticket"/></svg></div><h2>El Museo de Nosotros</h2><p class="ticket-description">${escape(config.texts.ticketDescription)}</p><p class="ticket-couple">${escape(config.couple)}</p><div class="ticket-details"><p><small>CELEBRAMOS</small>${escape(config.celebration)}</p><p><small>FECHA</small>${escape(config.date)}</p></div><p class="ticket-admission">${escape(config.texts.ticketAdmission)}</p></div><div class="ticket-stub"><span class="eyebrow">UNA HISTORIA IRREPETIBLE</span><span class="stub-monogram">${escape(config.initials)}</span><span class="barcode" aria-hidden="true"></span><span class="ticket-number">Nº ${escape(config.ticketNumber)}</span></div></article>`;
+  }
+  async function enterMuseum() {
+    if (transitioning) return;
+    transitioning = true;
+    $('#enter-museum').disabled = true;
+    const doors = $('#door-transition');
+    doors.classList.remove('open');
+    doors.hidden = false;
+    showScreen('lobby', false);
+    $('#main').inert = true;
+    state.entered = true;
+    save();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    doors.classList.add('open');
+    setTimeout(() => {
+      doors.hidden = true;
+      $('#main').inert = false;
+      $('#enter-museum').disabled = false;
+      transitioning = false;
+      showScreen('lobby');
+    }, reducedMotion.matches ? 0 : 1550);
+  }
+  function passportMarkup() {
+    const count = state.completed.size;
+    return `<div class="dialog-heading"><h2 id="dialog-title">Pasaporte de recuerdos</h2><p>Lo que vivimos, para llevarlo siempre contigo.</p></div><div class="passport-spread"><div class="passport-page"><p class="eyebrow">ESTE PASAPORTE PERTENECE A</p><svg class="passport-flower" aria-hidden="true"><use href="#icon-flower"/></svg><p class="passport-name">${escape(config.recipient)}</p><p class="passport-pair">${escape(config.couple)}</p><p class="passport-date">${escape(config.date)}</p><p class="passport-count">${count} de 6 salas completadas</p><p class="passport-message">${escape(config.texts.passportMessage)}</p></div><div class="passport-page"><p class="eyebrow">LOS SELLOS DE NUESTRA HISTORIA</p><div class="stamp-grid">${config.rooms.map((room,i) => `<div class="stamp-slot ${state.completed.has(room.id)?'completed':''}"><div class="stamp-outline" aria-label="Sala ${i+1}: ${state.completed.has(room.id)?'completada':'sin sello'}">${state.completed.has(room.id)?'✧':String(i+1).padStart(2,'0')}</div><small>${escape(room.title)}</small></div>`).join('')}</div></div></div>`;
+  }
+  function mapMarkup() {
+    return `<div class="dialog-heading"><h2 id="dialog-title">Mapa del museo</h2><p>Todos los caminos nos llevan a nosotros.</p></div><div class="map-sheet"><div class="map-north" aria-hidden="true">N<br>↑</div><div class="floorplan">${config.rooms.map((room,i) => `<button class="room-access ${room.requires && !room.requires.every(id=>state.completed.has(id)) ? 'locked':''}" data-room="${escape(room.id)}" ${room.requires ? `aria-describedby="room-lock-explanation"` : ''}><span class="room-number">${String(i+1).padStart(2,'0')}</span><span>${escape(room.title)}</span>${room.requires && !room.requires.every(id=>state.completed.has(id)) ? '<svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg>' : ''}</button>`).join('')}<div class="you-are-here"><b aria-hidden="true"></b>ESTÁS AQUÍ<span>Vestíbulo</span></div></div><p class="map-legend" id="room-lock-explanation"><svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg><span>Sala 06 · ${escape(config.texts.lockedRoom)}</span></p></div><p class="map-footnote">Las salas abrirán pronto. Por ahora, disfruta del comienzo.</p>`;
+  }
+  const dialog = $('#museum-dialog');
+  function openDialog(type, source) {
+    opener = source;
+    $('#dialog-content').className = type === 'ticket' ? 'dialog-ticket' : '';
+    $('#dialog-content').innerHTML = type === 'map' ? mapMarkup() : type === 'passport' ? passportMarkup() : `<div class="dialog-heading"><h2 id="dialog-title">Tu entrada, para siempre</h2><p>Esta historia tiene un lugar reservado para ti.</p></div>${ticketMarkup()}`;
+    dialog.showModal();
+    dialog.scrollTop = 0;
+    $('#close-dialog').focus();
+  }
+  function closeDialog() { dialog.close(); }
+  dialog.addEventListener('close',()=> { $('#notice').hidden = true; document.body.append($('#notice')); opener?.focus({preventScroll:true}); });
+  dialog.addEventListener('click',event=> {
+    if (event.target === dialog) { const rect=dialog.getBoundingClientRect(); if(event.clientX<rect.left || event.clientX>rect.right || event.clientY<rect.top || event.clientY>rect.bottom) closeDialog(); }
+    const button = event.target.closest('[data-room]');
+    if(button) visitRoom(button.dataset.room);
+  });
+  async function visitRoom(id) {
+    const room = config.rooms.find(item=>item.id===id);
+    if(!room) return;
+    if(!roomHandlers.has(id)) { notify(config.texts.roomSoon); return; }
+    if(room.requires && !room.requires.every(item=>state.completed.has(item))) { notify(config.texts.lockedRoom); return; }
+    closeDialog();
+    try {
+      const result = await roomHandlers.get(id)({config, returnToLobby:()=>showScreen('lobby')});
+      if(result?.completed === true) {
+        state.completed.add(id);
+        save();
+        $('#passport-preview-count').textContent = `${state.completed.size} de 6 salas completadas`;
+      }
+    } catch { notify(config.texts.roomSoon); }
+  }
+  /* Próximas entregas: registrar una sala que resuelva { completed: true }
+     únicamente al finalizar su experiencia. Visitar el mapa nunca da sellos. */
+  window.Museum = Object.freeze({
+    registerRoom(id, handler) { if(config.rooms.some(room=>room.id===id) && typeof handler==='function') roomHandlers.set(id,handler); },
+    openRoom:visitRoom,
+    getProgress:()=>({entered:state.entered,completed:[...state.completed]}),
+    returnToLobby:()=>showScreen('lobby')
+  });
+  const ambient = {playing:false,audio:null,context:null,gain:null,nodes:[]};
+  function updateSoundButton() {
+    $('#ambient-toggle').setAttribute('aria-pressed',String(ambient.playing));
+    $('#ambient-toggle span').textContent = ambient.playing ? 'Silenciar ambiente' : 'Activar ambiente';
+  }
+  async function toggleAmbient() {
+    const button = $('#ambient-toggle');
+    button.disabled = true;
+    try {
+      if(ambient.playing) {
+        ambient.audio?.pause();
+        if(ambient.context) await ambient.context.suspend();
+        ambient.playing = false;
+      } else if(config.resources.ambientAudio) {
+        if(!ambient.audio) { ambient.audio = new Audio(config.resources.ambientAudio); ambient.audio.loop = true; ambient.audio.volume = config.resources.volume; }
+        await ambient.audio.play();
+        ambient.playing = true;
+      } else if(config.resources.synthesizedAmbient && (window.AudioContext || window.webkitAudioContext)) {
+        if(!ambient.context) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          ambient.context = new AudioContext();
+          ambient.gain = ambient.context.createGain();
+          ambient.gain.gain.value = 0;
+          ambient.gain.connect(ambient.context.destination);
+          [130.81,196,261.63,329.63,392].forEach((frequency,index)=> {
+            const oscillator=ambient.context.createOscillator(), gain=ambient.context.createGain();
+            oscillator.type='sine'; oscillator.frequency.value=frequency; oscillator.detune.value=index%2 ? 3 : -3;
+            gain.gain.value=.12;
+            oscillator.connect(gain); gain.connect(ambient.gain); oscillator.start();
+            const drift=ambient.context.createOscillator(), driftGain=ambient.context.createGain();
+            drift.frequency.value=.045+index*.016; driftGain.gain.value=.055;
+            drift.connect(driftGain); driftGain.connect(gain.gain); drift.start();
+            ambient.nodes.push(oscillator,gain,drift,driftGain);
+          });
+        }
+        await ambient.context.resume();
+        ambient.gain.gain.setTargetAtTime(config.resources.volume,ambient.context.currentTime,.8);
+        ambient.playing=true;
+      } else { notify(config.texts.ambientUnavailable); }
+      state.soundPreferred = ambient.playing;
+      save();
+    } catch { ambient.playing=false; notify(config.texts.ambientUnavailable); }
+    finally { button.disabled=false; updateSoundButton(); }
+  }
+  document.querySelectorAll('[data-config]').forEach(node=>node.textContent=config[node.dataset.config]);
+  $('#letter-title').textContent=config.texts.invitationTitle;
+  $('#letter-body').textContent=config.texts.invitationBody;
+  $('#welcome-title').textContent=format(config.texts.welcomeTitle);
+  $('#welcome-body').textContent=format(config.texts.welcomeBody);
+  $('#welcome-signature').textContent=format(config.texts.welcomeSignature);
+  $('.scene-label').textContent=`VESTÍBULO · ${config.initials}`;
+  $('#passport-preview-count').textContent=`${state.completed.size} de 6 salas completadas`;
+  $('#ticket-mount').innerHTML=ticketMarkup();
+  $('#envelope').addEventListener('click',openInvitation);
+  $('#discover-ticket').addEventListener('click',()=>showScreen('ticket'));
+  $('#enter-museum').addEventListener('click',enterMuseum);
+  $('#back-invitation').addEventListener('click',()=>resetInvitation(false));
+  $('#continue-visit').addEventListener('click',()=>showScreen('lobby'));
+  $('#replay-invitation').addEventListener('click',()=>resetInvitation(false));
+  $('.brand').addEventListener('click',event=>{event.preventDefault();if(!transitioning)resetInvitation();});
+  $('#open-map').addEventListener('click',event=>openDialog('map',event.currentTarget));
+  $('#open-passport').addEventListener('click',event=>openDialog('passport',event.currentTarget));
+  $('#consult-ticket').addEventListener('click',event=>openDialog('ticket',event.currentTarget));
+  $('#close-dialog').addEventListener('click',closeDialog);
+  $('#ambient-toggle').addEventListener('click',toggleAmbient);
+  $('#dismiss-notice').addEventListener('click',()=>{$('#notice').hidden=true;});
+  /* Preference is remembered; browser audio still requires a fresh gesture. */
+  if(state.soundPreferred) $('#ambient-toggle').title='Elegiste ambiente en tu última visita. Toca para activarlo de nuevo.';
+  resetInvitation(true);
+})();

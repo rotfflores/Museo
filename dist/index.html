@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eee7da">
+  <meta name="description" content="Un museo privado dedicado a nuestra historia. Una invitación, una entrada y todos los recuerdos que nos esperan.">
+  <title>El Museo de Nosotros</title>
+  <link rel="icon" href="assets/monogram.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="icon-sound" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Zm4 3a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="icon-map" viewBox="0 0 24 24"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5Zm6-2v16m6-14v16"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Zm0 0v15"/></symbol>
+    <symbol id="icon-ticket" viewBox="0 0 24 24"><path d="M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4V5Zm13 0v2m0 3v2m0 3v2"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5V10Zm7 5v2"/></symbol>
+    <symbol id="icon-flower" viewBox="0 0 100 100"><g fill="none" stroke="currentColor" stroke-width=".9"><path d="M50 77V45m0 16c-13 2-20-6-19-14 11 0 18 5 19 14Zm0 8c14 1 22-8 22-16-12 1-19 8-22 16Z"/><path d="M50 44c-12-2-17-12-12-19 7-3 12 4 12 10 0-12 8-19 14-14 6 6-1 15-10 20 11-5 22-1 19 6-3 8-15 4-21-2-3 11-13 16-17 9-4-6 6-11 15-10Z"/><circle cx="50" cy="42" r="3"/></g></symbol>
+  </defs></svg>
+  <header class="site-header">
+    <a class="brand" href="#invitacion" aria-label="El Museo de Nosotros, volver a la invitación"><span class="brand-mark" aria-hidden="true">M<span>N</span></span><span>EL MUSEO<br>DE NOSOTROS</span></a>
+    <button id="ambient-toggle" class="ambient-button" type="button" aria-pressed="false"><svg class="icon"><use href="#icon-sound"/></svg><span>Activar ambiente</span><i aria-hidden="true"></i></button>
+  </header>
+  <main id="main">
+    <section id="invitation" class="screen invitation-screen" aria-labelledby="invitation-title">
+      <div class="invitation-heading"><p class="eyebrow">UNA EXPOSICIÓN ÚNICA. UNA HISTORIA NUESTRA.</p><h1 id="invitation-title">Una invitación<br><em>solo para ti.</em></h1><p class="recipient">Para <span data-config="recipient">Sofía</span>, con todo mi amor.</p></div>
+      <div id="return-visit" class="return-visit" hidden><p>Tu museo te estaba esperando.</p><button id="continue-visit" class="button primary">Continuar mi visita <span aria-hidden="true">↗</span></button><button id="replay-invitation" class="text-button">Ver la invitación otra vez</button></div>
+      <div id="envelope-wrap" class="envelope-wrap">
+        <div class="envelope-shadow"></div>
+        <button id="envelope" class="envelope" type="button" aria-label="Abrir tu invitación" aria-expanded="false">
+          <span class="envelope-back"></span><span class="peek-card"><svg><use href="#icon-flower"/></svg></span><span class="envelope-front"></span><span class="envelope-flap"></span><span class="wax-seal"><span data-config="initials">D & S</span></span><span class="envelope-caption">PARA TI, SIEMPRE.</span>
+        </button>
+        <p class="open-hint"><span aria-hidden="true">✧</span> Toca para abrir</p>
+      </div>
+      <article id="letter" class="letter" hidden aria-labelledby="letter-title" tabindex="-1">
+        <svg class="letter-flower" aria-hidden="true"><use href="#icon-flower"/></svg><p class="eyebrow">MI PERSONA FAVORITA</p><h2 id="letter-title"></h2><p id="letter-body"></p><p class="signature">Con amor, <span data-config="sender">Daniel</span></p><button id="discover-ticket" class="button primary">Descubrir mi entrada <svg class="icon"><use href="#icon-arrow"/></svg></button>
+      </article>
+      <p class="invitation-note">Algunas historias merecen ser guardadas para siempre.</p>
+    </section>
+    <section id="ticket-screen" class="screen ticket-screen" hidden aria-labelledby="ticket-heading">
+      <p class="eyebrow">EL COMIENZO DE UN RECORRIDO MUY NUESTRO</p><h1 id="ticket-heading">Tu entrada a <em>nuestra historia.</em></h1><p class="screen-subtitle">Un lugar reservado para la persona más especial.</p>
+      <div id="ticket-mount"></div>
+      <button id="enter-museum" class="button primary">Entrar al museo <svg class="icon"><use href="#icon-arrow"/></svg></button><button id="back-invitation" class="text-button">Volver a la invitación</button>
+    </section>
+    <section id="lobby" class="screen lobby-screen" hidden aria-labelledby="lobby-title">
+      <div class="lobby-heading"><p class="eyebrow">BIENVENIDA A NUESTRA EXPOSICIÓN PRIVADA</p><h1 id="lobby-title">El Museo <em>de Nosotros</em></h1><p>Cada recuerdo tiene un lugar. Este es el nuestro.</p></div>
+      <div class="museum-scene" aria-hidden="true">
+        <svg viewBox="0 0 1440 750" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#ded2bb"/><stop offset="1" stop-color="#f4eddc"/></linearGradient>
+            <linearGradient id="wood" x2="1" y2="0"><stop stop-color="#35261c"/><stop offset=".5" stop-color="#664432"/><stop offset="1" stop-color="#35261c"/></linearGradient>
+            <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#ab9578"/><stop offset="1" stop-color="#d5bea0"/></linearGradient>
+            <radialGradient id="glow"><stop stop-color="#fff4cc" stop-opacity=".8"/><stop offset="1" stop-color="#fff4cc" stop-opacity="0"/></radialGradient>
+            <linearGradient id="hall" x2="0" y2="1"><stop stop-color="#b8a383"/><stop offset="1" stop-color="#efdcc0"/></linearGradient>
+            <filter id="soft"><feGaussianBlur stdDeviation="12"/></filter>
+          </defs>
+          <path fill="url(#wall)" d="M0 0h1440v750H0z"/>
+          <path fill="#cbbda4" d="M0 0 275 130v382L0 665Zm1440 0-275 130v382l275 153Z"/>
+          <path fill="#b8a386" d="M0 0h1440l-275 130H275Z"/>
+          <path fill="url(#floor)" d="M0 665 275 512h890l275 153v85H0Z"/>
+          <g stroke="#977c5e" stroke-width="1" opacity=".45"><path d="m720 512-645 238m645-238L310 750m410-238L570 750m150-238 150 238m-150-238 410 238m-410-238 645 238M203 552h1034M110 605h1220M0 680h1440"/></g>
+          <g fill="none" stroke="#ac9576"><path d="M0 20 275 148h890l275-128M0 43l275 121h890l275-121M0 627l275-144h890l275 144M0 639l275-144h890l275 144"/><path d="M295 170h850v295H295Z"/><path d="M310 184h820v267H310Z"/></g>
+          <path d="M539 512V312a181 181 0 0 1 362 0v200Z" fill="#b8a184" stroke="#ae9676" stroke-width="2"/>
+          <path d="M558 512V312a162 162 0 0 1 324 0v200Z" fill="#e6dac5"/>
+          <path d="M575 512V315a145 145 0 0 1 290 0v197Z" fill="url(#wood)"/>
+          <path d="M588 512V315a132 132 0 0 1 264 0v197Z" fill="url(#hall)"/>
+          <path d="M611 512V328a109 109 0 0 1 218 0v184Z" fill="#e5d8be"/>
+          <path d="M646 512V344a74 74 0 0 1 148 0v168Z" fill="#a38c6d"/>
+          <path d="M658 512V344a62 62 0 0 1 124 0v168Z" fill="#483b2c"/>
+          <path d="M674 512V352a46 46 0 0 1 92 0v160Z" fill="#d3b994"/>
+          <path d="M588 512h264l130 238H458Z" fill="#ebdfcc" opacity=".35"/>
+          <g fill="#d2bea0" stroke="#b29a75"><path d="M535 302h29v203h-29zM876 302h29v203h-29z"/><path d="M527 300h46v13h-46zM867 300h46v13h-46zM526 500h49v12h-49zM866 500h49v12h-49z"/></g>
+          <g fill="#6f593e"><path d="M458 279h3v53h-3zM979 279h3v53h-3z"/><ellipse cx="460" cy="281" rx="16" ry="7"/><ellipse cx="980" cy="281" rx="16" ry="7"/></g>
+          <ellipse cx="460" cy="292" rx="110" ry="150" fill="url(#glow)"/><ellipse cx="980" cy="292" rx="110" ry="150" fill="url(#glow)"/>
+          <g stroke="#725939" stroke-width="5"><path d="M340 266h72v112h-72zM1028 266h72v112h-72z" fill="#e8dbc4"/></g>
+          <g fill="none" stroke="#a88b61" stroke-width="1.5"><path d="M351 278h50v89h-50zM1039 278h50v89h-50z"/><path d="M376 350v-41m0 18c-16-4-17-19-17-19 15-1 19 11 17 19Zm0 9c18-4 19-17 19-17-13-1-21 8-19 17Zm687 14v-43m0 20c-16-6-15-19-15-19 15 1 18 13 15 19Zm0 9c17-3 19-17 19-17-15-2-20 10-19 17Z"/></g>
+          <ellipse cx="720" cy="608" rx="167" ry="25" fill="#64492e" opacity=".2" filter="url(#soft)"/>
+          <path d="M609 575h222v23H609z" fill="#65462f"/><path d="M603 568h234v17H603z" fill="url(#wood)"/><path d="M620 593h12v34h-12zM808 593h12v34h-12z" fill="#4f3726"/>
+          <g fill="#706a4e"><path d="M190 523q-8-120 20-130-1 80-20 130Zm2 0q-48-95-31-111 35 49 31 111Zm2 0q42-106 54-95-5 66-54 95Zm1056 0q8-120-20-130 1 80 20 130Zm-2 0q48-95 31-111-35 49-31 111Zm-2 0q-42-106-54-95 5 66 54 95Z"/></g><path d="m167 514 9 56h35l9-56Zm1053 0 9 56h35l9-56Z" fill="#967458"/>
+        </svg>
+        <div class="scene-label">VESTÍBULO <span>·</span> D & S</div>
+      </div>
+      <div class="lobby-content">
+        <article class="welcome-plaque"><span class="plaque-screw top-left"></span><span class="plaque-screw top-right"></span><p class="eyebrow">UNA NOTA PARA TI</p><h2 id="welcome-title">Bienvenida, Sofía.</h2><p id="welcome-body"></p><p class="signature" id="welcome-signature"></p><span class="plaque-screw bottom-left"></span><span class="plaque-screw bottom-right"></span></article>
+        <div class="museum-objects">
+          <button id="open-map" class="museum-object map-object"><span class="map-paper" aria-hidden="true"><span class="mini-plan"><i></i><i></i><i></i><i></i><i></i><i></i></span><span>EL MUSEO DE NOSOTROS</span><b>Tu recorrido</b><small>PLANO DE LA EXPOSICIÓN</small></span><span class="object-label"><svg class="icon"><use href="#icon-map"/></svg><span>Mapa del museo<small>Seis salas, una historia</small></span><span aria-hidden="true">↗</span></span></button>
+          <button id="open-passport" class="museum-object passport-object"><span class="passport-cover" aria-hidden="true"><span>PASAPORTE<br>DE RECUERDOS</span><svg><use href="#icon-flower"/></svg><b data-config="initials">D & S</b><small>EL MUSEO DE NOSOTROS</small></span><span class="object-label"><svg class="icon"><use href="#icon-book"/></svg><span>Pasaporte de recuerdos<small id="passport-preview-count">0 de 6 salas completadas</small></span><span aria-hidden="true">↗</span></span></button>
+        </div>
+      </div>
+      <button id="consult-ticket" class="text-button consult-ticket"><svg class="icon"><use href="#icon-ticket"/></svg> Volver a consultar mi boleto</button>
+    </section>
+  </main>
+  <footer class="site-footer"><span id="stage-label">01 <span class="footer-line"></span> LA INVITACIÓN</span><span>HECHO DE RECUERDOS, <em>Y DE TI.</em></span></footer>
+  <div id="door-transition" class="door-transition" hidden aria-hidden="true"><div class="door door-left"><i></i><b></b></div><div class="door door-right"><i></i><b></b></div></div>
+  <dialog id="museum-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">EL MUSEO DE NOSOTROS</span><button id="close-dialog" class="close-button" aria-label="Cerrar">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden><span aria-hidden="true">✧</span><span id="notice-text"></span><button id="dismiss-notice" aria-label="Cerrar aviso">×</button></div>
+</body>
+</html>
