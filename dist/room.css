@@ -104,3 +104,16 @@ body.room-view .site-header>*{pointer-events:auto}
 @media(prefers-reduced-motion:reduce){.stamp-page .new-stamp,.stamp-page:after{animation:none}.stamp-page:after{opacity:0}}
 .lobby-heading.room-heading>.eyebrow{font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:2.6px;color:var(--muted);margin:0}@media(max-width:600px){.lobby-heading.room-heading>.eyebrow{font-size:7px;letter-spacing:1.3px}}
 .room-screen .look-target,.room-screen .controls-open .look-target{left:16px;right:16px;transform:none;width:auto;max-width:none;align-items:center;pointer-events:none}.room-screen .look-target>span{max-width:min(560px,100%);pointer-events:auto}
+/* ===== Sala 01 igual que el vestíbulo: sólo el título y el dock ===== */
+.sr-only,.sr-only-focusable:not(:focus){position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}
+.keyboard-shortcuts{position:absolute;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:4;display:flex;gap:6px}
+.sr-only-focusable:focus{display:inline-flex;align-items:center;min-height:40px;padding:8px 18px;border:1px solid #b9a17780;border-radius:999px;background:#f8f2e6eb;backdrop-filter:blur(8px);color:#5d4a33;font-size:12px;white-space:nowrap}
+.room-help-sheet .help-tutorial{display:flex;margin:16px auto 22px}
+.room-help-card{max-width:480px;margin:0 auto}
+.room-help-card .room-status{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin:8px 0 4px}
+.room-help-card .room-status p{margin:0;font-size:12px;color:#766750}
+.room-help-card .exhibit-tour{display:grid;grid-template-columns:1fr;gap:0;margin:6px 0 0;padding:0}
+.room-help-card .tour-stop{width:100%;min-height:0;padding:13px 0;font-size:17px;border-color:#c9b38a99}
+.room-help-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
+dialog:has(.room-help-sheet){width:min(560px,calc(100% - 36px))}
+.lobby-dock{box-sizing:border-box;min-height:58px}@media(max-width:600px){.lobby-dock{min-height:0}}

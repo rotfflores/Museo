@@ -24,7 +24,6 @@ function updateProgress() {
   const progress=Museum.getProgress(),discovered=progress.discoveries.beginning||[];
   $('#room-discovery-count').textContent=`Recuerdos descubiertos: ${discovered.length} de 3`;
   $('#room-clue-count').textContent=`Pistas encontradas: ${progress.clues.length} de 5`;
-  $('#room-completed').hidden=!progress.completed.includes('beginning');
   $('#room-passport-count').textContent=`${progress.completed.length}/6`;
   $('#room-passport').setAttribute('aria-label',`Pasaporte de recuerdos, ${progress.completed.length} de 6 salas completadas`);
   for(const target of pieceTargets)target.seen.visible=discovered.includes(target.id);
@@ -38,15 +37,14 @@ function setTarget(target) {
   selected=target;
   // Sin pieza a la vista, la píldora muestra la introducción de la sala.
   $('#target-name').textContent=target ? target.id==='key' ? 'Un pequeño detalle dorado' : room.exhibits[target.index].title : room.introduction;
-  $('#view-memory span').textContent=target?.id==='key'?'Llave':'Recuerdo';
-  $('#view-memory').setAttribute('aria-label',target?target.id==='key'?'Recoger la llave':`Ver el recuerdo: ${room.exhibits[target.index].title}`:'Ir al recuerdo más cercano');
+  $('#view-memory').textContent=target?target.id==='key'?'Recoger la llave':`Ver el recuerdo: ${room.exhibits[target.index].title}`:'Ir al recuerdo más cercano';
   $('#gallery-stage').dataset.target=target?.id||'';
 }
 function fallbackMode() {
   fallback=true;$('#gallery-fallback').hidden=false;$('#gallery-stage').classList.add('without-webgl');
   $('#accessible-decoration').hidden=false;
   document.querySelectorAll('.gallery-navigation button').forEach(button=>button.disabled=true);
-  $('#toggle-controls').hidden=true;$('#gallery-hint').hidden=true;
+  $('#gallery-hint').hidden=true;
   setTarget(targets[0]||{id:'message',index:0});
 }
 function texture(width,height,paint) {
@@ -368,7 +366,7 @@ function conversationMarkup(piece) {
 }
 function symbolMarkup() {return '<div class="symbol-composition" aria-label="Dos piezas entrelazadas"><span></span><span></span><i aria-hidden="true">✧</i></div>';}
 function rewardMarkup(){return `<div class="stamp-reward" role="status"><div class="stamp-page" aria-hidden="true"><div class="new-stamp"><span>SALA 01</span><b>✧</b><span>AQUÍ COMENZÓ TODO</span></div></div><p>${escape(room.completionMessage)}</p><div><button data-completion="lobby" class="text-button">Volver al vestíbulo</button><button data-completion="map" class="button primary">Seguir explorando ↗</button></div></div>`;}
-function openPiece(index,source=$('#view-memory')) {
+function openPiece(index,source=$('#gallery-stage')) {
   const piece=room.exhibits[index];currentPiece=index;
   const progress=Museum.discoverPiece('beginning',piece.id);
   buzz(progress.newlyCompleted?[30,60,45]:14);
@@ -376,7 +374,7 @@ function openPiece(index,source=$('#view-memory')) {
   let media='';
   if(piece.audio)media=`<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ ${escape(text(piece.audioLabel))}</button><audio id="memory-audio" preload="none" src="${escape(piece.audio)}"></audio><p id="media-status" role="status"></p></div>`;
   if(piece.video)media=`<div class="optional-video"><button id="play-memory-video" class="button secondary">▶ Ver nuestro video</button><video id="memory-video" preload="none" playsinline ${piece.videoPoster?`poster="${escape(piece.videoPoster)}"`:''} src="${escape(piece.video)}" hidden></video><p id="media-status" role="status"></p></div>`;
-  Museum.openContent({className:'memory-overlay',source,html:`<div class="memory-heading"><p class="eyebrow">PIEZA 0${index+1} · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2></div>${artwork}<blockquote class="memory-dedication">“${escape(piece.dedication)}”</blockquote>${media}${progress.newlyCompleted?rewardMarkup():''}<div class="memory-footer"><p>${escape(config.sender)} <span>para</span> ${escape(config.recipient)}</p><button id="next-piece" class="text-button">${index<2?'Ir a la siguiente pieza':'Volver a la primera pieza'} →</button></div>`});
+  Museum.openContent({className:'memory-overlay',source,onClose:progress.newlyCompleted?()=>setTimeout(()=>Museum.notify('Este comienzo ya tiene su sello.'),250):null,html:`<div class="memory-heading"><p class="eyebrow">PIEZA 0${index+1} · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2></div>${artwork}<blockquote class="memory-dedication">“${escape(piece.dedication)}”</blockquote>${media}${progress.newlyCompleted?rewardMarkup():''}<div class="memory-footer"><p>${escape(config.sender)} <span>para</span> ${escape(config.recipient)}</p><button id="next-piece" class="text-button">${index<2?'Ir a la siguiente pieza':'Volver a la primera pieza'} →</button></div>`});
   $('#next-piece').addEventListener('click',()=>{Museum.closeOverlay();setTimeout(()=>guideTo((index+1)%3),0);});
   document.querySelectorAll('[data-completion]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.completion==='map')Museum.openMap($('#room-passport'));
@@ -398,7 +396,7 @@ function openPiece(index,source=$('#view-memory')) {
   }
   updateProgress();
 }
-function openKey(source=$('#view-memory')) {
+function openKey(source=$('#gallery-stage')) {
   const added=Museum.findClue(room.clue.id);buzz(14);
   Museum.openContent({className:'key-overlay',source,html:`<div class="dialog-heading"><p class="eyebrow">${added?'LA PRIMERA PISTA':'TU PRIMERA LLAVE'}</p><h2 id="dialog-title">La llave del comienzo</h2></div><div class="collectible-key" aria-hidden="true"><span></span><i></i></div><blockquote class="memory-dedication">“${escape(room.clue.message)}”</blockquote><p class="key-counter">Pistas encontradas: ${Museum.getProgress().clues.length} de 5</p><p class="key-note">Una de las cinco llaves de la vitrina secreta. Tu sello y tus pistas cuentan su propia historia.</p>`});
   updateProgress();
@@ -412,12 +410,24 @@ $('#view-memory').addEventListener('click',event=>{
   const camera=engine.camera.position,nearest=[...pieceTargets].sort((a,b)=>camera.distanceTo(a.focus)-camera.distanceTo(b.focus))[0];
   goTo(nearest,{source:event.currentTarget});
 });
-$('#room-help').addEventListener('click',event=>Museum.openTutorial('room',event.currentTarget));
+// "?" abre una hoja con el tutorial, el progreso, las tres paradas y la pista.
+function openHelp(source) {
+  const panel=$('#room-help-panel');
+  Museum.openContent({className:'room-help-sheet',source,html:'<div class="dialog-heading"><p class="eyebrow">SALA 01 · AYUDA</p><h2 id="dialog-title">Tu recorrido</h2></div><button class="button primary help-tutorial" type="button">Ver cómo moverse</button>',onClose:()=>{panel.hidden=true;$('#room-screen').append(panel);}});
+  $('#dialog-content').append(panel);panel.hidden=false;
+  $('#dialog-content .help-tutorial').addEventListener('click',()=>Museum.openTutorial('room',source));
+}
+$('#room-help').addEventListener('click',event=>openHelp(event.currentTarget));
+// Atajos de teclado: < y > (o , y .) cambian de pieza.
+$('#gallery-stage').addEventListener('keydown',event=>{
+  if(event.target.closest('button'))return;
+  const step=event.key==='<'||event.key===','?2:event.key==='>'||event.key==='.'?1:0;
+  if(!step)return;
+  event.preventDefault();
+  guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+step)%3);
+});
 $('#step-prev').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+2)%3,event.currentTarget));
 $('#step-next').addEventListener('click',event=>guideTo(((focused&&focused.id!=='key'?focused.index:currentPiece)+1)%3,event.currentTarget));
-// Caminar con botones: visible al inicio en computadora, oculto en pantallas táctiles.
-if(!matchMedia('(pointer: coarse)').matches){$('#gallery-stage').classList.add('controls-open');$('#toggle-controls').setAttribute('aria-expanded','true');}
-$('#toggle-controls').addEventListener('click',event=>{const open=$('#gallery-stage').classList.toggle('controls-open');event.currentTarget.setAttribute('aria-expanded',String(open));interacted();});
 {
   const coarse=matchMedia('(pointer: coarse)').matches,parts=coarse?['Toca una pieza','Desliza para avanzar']:['Haz clic en una pieza','Arrastra para mirar'];
   $('#gallery-hint').replaceChildren(...[['span',parts[0]],['b','·'],['span',parts[1]]].map(([tag,value])=>{const part=document.createElement(tag);part.textContent=value;return part;}));
@@ -434,14 +444,13 @@ $('#toggle-controls').addEventListener('click',event=>{const open=$('#gallery-st
     const next=(currentPiece+(dx<0?1:2))%3;Museum.closeOverlay();setTimeout(()=>guideTo(next),0);
   },{passive:true});
 }
-document.querySelectorAll('[data-tour]').forEach(button=>button.addEventListener('click',()=>guideTo(Number(button.dataset.tour),button)));
+// Las paradas viven en la hoja de ayuda: se cierra y la cámara va a la pieza.
+document.querySelectorAll('[data-tour]').forEach(button=>button.addEventListener('click',()=>{Museum.closeOverlay();setTimeout(()=>guideTo(Number(button.dataset.tour)),0);}));
 $('#gallery-stage').addEventListener('gallery:arrived',()=>{document.querySelectorAll('.guiding-stop').forEach(button=>button.classList.remove('guiding-stop'));});
 $('#room-back').addEventListener('click',Museum.returnToLobby);
 $('#room-passport').addEventListener('click',event=>Museum.openPassport(event.currentTarget));
 $('#clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#accessible-decoration').addEventListener('click',event=>openKey(event.currentTarget));
-$('#completed-lobby').addEventListener('click',Museum.returnToLobby);
-$('#completed-map').addEventListener('click',event=>Museum.openMap(event.currentTarget));
 document.addEventListener('museum:progress',updateProgress);
 document.addEventListener('museum:overlay',event=>engine?.setPaused(event.detail));
 document.addEventListener('museum:screen',event=>{engine?.setActive(event.detail==='room');document.body.classList.toggle('room-view',event.detail==='room');});
