@@ -32,12 +32,12 @@ window.MUSEUM_CONFIG = {
     { id: "beginning", title: "Aquí comenzó todo.", route: "beginning-room.js", pieces: ["message", "first-date", "together"] },
     { id: "moments", title: "Momentos que se quedaron.", route: "moments-room.js", piecesFrom: "momentsRoom" },
     { id: "little-things", title: "Pequeñas cosas, grandes recuerdos.", route: "little-things-room.js", piecesFrom: "littleThingsRoom" },
-    { id: "you", title: "Así te veo yo.", route: null },
+    { id: "you", title: "Así te veo yo.", route: "you-room.js", piecesFrom: "youRoom" },
     { id: "future", title: "Lo que todavía nos espera.", route: null },
     { id: "artwork", title: "Una obra para ti.", route: null, requires: ["beginning", "moments", "little-things", "you", "future"] }
   ],
   /* Las pistas tienen su propio contador; no son requisitos para los sellos. */
-  clueIds: ["beginning-key", "moments-camera", "little-things-flower", "you-key", "future-key"],
+  clueIds: ["beginning-key", "moments-camera", "little-things-flower", "you-star", "future-key"],
   beginningRoom: {
     title: "Aquí comenzó todo",
     subtitle: "Antes de tener una historia, tuvimos un primer momento.",
@@ -187,6 +187,56 @@ window.MUSEUM_CONFIG = {
         description: "Un objeto que representa una anécdota que sólo nosotros entendemos.",
         dedication: "Tal vez nadie más entienda por qué esto es especial. Me gusta que nosotros sí.",
         message: "", photo: null, photoAlt: "", audio: null }
+    ]
+  },
+  /* Sala 04. Cambia fotos, textos, audios y canciones. Las fotos cuentan en el límite de 25 del museo
+     (puedes reutilizar imágenes ya usadas); las canciones, en el máximo de 5. Una canción sin "audio"
+     ni "link" no se muestra. "audio" es un archivo local (por ejemplo assets/sala04/cancion.mp3). */
+  youRoom: {
+    title: "Así te veo yo",
+    subtitle: "Quería que, por un momento, pudieras verte a través de mis ojos.",
+    completionMessage: "Esta sala guarda algo que quería que supieras: todo lo que admiro de ti.",
+    clue: {
+      id: "you-star",
+      message: "Hay formas de brillar que solo descubrimos al conocer a alguien. Has encontrado otra parte de la sorpresa.",
+      hint: "Acércate al caballete del centro y mira su base: algo pequeño brilla ahí."
+    },
+    portraits: [
+      { id: "alegria", title: "Tu manera de alegrar mis días", phrase: "Tu risa, siempre.",
+        dedication: "Hay algo en tu risa que hace que hasta un día complicado se sienta más ligero.",
+        photo: "assets/sala04/retrato-alegria.jpg", alt: "Fotografía de ejemplo: una mujer sonríe con luz cálida junto a una puerta", audio: null, audioLabel: "Escuchar a {sender}",
+        credit: {author: "Konstantin Mishchenko", url: "https://www.pexels.com/photo/portrait-of-a-smiling-woman-in-warm-lighting-28442312/"} },
+      { id: "admiro", title: "Lo que admiro de ti", phrase: "Tu fuerza tranquila.",
+        dedication: "Admiro cómo sigues adelante, cómo te esfuerzas y cómo encuentras fuerzas incluso cuando las cosas cuestan.",
+        photo: "assets/sala04/retrato-admiro.jpg", alt: "Fotografía de ejemplo: retrato sereno de una mujer de perfil con luz natural", audio: null, audioLabel: "Escuchar a {sender}",
+        credit: {author: "Alina Chernii", url: "https://www.pexels.com/photo/portrait-of-a-woman-from-profile-18841733/"} },
+      { id: "gestos", title: "Tus pequeños gestos", phrase: "Detalles que lo cambian todo.",
+        dedication: "A veces es una pregunta, un abrazo o la forma en que me escuchas. Son detalles tuyos que para mí significan muchísimo.",
+        photo: "assets/sala04/retrato-gestos.jpg", alt: "Fotografía de ejemplo: dos manos se entrelazan suavemente al atardecer", audio: null, audioLabel: "Escuchar a {sender}",
+        credit: {author: "Jonathan Borba", url: "https://www.pexels.com/photo/romantic-couple-holding-hands-at-sunset-28961734/"} },
+      { id: "ser-yo", title: "Contigo puedo ser yo", phrase: "Sin palabras perfectas.",
+        dedication: "Me gusta poder hablar contigo sin tener que encontrar las palabras perfectas. Sentir que me escuchas también es una forma de sentirme querido.",
+        photo: "assets/sala04/retrato-ser-yo.jpg", alt: "Fotografía de ejemplo: una mujer mira a través de una ventana con luz suave", audio: null, audioLabel: "Escuchar a {sender}",
+        credit: {author: "behrouz sasani", url: "https://www.pexels.com/photo/portrait-of-a-woman-through-a-window-5590429/"} },
+      { id: "elegirte", title: "Te sigo eligiendo", phrase: "Hoy y todos los días.",
+        dedication: "Por lo que hemos vivido y por todo lo que sigo descubriendo de ti. Me hace feliz continuar esta historia contigo.",
+        photo: "assets/sala04/retrato-elegirte.jpg", alt: "Fotografía de ejemplo: una mujer iluminada por el sol al atardecer en un paisaje natural", audio: null, audioLabel: "Escuchar a {sender}",
+        credit: {author: "rasul lotfi", url: "https://www.pexels.com/photo/woman-portrait-at-sunset-14411942/"} }
+    ],
+    centerpiece: {
+      id: "obra-central", title: "Mi obra favorita", plaque: "Hay algo más que quiero mostrarte.",
+      photo: "assets/sala04/obra-favorita.jpg", alt: "Fotografía de ejemplo: una pareja se abraza con sus frentes juntas bajo una luz cálida",
+      credit: {author: "Oğuz Uğur", url: "https://www.pexels.com/photo/portrait-of-hugging-couple-20103982/"},
+      dedication: "Después de todo lo que has visto, quería decirte algo sencillo: me encanta la persona que eres y me hace feliz compartir mi vida contigo."
+    },
+    /* "near" indica junto a qué retrato (1 a 5) va cada estación. Audios aportados por el usuario. */
+    songs: [
+      { id: "cancion-inicio", near: 1, title: "When I Look at You", artist: "Miley Cyrus", cover: null, audio: "assets/sala04/when-i-look-at-you.mp3", link: null,
+        dedication: "Cuando el día se vuelve difícil, mirarte me devuelve la calma. Guardé esta canción aquí porque me recuerda lo bonito que es encontrarte y sentir que estoy en casa." },
+      { id: "cancion-ti", near: 3, title: "Just the Way You Are", artist: "Bruno Mars", cover: null, audio: "assets/sala04/just-the-way-you-are.mp3", link: null,
+        dedication: "Me encantas en tus días de risa y también en los que dudas de ti. No tienes que cambiar nada para ser especial para mí; ojalá esta canción te recuerde lo mucho que admiro tu manera de ser." },
+      { id: "cancion-juntos", near: 5, title: "Perfect", artist: "Ed Sheeran", cover: null, audio: "assets/sala04/perfect.mp3", link: null,
+        dedication: "La guardé pensando en nosotros: en un baile sin prisa, en tenerte cerca y en todos los días que todavía quiero compartir contigo. Hoy, como entonces, te sigo eligiendo." }
     ]
   }
 };

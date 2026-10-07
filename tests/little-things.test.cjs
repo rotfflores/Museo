@@ -31,8 +31,8 @@ test('quitar objetos ajusta el total y no deja requisitos imposibles',()=>{
 test('las fotos complementarias cuentan en el límite global de 25 fotografías',()=>{
   const config=freshConfig();
   const used=config.beginningRoom.exhibits.reduce((sum,piece)=>sum+['screenshot','photo','chat'].filter(key=>piece[key]).length,0)+config.momentsRoom.exhibits.filter(piece=>piece.type==='photo').length;
-  for(const piece of config.littleThingsRoom.objects)piece.photo='x.jpg';
-  for(let i=0;i<30;i++)config.littleThingsRoom.objects.push({id:`extra-${i}`,object:'cups',title:'Extra',photo:'x.jpg'});
+  config.littleThingsRoom.objects.forEach((piece,i)=>{piece.photo=`base-${i}.jpg`;});
+  for(let i=0;i<30;i++)config.littleThingsRoom.objects.push({id:`extra-${i}`,object:'cups',title:'Extra',photo:`extra-${i}.jpg`});
   const warn=console.warn;console.warn=()=>{};
   try{prepareConfig(config);}finally{console.warn=warn;}
   const photos=config.littleThingsRoom.objects.filter(piece=>piece.photo).length;

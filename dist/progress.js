@@ -3,25 +3,37 @@
   'use strict';
   /* Límite del paquete completo y piezas de cada sala calculadas desde su contenido:
      si se quita una pieza, el sello no pide algo imposible. */
-  const LIMITS = {photos:25, videos:5};
+  const LIMITS = {photos:25, videos:5, songs:5};
   function prepareConfig(config) {
     if(config.__prepared) return config;
-    let photos=0, videos=0;
+    let photos=0, videos=0, songs=0;
+    // Rutas ya usadas: reutilizar una imagen no vuelve a contar en el límite.
+    const paths=new Set();
     for(const piece of config.beginningRoom?.exhibits||[]) {
-      for(const key of ['screenshot','photo','chat']) if(piece[key]) photos++;
+      for(const key of ['screenshot','photo','chat']) if(piece[key]){ photos++; paths.add(piece[key]); }
       if(piece.video) videos++;
     }
     for(const room of config.rooms||[]) {
       const data=room.piecesFrom && config[room.piecesFrom];
       if(!data) continue;
       const seen=new Set(), dropped=[];
+      // Sala de retratos: cada retrato es una pieza y la obra central, la última. Las canciones son opcionales.
+      if(Array.isArray(data.portraits)) {
+        const photo=item=>{ if(!item.photo) return; if(paths.has(item.photo)) return; if(photos<LIMITS.photos){photos++;paths.add(item.photo);} else {dropped.push(`${item.id} (foto)`);item.photo=null;} };
+        data.portraits=data.portraits.filter(piece=>{ if(!piece||!piece.id||seen.has(piece.id)) return false; seen.add(piece.id); photo(piece); return true; });
+        if(data.centerpiece?.id&&!seen.has(data.centerpiece.id)) photo(data.centerpiece); else if(data.centerpiece) data.centerpiece=null;
+        data.songs=(Array.isArray(data.songs)?data.songs:[]).filter(song=>{ if(!song||!song.id||!(song.audio||song.link)) return false; if(songs>=LIMITS.songs){dropped.push(song.id);return false;} songs++; return true; });
+        if(dropped.length && typeof console!=='undefined') console.warn(`Límites del museo: se omiten ${dropped.join(', ')}.`);
+        room.pieces=[...data.portraits.map(piece=>piece.id),...(data.centerpiece?[data.centerpiece.id]:[])];
+        continue;
+      }
       // Salas de objetos: cada objeto es una pieza; su foto complementaria cuenta en el límite de fotos.
       if(Array.isArray(data.objects)) {
         data.objects=data.objects.filter(piece=>{
           if(!piece||!piece.id||seen.has(piece.id)) return false;
           const needsPhoto=piece.object==='photo';
           if(needsPhoto&&(!piece.photo||photos>=LIMITS.photos)){dropped.push(piece.id);return false;}
-          if(piece.photo){ if(photos<LIMITS.photos) photos++; else {piece.photo=null;dropped.push(`${piece.id} (foto)`);} }
+          if(piece.photo){ if(paths.has(piece.photo)) {} else if(photos<LIMITS.photos) {photos++;paths.add(piece.photo);} else {piece.photo=null;dropped.push(`${piece.id} (foto)`);} }
           seen.add(piece.id);
           return true;
         });
@@ -33,7 +45,7 @@
         if(!piece||!piece.id||seen.has(piece.id)||!['photo','video'].includes(piece.type)) return false;
         const isVideo=piece.type==='video';
         if(isVideo?videos>=LIMITS.videos:photos>=LIMITS.photos){dropped.push(piece.id);return false;}
-        seen.add(piece.id); if(isVideo) videos++; else photos++;
+        seen.add(piece.id); if(isVideo) videos++; else {photos++; if(piece.src) paths.add(piece.src);}
         return true;
       });
       if(dropped.length && typeof console!=='undefined') console.warn(`Límite de ${LIMITS.photos} fotos y ${LIMITS.videos} videos: se omiten ${dropped.join(', ')}.`);

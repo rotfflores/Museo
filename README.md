@@ -116,3 +116,40 @@ Sala circular e íntima: seis vitrinas de madera oscura y cristal alrededor de l
 - Cada objeto examinado deja su miniatura en la mesa; tocar la mesa o una miniatura vuelve a abrir el recuerdo. «Objetos descubiertos: n de 6» se calcula con los objetos configurados; al examinarlos todos se entrega el sello.
 - La pista secreta es una pequeña flor dorada en el costado derecho de la mesa central (id `little-things-flower`).
 - Personaliza en dist/config.js, `littleThingsRoom.objects[]`: `object` (cups, tickets, flower, suitcase, note, keychain o photo), `model` (ruta .glb/.gltf opcional), `position` (1 a 6), `title`, `date`, `description`, `dedication`, `message`, `photo` y `photoAlt` (opcionales; cuentan en el límite de 25 fotos), `audio` y `audioLabel` (opcionales; pausan el ambiente mientras suenan), `tags` (destinos de la maleta), `ticketText`, `noteText` y `cardText`. Con `object: "photo"` y una `photo`, el recuerdo se muestra como fotografía enmarcada sobre el pedestal con las mismas funciones.
+
+## Sala 04: Así te veo yo
+
+Galería semicircular de retratos: cinco marcos dorados en un ábside de color marfil y, en el centro, un caballete cubierto por una tela. Se entra por la puerta 04 del vestíbulo (el espejo ovalado) o desde el mapa. La puerta de regreso está detrás de la cámara.
+
+- **Retratos.** Al tocar un retrato se abre la nota lateral con:
+  - el título y la dedicatoria completa;
+  - la narración opcional;
+  - «Ver fotografía ampliada»;
+  - «‹ Anterior / Siguiente ›».
+
+  Mientras la nota está abierta la cámara no se mueve; al cerrarla, el visitante vuelve a donde estaba.
+- **Obra central.** Cuando los retratos están abiertos aparece «Descubrir la obra». La tela se retira (en movimiento reducido, con un fundido breve), se enciende el foco y se muestra la dedicatoria. Después se puede volver a abrir.
+- **Sello.** La sala se completa con todos los retratos y la obra central.
+- **Estaciones de escucha.** Hay tres, son opcionales y no cuentan para el sello. Cada una tiene «Escuchar» si tiene `audio` local, o «Abrir canción ↗» si tiene `link`; una canción sin `audio` ni `link` se oculta. Un solo control de medios evita que dos audios suenen a la vez, y el ambiente se pausa y se restaura.
+- **Pista secreta.** Es una pequeña estrella dorada en la base del caballete, a la derecha (id `you-star`). Se puede encontrar desde el principio.
+- **Personalizar.** Todo está en dist/config.js, en `youRoom`:
+  - `portraits[]`: `id`, `title`, `phrase` (la placa), `dedication`, `photo`, `alt`, `credit` (`author` y `url`), `audio` y `audioLabel`;
+  - `centerpiece`: `title`, `plaque`, `photo`, `credit` y `dedication`;
+  - `songs[]`: `near` (junto a qué retrato), `title`, `artist`, `cover`, `audio`, `link` y `dedication`.
+
+  Las fotos cuentan en el límite de 25 (una ruta ya usada en otra sala no vuelve a contar) y las canciones en el máximo de 5 del museo.
+- **Contenido instalado.** Las seis fotografías de dist/assets/sala04/ son ejemplos de Pexels acordes con las descripciones: sonrisa, perfil sereno, manos entrelazadas, mirada junto a una ventana, atardecer y una pareja abrazada. Los créditos aparecen en las notas y en la fotografía ampliada. Se pueden reemplazar por fotografías personales.
+- **Canciones.** Los tres MP3 proporcionados por el usuario se copiaron sin conversión: «When I Look at You», Miley Cyrus (4:06); «Just the Way You Are», Bruno Mars (3:40); y «Perfect», Ed Sheeran (4:24). Cada estación reproduce su archivo dentro de la sala y tiene una dedicatoria propia.
+
+### Fuentes de las fotografías de la sala 04
+
+Descargadas el 7 de octubre de 2026, bajo la [licencia de Pexels](https://www.pexels.com/license/). Los archivos originales descargados conservan su encuadre y marcas visibles.
+
+| Recuerdo | Fotografía y autor |
+| --- | --- |
+| Tu manera de alegrar mis días | [Konstantin Mishchenko: sonrisa con luz cálida](https://www.pexels.com/photo/portrait-of-a-smiling-woman-in-warm-lighting-28442312/) |
+| Lo que admiro de ti | [Alina Chernii: retrato de perfil](https://www.pexels.com/photo/portrait-of-a-woman-from-profile-18841733/) |
+| Tus pequeños gestos | [Jonathan Borba: manos entrelazadas](https://www.pexels.com/photo/romantic-couple-holding-hands-at-sunset-28961734/) |
+| Contigo puedo ser yo | [behrouz sasani: retrato junto a una ventana](https://www.pexels.com/photo/portrait-of-a-woman-through-a-window-5590429/) |
+| Te sigo eligiendo | [rasul lotfi: retrato al atardecer](https://www.pexels.com/photo/woman-portrait-at-sunset-14411942/) |
+| Mi obra favorita | [Oğuz Uğur: pareja abrazada](https://www.pexels.com/photo/portrait-of-hugging-couple-20103982/) |

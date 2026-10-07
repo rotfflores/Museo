@@ -261,3 +261,14 @@ body:has(#little-note.inspecting) .site-header{visibility:hidden}
 .inspect-hint.gone{opacity:0}
 #little-note.inspecting .inspect-view{position:relative}
 @media(max-width:760px){.inspect-hint{font-size:8px;letter-spacing:.8px;bottom:12px;max-width:calc(100% - 24px);white-space:normal;text-align:center}}
+/* Sala 04 · Así te veo yo */
+.lobby-heading.room-overlay>p#you-counter{font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#8c754e;margin:8px auto 0}
+.lobby-heading.room-overlay #you-subtitle{font-family:var(--serif);font-style:italic;font-size:14px;color:#817057;margin:0 auto;max-width:560px}
+.you-steps{display:flex;justify-content:space-between;gap:12px;margin-top:18px;padding-top:12px;border-top:1px solid rgba(184,155,102,.3)}
+.you-steps .text-button{min-height:40px;padding:8px 4px}
+.you-audio{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.you-audio p:empty{display:none}
+.you-song-link{text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.you-song-note{font-size:12px;color:#8a7a62;margin-top:14px}
+.you-cover{margin:12px 0}.you-cover img{width:120px;height:120px;object-fit:cover;border-radius:6px;box-shadow:0 6px 18px rgba(60,40,20,.18)}
+@media(max-width:600px){.lobby-heading.room-overlay>p#you-counter{font-size:8px;letter-spacing:1.1px;margin-top:5px}.lobby-heading.room-overlay #you-subtitle{font-size:12px}}
