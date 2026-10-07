@@ -146,3 +146,22 @@ dialog[open]{animation:dialog-in .45s cubic-bezier(.2,.7,.2,1)}
 body.lobby-view .notice{bottom:calc(96px + env(safe-area-inset-bottom))}
 @media(prefers-reduced-motion:reduce){dialog[open]{animation:none}}
 dialog:has(.tutorial-dialog),dialog:has(.dialog-note){width:min(560px,calc(100% - 36px))}
+
+/* Sala 01: madera de nogal y bronce; acceso distinto al vidrio del vestíbulo. */
+.door-transition[data-variant="room-01"]{background:#332a22;perspective:1600px}
+.door-transition[data-variant="room-01"] .door{background:linear-gradient(90deg,#30251e,#4f3e30 45%,#3f3026);box-shadow:inset 0 0 65px #170f0866}
+.door-transition[data-variant="room-01"] .door:before{background:repeating-linear-gradient(90deg,#9a7c4926 0 1px,#221a1433 1px 3px,transparent 3px 18px);opacity:.65}
+.door-transition[data-variant="room-01"] .door-panel{border:1px solid #a68b5c;background:linear-gradient(135deg,#6b544426,#251c1680);box-shadow:inset 0 0 0 6px #3a2c224d,inset 0 0 0 7px #c6a67226;border-radius:clamp(65px,10vw,140px) clamp(65px,10vw,140px) 0 0}
+.door-transition[data-variant="room-01"] .door-left{border-right-color:#251b13;transform-origin:left center}
+.door-transition[data-variant="room-01"] .door-right{border-left-color:#8b7350;transform-origin:right center}
+.door-transition[data-variant="room-01"] .door-arch{border-color:#d5c5a7;box-shadow:inset 0 0 0 2px #9a8156,inset 0 0 32px #160e0999}
+.door-transition[data-variant="room-01"] .door-identity{background:radial-gradient(ellipse,#443529f5 30%,#443529dd 55%,transparent 73%)}
+.door-transition[data-variant="room-01"] .door-identity h2{color:#efe6d5}
+.door-transition[data-variant="room-01"] .door-identity .eyebrow,.door-transition[data-variant="room-01"] .door-note p{color:#c2ae87}
+.door-transition[data-variant="room-01"] .door-monogram{width:48px;height:48px;border:1px solid #9a8156;border-radius:50%;justify-content:center;font-style:normal;color:#d6c49e;font-size:17px}
+.door-transition[data-variant="room-01"] .door-monogram:before,.door-transition[data-variant="room-01"] .door-monogram:after{display:none}
+.door-transition[data-variant="room-01"] .door-progress b{background:#c1a16d}
+.door-transition[data-variant="room-01"].ready .door-left{transform:rotateY(-2deg)}
+.door-transition[data-variant="room-01"].ready .door-right{transform:rotateY(2deg)}
+.door-transition[data-variant="room-01"].open .door-left{transform:rotateY(-100deg)}
+.door-transition[data-variant="room-01"].open .door-right{transform:rotateY(100deg)}

@@ -492,10 +492,10 @@ function build() {
   const dust = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ map: dotTexture(), size: 0.07, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffe8bf' }));
   scene.add(dust);
 
-  /* Cámara: entra por la puerta del museo y luego sigue tu mirada. */
+  /* La entrada permanece en el mismo encuadre mientras se retira la puerta. */
   const home = new THREE.Vector3(0, 1.95, 6.6);
-  const view = { yaw: 0, pitch: -0.05, targetYaw: 0, targetPitch: -0.05 };
-  let flight = null, intro = null, hovered = null, visible = false, running = false, announced = false;
+  const view = { yaw: 0, pitch: -0.005, targetYaw: 0, targetPitch: -0.005 };
+  let flight = null, returnTimer = null, hovered = null, visible = false, running = false, announced = false;
   const portrait = () => sceneBox.clientWidth / sceneBox.clientHeight < 1.1;
   // A pantalla completa se puede recorrer con la mirada todo el arco de puertas.
   const yawLimit = () => (portrait() ? 1.1 : 0.62);
@@ -518,9 +518,14 @@ function build() {
   const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const lookDirection = (yaw, pitch) => new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
 
-  function startIntro() {
-    if (reducedMotion.matches) { intro = null; return; }
-    intro = { start: performance.now(), from: new THREE.Vector3(0, 2.6, 15.5), duration: 2600 };
+  function settleCamera() {
+    clearTimeout(returnTimer);
+    flight = null;
+    sceneBox.classList.remove('flying','through');
+    camera.position.copy(home);
+    view.yaw = view.targetYaw;
+    view.pitch = view.targetPitch;
+    camera.lookAt(home.clone().add(lookDirection(view.yaw,view.pitch)));
   }
 
   function placeCamera(now) {
@@ -532,18 +537,10 @@ function build() {
       if (t === 1) { const done = flight.done; flight = null; done?.(); }
       return;
     }
-    if (intro) {
-      const t = Math.min(1, (now - intro.start) / intro.duration), k = ease(t);
-      camera.position.lerpVectors(intro.from, home, k);
-      camera.lookAt(new THREE.Vector3(0, 1.9, -3));
-      if (t === 1) intro = null;
-      return;
-    }
     /* La mirada sólo cambia cuando la persona la mueve: sin deriva automática. */
     view.yaw += (view.targetYaw - view.yaw) * 0.08;
     view.pitch += (view.targetPitch - view.pitch) * 0.08;
-    const sway = reducedMotion.matches ? 0 : Math.sin(now / 2600) * 0.025;
-    camera.position.set(home.x + view.yaw * 0.6, home.y + sway, home.z);
+    camera.position.copy(home);
     camera.lookAt(camera.position.clone().add(lookDirection(view.yaw, view.pitch)));
   }
 
@@ -554,7 +551,7 @@ function build() {
   function homeLook() { return home.clone().add(lookDirection(view.yaw, view.pitch).multiplyScalar(6)); }
 
   function enterDoor(door) {
-    if (flight || intro) return;
+    if (flight) return;
     const center = door.group.position.clone().setY(1.55);
     const inward = center.clone().setY(0).normalize();
     const front = center.clone().sub(inward.clone().multiplyScalar(2.6)).setY(1.65);
@@ -575,7 +572,8 @@ function build() {
     });
   }
   function returnHome(delay) {
-    setTimeout(() => {
+    clearTimeout(returnTimer);
+    returnTimer = setTimeout(() => {
       if(document.querySelector('#lobby').hidden){flight=null;sceneBox.classList.remove('flying','through');return;}
       view.targetYaw = view.yaw;
       flyTo(home.clone(), homeLook(), 1500, () => sceneBox.classList.remove('flying'));
@@ -597,7 +595,7 @@ function build() {
     if (drag) {
       const dx = event.clientX - drag.x;
       if (Math.abs(dx) > 6) drag.moved = true;
-      if (drag.moved) view.targetYaw = THREE.MathUtils.clamp(drag.yaw - dx / sceneBox.clientWidth * 2.4, -yawLimit(), yawLimit());
+      if (drag.moved) view.targetYaw = THREE.MathUtils.clamp(drag.yaw + dx / sceneBox.clientWidth * 2.4, -yawLimit(), yawLimit());
     }
     if (event.pointerType === 'mouse') {
       const object = flight ? null : pick(event);
@@ -612,7 +610,7 @@ function build() {
   canvas.addEventListener('pointerup', event => {
     const wasDrag = drag?.moved;
     drag = null;
-    if (wasDrag || flight || intro) return;
+    if (wasDrag || flight) return;
     const object = pick(event);
     if (!object) return;
     if (object.userData.kind === 'heart') { heartPulse = performance.now(); Museum.openPassport(); }
@@ -669,9 +667,10 @@ function build() {
   new IntersectionObserver(entries => { visible = entries[0].isIntersecting; setRunning(); }).observe(sceneBox);
   document.addEventListener('visibilitychange', setRunning);
   document.addEventListener('museum:screen', event => {
-    if (event.detail === 'lobby') { refreshDoors(); resize(); startIntro(); }
+    if (event.detail === 'lobby') { refreshDoors(); resize(); settleCamera(); }
+    else { clearTimeout(returnTimer); flight=null; }
     setRunning();
   });
-  if (!document.querySelector('#lobby').hidden) startIntro();
+  if (!document.querySelector('#lobby').hidden) settleCamera();
   setRunning();
 }

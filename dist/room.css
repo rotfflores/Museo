@@ -137,3 +137,17 @@ dialog:has(.room-help-sheet){width:min(560px,calc(100% - 36px))}
 .media-credit a{color:inherit;text-underline-offset:3px}
 .memory-gallery.single-memory img{max-height:48svh}
 @media(max-width:600px){.conversation-capture img{max-height:58svh}.memory-gallery.single-memory img{max-height:56svh}}
+
+/* Notas de las piezas: el museo permanece visible y navegable. */
+.room-note{position:fixed;z-index:15;right:clamp(22px,4vw,56px);bottom:106px;width:min(350px,calc(100vw - 40px));padding:26px 25px 23px;background:#fbf7edef;border:1px solid #b6a47e;box-shadow:0 12px 40px #3d302b26;backdrop-filter:blur(12px);max-height:calc(100svh - 200px);overflow:auto;animation:room-note-in .25s ease}
+.room-note:before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:#a58a59}
+.room-note .close-button{position:absolute;top:9px;right:9px;width:30px;height:30px;font-size:20px}
+.room-note .eyebrow{font-size:8px;letter-spacing:1.4px;color:#90794f;padding-right:16px;margin:0 0 14px}
+.room-note h2{font-family:var(--serif);font-size:26px;font-weight:400;line-height:1.15;margin:0 0 14px;padding-right:14px}
+.room-note-description{font-size:12px;line-height:1.75;color:#786951}
+.room-note-dedication{font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.55;color:#7b6747;margin:14px 0 0}
+.room-note-reward{font-size:11px;line-height:1.6;color:#687355;border-top:1px solid #c4b59466;padding-top:12px;margin-top:15px}
+.room-note .media-credit{text-align:left;font-size:9px!important}
+@keyframes room-note-in{from{opacity:0;transform:translateY(8px)}}
+@media(max-width:600px){.room-note{right:16px;left:16px;bottom:92px;width:auto;padding:21px 22px;max-height:44svh}.room-note h2{font-size:23px}.room-note-description{font-size:11px}.room-note-dedication{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.room-note{animation:none}}

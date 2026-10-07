@@ -114,6 +114,10 @@
         <div class="room-help-actions"><button id="clue-hint" class="text-button" type="button">Necesito una pista <span aria-hidden="true">✧</span></button><button id="accessible-decoration" class="text-button" type="button" hidden>Explorar los detalles de la columna</button></div>
         <span class="plaque-screw bottom-left"></span><span class="plaque-screw bottom-right"></span>
       </div>
+      <aside id="room-note" class="room-note" hidden aria-labelledby="room-note-title">
+        <button id="close-room-note" class="close-button" type="button" aria-label="Cerrar nota">×</button>
+        <div id="room-note-content"></div>
+      </aside>
       <nav id="room-dock" class="lobby-dock room-dock" aria-label="Sala 01">
         <button id="room-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
         <button id="room-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="room-passport-count">0/6</small></span></button>

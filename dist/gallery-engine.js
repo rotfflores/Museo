@@ -109,8 +109,8 @@ export function createGallery({container,scene,camera,obstacles,targets,onTarget
     }
     // Deslizar rápido: a los lados cambia de pieza, hacia abajo da un paso atrás.
     const dx=event.clientX-start.x,dy=event.clientY-start.y,quick=performance.now()-start.time<450;
-    if(quick&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4)onSwipe?.(dx<0?'left':'right',()=>{view.yaw=start.yaw;view.pitch=start.pitch;});
-    else if(quick&&dy>70&&dy>Math.abs(dx)*1.4)onSwipe?.('down',()=>{view.yaw=start.yaw;view.pitch=start.pitch;});
+    if(event.pointerType==='touch'&&quick&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.4)onSwipe?.(dx<0?'left':'right',()=>{view.yaw=start.yaw;view.pitch=start.pitch;});
+    else if(event.pointerType==='touch'&&quick&&dy>70&&dy>Math.abs(dx)*1.4)onSwipe?.('down',()=>{view.yaw=start.yaw;view.pitch=start.pitch;});
   });canvas.addEventListener('pointercancel',()=>{release();hover(null);});canvas.addEventListener('pointerleave',leave);
   // Las tres piezas se abren con un botón; la pequeña llave admite un toque sin arrastre.
   container.addEventListener('keydown',event=>{

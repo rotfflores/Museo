@@ -303,6 +303,7 @@ function buzz(pattern){try{if(matchMedia('(pointer: coarse)').matches)navigator.
 function resume(){if(!$('#museum-dialog').open)engine?.setPaused(false);}
 // La cámara se desliza hasta la pieza y el recuerdo se abre al llegar.
 function goTo(target,{open=true,source=null}={}) {
+  closeNote(false);
   resume();
   if(target.id!=='key')currentPiece=target.index;
   if(focused===target&&!engine.isFlying()){if(open)openTarget(target,source||undefined);return;}
@@ -316,12 +317,14 @@ function goTo(target,{open=true,source=null}={}) {
   else Museum.notify('Puedes acercarte a la pieza con los controles de la sala.');
 }
 function stepBack() {
+  closeNote(false);
   if(!engine)return;
   resume();focused=null;flyingTo=null;
   engine.guideTo(overview,{select:false});
 }
 // Tocar el suelo: caminar hasta ese punto rodeando los muebles.
 function walkTo(point) {
+  closeNote(false);
   const camera=engine.camera.position;
   let x=THREE.MathUtils.clamp(point.x,WALK_BOUNDS.minX,WALK_BOUNDS.maxX),z=THREE.MathUtils.clamp(point.z,WALK_BOUNDS.minZ,WALK_BOUNDS.maxZ);
   for(let i=0;i<14&&!isWalkable(x,z,obstacles);i++){x+=(camera.x-x)*.22;z+=(camera.z-z)*.22;}
@@ -342,7 +345,7 @@ function onSwipe(direction,restoreView) {
   if(!focused||focused.id==='key')return;
   restoreView();
   if(direction==='down'){stepBack();return;}
-  goTo(pieceTargets[(focused.index+(direction==='left'?1:2))%3]);
+  goTo(pieceTargets[(focused.index+(direction==='right'?1:2))%3]);
 }
 function animate(dt) {
   const ease=reducedMotion.matches?1:Math.min(1,dt*8);
@@ -392,7 +395,23 @@ function conversationMarkup(piece) {
 }
 function symbolMarkup() {return '<div class="symbol-composition" aria-label="Dos piezas entrelazadas"><span></span><span></span><i aria-hidden="true">✧</i></div>';}
 function rewardMarkup(){return `<div class="stamp-reward" role="status"><div class="stamp-page" aria-hidden="true"><div class="new-stamp"><span>SALA 01</span><b>✧</b><span>AQUÍ COMENZÓ TODO</span></div></div><p>${escape(room.completionMessage)}</p><div><button data-completion="lobby" class="text-button">Volver al vestíbulo</button><button data-completion="map" class="button primary">Seguir explorando ↗</button></div></div>`;}
+let noteSource=null;
+function closeNote(restoreFocus=true) {
+  const note=$('#room-note');if(note.hidden)return;
+  note.querySelectorAll('audio,video').forEach(media=>{media.pause();media.currentTime=0;});
+  note.hidden=true;$('#room-note-content').replaceChildren();
+  if(restoreFocus)(noteSource?.isConnected&&!noteSource.closest('[hidden]')?noteSource:$('#gallery-stage')).focus({preventScroll:true});
+  noteSource=null;
+}
+function showNote({eyebrow,title,body,source=$('#gallery-stage')}) {
+  closeNote(false);noteSource=source;
+  $('#room-note-content').innerHTML=`<p class="eyebrow">${escape(eyebrow)}</p><h2 id="room-note-title" tabindex="-1">${escape(title)}</h2>${body}`;
+  $('#room-note').hidden=false;$('#room-note-title').focus({preventScroll:true});
+}
+$('#close-room-note').addEventListener('click',()=>closeNote());
+$('#room-note').addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeNote();}});
 function openPiece(index,source=$('#gallery-stage')) {
+  closeNote(false);
   const piece=room.exhibits[index];currentPiece=index;
   const progress=Museum.discoverPiece('beginning',piece.id);
   buzz(progress.newlyCompleted?[30,60,45]:14);
@@ -400,6 +419,9 @@ function openPiece(index,source=$('#gallery-stage')) {
   let media='';
   if(piece.audio)media=`<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ ${escape(text(piece.audioLabel))}</button><audio id="memory-audio" preload="none" src="${escape(piece.audio)}"></audio><p id="media-status" role="status"></p></div>`;
   if(piece.video)media=`<div class="optional-video"><button id="play-memory-video" class="button secondary">▶ Ver nuestro video</button><video id="memory-video" preload="none" playsinline ${piece.videoPoster?`poster="${escape(piece.videoPoster)}"`:''} src="${escape(piece.video)}" hidden></video><p id="media-status" role="status"></p></div>`;
+  if(index>0) {
+    showNote({eyebrow:`PIEZA 0${index+1} · ${piece.date}`,title:piece.title,source,body:`<p class="room-note-description">${escape(piece.description)}</p><p class="room-note-dedication">${escape(piece.dedication)}</p>${index===1?mediaCredit(piece.photoCredit):''}${media}${progress.newlyCompleted?'<p class="room-note-reward" role="status">✧ Sala completada. Tu pasaporte ya tiene un nuevo sello.</p>':''}`});
+  } else {
   Museum.openContent({className:'memory-overlay',source,onClose:progress.newlyCompleted?()=>setTimeout(()=>Museum.notify('Este comienzo ya tiene su sello.'),250):null,html:`<div class="memory-heading"><p class="eyebrow">PIEZA 0${index+1} · ${escape(piece.date)}</p><h2 id="dialog-title">${escape(piece.title)}</h2></div>${artwork}<blockquote class="memory-dedication">“${escape(piece.dedication)}”</blockquote>${media}${progress.newlyCompleted?rewardMarkup():''}<div class="memory-footer"><p>${escape(config.sender)} <span>para</span> ${escape(config.recipient)}</p><button id="next-piece" class="text-button">${index<2?'Ir a la siguiente pieza':'Volver a la primera pieza'} →</button></div>`});
   $('#next-piece').addEventListener('click',()=>{Museum.closeOverlay();setTimeout(()=>guideTo((index+1)%3),0);});
   document.querySelectorAll('[data-completion]').forEach(button=>button.addEventListener('click',()=>{
@@ -411,6 +433,7 @@ function openPiece(index,source=$('#gallery-stage')) {
   document.querySelectorAll('.memory-overlay img:not([data-fallback])').forEach(image=>image.addEventListener('error',()=>{
     const replacement=document.createElement('div');replacement.className='missing-memory-image';replacement.textContent='Este recuerdo espera su imagen. Por ahora, conserva estas palabras.';image.replaceWith(replacement);
   }));
+  }
   if(piece.audio) {
     const audio=$('#memory-audio'),button=$('#play-memory-audio');
     button.addEventListener('click',async()=>{try{if(audio.paused){await audio.play();button.textContent='Ⅱ Pausar audio';}else{audio.pause();button.textContent=`▶ ${text(piece.audioLabel)}`;}}catch{$('#media-status').textContent='No se pudo reproducir el audio. Puedes seguir disfrutando del recuerdo.';}});
@@ -426,7 +449,7 @@ function openPiece(index,source=$('#gallery-stage')) {
 }
 function openKey(source=$('#gallery-stage')) {
   const added=Museum.findClue(room.clue.id);buzz(14);
-  Museum.openContent({className:'key-overlay',source,html:`<div class="dialog-heading"><p class="eyebrow">${added?'LA PRIMERA PISTA':'TU PRIMERA LLAVE'}</p><h2 id="dialog-title">La llave del comienzo</h2></div><div class="collectible-key" aria-hidden="true"><span></span><i></i></div><blockquote class="memory-dedication">“${escape(room.clue.message)}”</blockquote><p class="key-counter">Pistas encontradas: ${Museum.getProgress().clues.length} de 5</p><p class="key-note">Una de las cinco llaves de la vitrina secreta. Tu sello y tus pistas cuentan su propia historia.</p>`});
+  showNote({eyebrow:added?'PISTA ENCONTRADA':'TU PRIMERA LLAVE',title:'La llave del comienzo',source,body:`<p class="room-note-description">Una pequeña llave dorada: la primera de cinco pistas para la vitrina secreta.</p><p class="room-note-dedication">${escape(room.clue.message)}</p><p class="room-note-reward" role="status">Pistas encontradas: ${Museum.getProgress().clues.length} de 5</p>`});
   updateProgress();
 }
 function openTarget(target=selected,source){if(!target)return;if(target.id==='key')openKey(source);else openPiece(target.index,source);}
@@ -480,6 +503,6 @@ $('#room-passport').addEventListener('click',event=>Museum.openPassport(event.cu
 $('#clue-hint').addEventListener('click',()=>Museum.notify(room.clue.hint));
 $('#accessible-decoration').addEventListener('click',event=>openKey(event.currentTarget));
 document.addEventListener('museum:progress',updateProgress);
-document.addEventListener('museum:overlay',event=>engine?.setPaused(event.detail));
-document.addEventListener('museum:screen',event=>{engine?.setActive(event.detail==='room');document.body.classList.toggle('room-view',event.detail==='room');});
+document.addEventListener('museum:overlay',event=>{if(event.detail)closeNote(false);engine?.setPaused(event.detail);});
+document.addEventListener('museum:screen',event=>{if(event.detail!=='room')closeNote(false);engine?.setActive(event.detail==='room');document.body.classList.toggle('room-view',event.detail==='room');});
 updateProgress();
