@@ -27,6 +27,23 @@
         room.pieces=[...data.portraits.map(piece=>piece.id),...(data.centerpiece?[data.centerpiece.id]:[])];
         continue;
       }
+      // Sala de planes: cada plan es una pieza. Solo un plan conserva su invitación opcional.
+      if(Array.isArray(data.plans)) {
+        let invitation=false;
+        data.plans=data.plans.filter(piece=>{
+          if(!piece||!piece.id||seen.has(piece.id)) return false;
+          seen.add(piece.id);
+          if(piece.photo){ if(paths.has(piece.photo)) {} else if(photos<LIMITS.photos) {photos++;paths.add(piece.photo);} else {piece.photo=null;dropped.push(`${piece.id} (foto)`);} }
+          const card=piece.invitation;
+          const filled=card&&['date','time','place','message'].some(key=>String(card[key]||'').trim());
+          piece.invitation=filled&&!invitation?card:null;
+          if(filled) invitation=true;
+          return true;
+        });
+        if(dropped.length && typeof console!=='undefined') console.warn(`Límite de ${LIMITS.photos} fotos: se omiten ${dropped.join(', ')}.`);
+        room.pieces=data.plans.map(piece=>piece.id);
+        continue;
+      }
       // Salas de objetos: cada objeto es una pieza; su foto complementaria cuenta en el límite de fotos.
       if(Array.isArray(data.objects)) {
         data.objects=data.objects.filter(piece=>{
@@ -78,7 +95,10 @@
     };
     // Recupera un cierre inesperado después de guardar la tercera pieza.
     for(const room of config.rooms) if(room.pieces?.length && room.pieces.every(id=>discoveries[room.id].has(id))) state.completed.add(room.id);
-    const getProgress = () => ({entered:state.entered,completed:[...state.completed],clues:[...state.clues],discoveries:Object.fromEntries(Object.entries(discoveries).map(([id,set])=>[id,[...set]]))});
+    const finalRoom = config.rooms.find(room=>room.requires);
+    const finalUnlocked = () => !!finalRoom && finalRoom.requires.every(id=>state.completed.has(id));
+    const cluesComplete = () => !!config.clueIds?.length && config.clueIds.every(id=>state.clues.has(id));
+    const getProgress = () => ({entered:state.entered,completed:[...state.completed],clues:[...state.clues],cluesComplete:cluesComplete(),finalUnlocked:finalUnlocked(),discoveries:Object.fromEntries(Object.entries(discoveries).map(([id,set])=>[id,[...set]]))});
     function save() {
       try { storage?.setItem(key,JSON.stringify({...getProgress(),soundPreferred:state.soundPreferred,tutorialSeen:state.tutorialSeen,tutorialRoomSeen:state.tutorialRoomSeen})); } catch { /* Memoria de sesión como alternativa. */ }
     }
@@ -100,8 +120,23 @@
       if(!config.clueIds?.includes(id) || state.clues.has(id)) return false;
       state.clues.add(id); save(); return true;
     }
-    return {state,save,getProgress,discoverPiece,completeRoom,findClue};
+    return {state,save,getProgress,discoverPiece,completeRoom,findClue,finalUnlocked,cluesComplete};
   }
-  root.MuseumProgress={createStore,prepareConfig,LIMITS};
-  if(typeof module!=='undefined' && module.exports) module.exports={createStore,prepareConfig,LIMITS};
+  /* El próximo capítulo elegido en la sala 05: solo en este dispositivo y separado de piezas, sellos y pistas. */
+  function createChoiceStore(config, storage) {
+    const key = `museum-of-us:${config.id}:next-chapter:v1`;
+    const valid = id => !!config.futureRoom?.plans?.some(plan=>plan.id===id);
+    let current = null;
+    try { const saved=storage?.getItem(key); current = valid(saved) ? saved : null; } catch { /* Sin almacenamiento: solo esta visita. */ }
+    return {
+      get: () => current,
+      set(id) {
+        current = valid(id) ? id : null;
+        try { if(current) storage?.setItem(key,current); else storage?.removeItem?.(key); } catch { /* Memoria de sesión. */ }
+        return current;
+      }
+    };
+  }
+  root.MuseumProgress={createStore,createChoiceStore,prepareConfig,LIMITS};
+  if(typeof module!=='undefined' && module.exports) module.exports={createStore,createChoiceStore,prepareConfig,LIMITS};
 })(globalThis);

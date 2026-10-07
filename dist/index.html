@@ -18,6 +18,7 @@
   <script type="module" src="moments-room.js"></script>
   <script type="module" src="little-things-room.js"></script>
   <script type="module" src="you-room.js"></script>
+  <script type="module" src="future-room.js"></script>
 </head>
 <body>
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -209,6 +210,33 @@
         <button id="you-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
         <button id="you-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="you-passport-count">0/6</small></span></button>
         <button id="you-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
+      </nav>
+    </section>
+    <section id="future-screen" class="screen room-screen" hidden aria-labelledby="future-title">
+      <div class="lobby-heading room-overlay"><p class="eyebrow">SALA 05 · LO QUE TODAVÍA NOS ESPERA</p><h1 id="future-title"></h1><p id="future-subtitle"></p><p class="moments-counter" id="future-counter" role="status">Planes descubiertos: 0 de 5</p></div>
+      <div id="future-stage" class="gallery-stage" role="region" aria-label="Sala 3D luminosa con cinco marcos cubiertos de papel y una mesa con un libro en el centro. Toca un marco para acercarte y descubrir su plan, toca el suelo para caminar, arrastra para mirar y desliza a los lados para cambiar de marco. Con teclado: W, A, S, D o las flechas para caminar, Q o E para girar, Enter para abrir y Escape para retroceder." tabindex="0">
+        <div id="future-fallback" class="gallery-fallback" hidden><p>Recorre esta sala a través de sus cinco planes.</p><span aria-hidden="true">✧</span></div>
+        <p class="sr-only" aria-live="polite"><span id="future-target-name"></span></p>
+        <button id="future-discover" class="examine-pill future-discover" type="button" hidden>Descubrir este plan</button>
+        <div class="keyboard-shortcuts"><button id="future-prev" class="sr-only-focusable" type="button">Plan anterior</button><button id="future-next" class="sr-only-focusable" type="button">Plan siguiente</button><button id="future-book-key" class="sr-only-focusable" type="button">Ir al libro del próximo capítulo</button><button id="future-exit-door" class="sr-only-focusable" type="button">Salir por la puerta al vestíbulo</button></div>
+      </div>
+      <div id="future-help-panel" class="welcome-plaque room-help-card" hidden>
+        <span class="plaque-screw top-left"></span><span class="plaque-screw top-right"></span>
+        <p class="eyebrow">LO QUE LLEVAS</p>
+        <div class="room-status"><p id="future-discovery-count">Planes descubiertos: 0 de 5</p><p id="future-choice-state">Próximo capítulo: todavía sin elegir</p><p id="future-clue-count">Pistas encontradas: 0 de 5</p></div>
+        <nav id="future-tour" class="exhibit-tour" aria-label="Los cinco planes y el libro"></nav>
+        <p class="room-help-exit">Descubre los cinco planes para recibir el sello. Elegir el próximo capítulo es opcional y solo se guarda en este dispositivo. Detrás de ti, por donde entraste, está la puerta de regreso al vestíbulo.</p>
+        <div class="room-help-actions"><button id="future-clue-hint" class="text-button" type="button">Necesito una pista <span aria-hidden="true">✧</span></button><button id="future-accessible-clue" class="text-button" type="button" hidden>Buscar el detalle escondido</button></div>
+        <span class="plaque-screw bottom-left"></span><span class="plaque-screw bottom-right"></span>
+      </div>
+      <aside id="future-note" class="room-note" hidden aria-labelledby="future-note-title">
+        <button id="close-future-note" class="close-button" type="button" aria-label="Cerrar nota">×</button>
+        <div id="future-note-content"></div>
+      </aside>
+      <nav id="future-dock" class="lobby-dock room-dock" aria-label="Sala 05">
+        <button id="future-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="future-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="future-passport-count">0/6</small></span></button>
+        <button id="future-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
     </section>
   </main>

@@ -4,6 +4,8 @@ Experiencia en HTML, CSS y JavaScript. Conserva la invitación, el boleto y la r
 
 ## Ejecutar y verificar
 
+GitHub Pages publica `dist/` en https://rotfflores.github.io/Museo/. El flujo `.github/workflows/pages.yml` comprueba el museo y lo actualiza automáticamente al subir cambios a `main`. También puede ejecutarse desde la pestaña Actions de GitHub.
+
 ```sh
 node preview.cjs
 node --test tests/museum.test.cjs tests/moments.test.cjs tests/little-things.test.cjs tests/you.test.cjs tests/sound.test.cjs
@@ -161,3 +163,23 @@ Descargadas el 7 de octubre de 2026, bajo la [licencia de Pexels](https://www.pe
 - La barra de Nota, Mapa, Pasaporte, Mi boleto, Sonido y Ayuda está en el vestíbulo y en las cuatro salas. En las salas añade «Salir». La ayuda abre el recorrido de la sala actual.
 - Las fotografías se contemplan mediante la cámara, con una frase breve y sin opción de ampliación. La canción activa dispone de un control compartido de pausa y cierre sobre la barra.
 - Las pruebas de sonido cubren los fundidos, la prioridad, el silencio global, la finalización y los intentos de reproducción pendientes o fallidos.
+
+## Sala 05: Lo que todavía nos espera
+
+Un taller luminoso con dos ventanales al amanecer. Hay cinco marcos cubiertos de papel con la palabra «Próximamente» y, en el centro, una mesa con el libro «Nuestro próximo capítulo». Se entra por la puerta 05 del vestíbulo o desde el mapa. La puerta de regreso está detrás de la cámara.
+
+- **Planes.** Al acercarte a un marco aparece «Descubrir este plan».
+  - El papel se levanta (con movimiento reducido, solo un fundido breve) y deja ver un pequeño escenario 3D.
+  - La nota muestra el título, la descripción y la dedicatoria.
+  - Los planes descubiertos siguen visibles al volver y se pueden abrir de nuevo.
+- **Sello.** La sala se completa al descubrir todos los planes configurados.
+- **Próximo capítulo.** «Me gustaría empezar por este» es opcional y guarda un solo plan.
+  - El plan elegido aparece en el libro y en una cinta sobre su marco.
+  - La elección se puede cambiar o quitar.
+  - Se guarda solo en este dispositivo, aparte de las piezas, los sellos y las pistas. No envía nada.
+- **Invitación.** Es opcional y solo puede tenerla un plan. Si existe, aparece un sobre con «Abrir invitación» que muestra únicamente los datos configurados.
+- **Sala 06.** Al completar las salas 01 a 05, en cualquier orden, aparece «La última sala ya puede abrirse». Mientras la sala 06 no exista, intentar entrar muestra «La sala final estará disponible pronto». Para conectarla después basta con `Museum.registerRoom('artwork', …)`.
+- **Pista secreta.** Es una brújula dorada en el costado izquierdo de la mesa del libro (id `future-compass`). Con las cinco pistas encontradas, la colección se marca como completa.
+- **Personalizar.** Todo está en dist/config.js, en `futureRoom`:
+  - `plans[]`: `title`, `description`, `dedication`, `scene`, `photo` (opcional, cuenta en el límite de 25) e `invitation` (`date`, `time`, `place`, `message`);
+  - `book`: los textos del libro.

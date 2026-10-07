@@ -8,6 +8,8 @@
   let storage;
   try { storage=window.localStorage; } catch { /* Acceso restringido: conservar en memoria. */ }
   const progressStore=window.MuseumProgress.createStore(config,storage);
+  const choiceStore=window.MuseumProgress.createChoiceStore(config,storage);
+  let finalWasUnlocked=progressStore.finalUnlocked();
   const state=progressStore.state;
   let screen = 'invitation', transitioning = false, opener = null, noticeTimer, invitationTimer;
   const roomHandlers = new Map();
@@ -24,6 +26,9 @@
   }
   function progressChanged() {
     updatePassportCount();
+    // La sala final se desbloquea con los cinco sellos, en cualquier orden.
+    if(!finalWasUnlocked&&progressStore.finalUnlocked()) setTimeout(()=>notify(config.texts.finalRoomUnlocked),reducedMotion.matches?0:1600);
+    finalWasUnlocked=progressStore.finalUnlocked();
     document.dispatchEvent(new CustomEvent('museum:progress'));
   }
   function notify(message) {
@@ -36,24 +41,25 @@
   function showScreen(next, focus = true) {
     clearTimeout(invitationTimer);
     screen = next;
-    const inMuseum=['lobby','room','moments','little-things','you'].includes(next);
+    const inMuseum=['lobby','room','moments','little-things','you','future'].includes(next);
     sharedDock.hidden=!inMuseum;$('#museum-back').hidden=next==='lobby';sharedDock.setAttribute('aria-label','Navegación del museo');
     if(next==='lobby')sound.enter();else if(!inMuseum)sound.leave();
     miniPlayer.hidden=!inMuseum||sound.state().kind!=='audio'||!sound.state().active;
-    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen'],['little-things','little-screen'],['you','you-screen']]) $(`#${id}`).hidden = name !== next;
+    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen'],['little-things','little-screen'],['you','you-screen'],['future','future-screen']]) $(`#${id}`).hidden = name !== next;
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     labels.room='04 <span class="footer-line"></span> AQUÍ COMENZÓ TODO';
     labels.moments='05 <span class="footer-line"></span> MOMENTOS QUE SE QUEDARON';
     labels.you='07 <span class="footer-line"></span> ASÍ TE VEO YO';
+    labels.future='08 <span class="footer-line"></span> LO QUE TODAVÍA NOS ESPERA';
     labels['little-things']='06 <span class="footer-line"></span> PEQUEÑAS COSAS, GRANDES RECUERDOS';
     $('#stage-label').innerHTML = labels[next];
     document.body.classList.toggle('lobby-view',next==='lobby');
     // Las salas comparten el mismo diseño a pantalla completa.
-    document.body.classList.toggle('room-view',next==='room'||next==='moments'||next==='little-things'||next==='you');
+    document.body.classList.toggle('room-view',next==='room'||next==='moments'||next==='little-things'||next==='you'||next==='future');
     window.scrollTo({top:0,behavior:'instant'});
     document.dispatchEvent(new CustomEvent('museum:screen',{detail:next}));
     if (focus) {
-      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next === 'little-things' ? 'little-screen' : next === 'you' ? 'you-screen' : next} h1`);
+      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next === 'little-things' ? 'little-screen' : next === 'you' ? 'you-screen' : next === 'future' ? 'future-screen' : next} h1`);
       heading.setAttribute('tabindex','-1');
       heading.focus({preventScroll:true});
     }
@@ -125,7 +131,7 @@
   }
   // Volver desde una sala: la puerta del museo se cierra, cambia la escena y se abre en el vestíbulo.
   async function returnToLobby() {
-    if(screen!=='room'&&screen!=='moments'&&screen!=='little-things'&&screen!=='you'){showScreen('lobby');return;}
+    if(screen!=='room'&&screen!=='moments'&&screen!=='little-things'&&screen!=='you'&&screen!=='future'){showScreen('lobby');return;}
     if(dialog.open) closeDialog();
     const opened=await playDoors({lines:['Cerrando la sala…','Volviendo al vestíbulo…','Bienvenida de nuevo.'],cover:()=>showScreen('lobby',false),ready:()=>null,minimum:1100,label:'EL MUSEO DE NOSOTROS',title:'El vestíbulo'});
     if(opened){$('#lobby-title').setAttribute('tabindex','-1');$('#lobby-title').focus({preventScroll:true});} else showScreen('lobby');
@@ -214,18 +220,21 @@
     $('#dialog-content').className = type === 'ticket' ? 'dialog-ticket' : '';
     $('#dialog-content').innerHTML = type === 'map' ? mapMarkup() : type === 'passport' ? passportMarkup() : `<div class="dialog-heading"><h2 id="dialog-title">Tu entrada, para siempre</h2><p>Esta historia tiene un lugar reservado para ti.</p></div>${ticketMarkup()}`;
     if(type==='map') {
-      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':screen==='moments'?'Sala 02 · Momentos que se quedaron':screen==='little-things'?'Sala 03 · Pequeñas cosas, grandes recuerdos':screen==='you'?'Sala 04 · Así te veo yo':'Vestíbulo';
+      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':screen==='moments'?'Sala 02 · Momentos que se quedaron':screen==='little-things'?'Sala 03 · Pequeñas cosas, grandes recuerdos':screen==='you'?'Sala 04 · Así te veo yo':screen==='future'?'Sala 05 · Lo que todavía nos espera':'Vestíbulo';
       const open=config.rooms.filter(room=>roomHandlers.has(room.id)).map(room=>room.title.replace(/\.$/,''));
       $('.map-footnote',dialog).textContent=open.length>1?`${open.slice(0,-1).join(', ')} y ${open.at(-1)} están abiertas. Las otras salas abrirán pronto.`:`${open[0]||'La primera sala'} está abierta. Las otras salas abrirán pronto.`;
       dialog.querySelectorAll('[data-room]').forEach(button=>{
+        const target=config.rooms.find(room=>room.id===button.dataset.room);
+        if(target?.requires&&progressStore.finalUnlocked()&&!roomHandlers.has(target.id)) $('.room-number',button).textContent+=' · DESBLOQUEADA';
         if(roomHandlers.has(button.dataset.room)) {
           button.classList.add('available');
           $('.room-number',button).textContent+=state.completed.has(button.dataset.room)?' · ✧':' · ABIERTA';
         }
       });
     }
+    if(type==='map'&&progressStore.finalUnlocked()) $('#room-lock-explanation span',dialog).textContent=`Sala 06 · ${config.texts.finalRoomUnlocked}`;
     if(type==='passport') {
-      const counter=document.createElement('p');counter.className='passport-clues';counter.textContent=`Pistas encontradas: ${state.clues.size} de 5`;
+      const counter=document.createElement('p');counter.className='passport-clues';counter.textContent=`Pistas encontradas: ${state.clues.size} de ${config.clueIds.length}${progressStore.cluesComplete()?' · colección completa':''}`;
       $('.passport-page',dialog).append(counter);
     }
     if(!dialog.open) dialog.showModal();
@@ -249,8 +258,8 @@
   async function visitRoom(id) {
     const room = config.rooms.find(item=>item.id===id);
     if(!room) return;
-    if(!roomHandlers.has(id)) { notify(config.texts.roomSoon); return; }
     if(room.requires && !room.requires.every(item=>state.completed.has(item))) { notify(config.texts.lockedRoom); return; }
+    if(!roomHandlers.has(id)) { notify(room.requires ? config.texts.finalRoomSoon : config.texts.roomSoon); return; }
     closeDialog();
     try {
       const result = await roomHandlers.get(id)({config, returnToLobby});
@@ -280,7 +289,14 @@
       if(result.added || result.newlyCompleted) progressChanged();
       return result;
     },
-    findClue:id=>{const added=progressStore.findClue(id);if(added)progressChanged();return added;},
+    findClue:id=>{
+      const added=progressStore.findClue(id);
+      if(added){progressChanged();if(progressStore.cluesComplete())setTimeout(()=>notify(config.texts.cluesComplete),reducedMotion.matches?0:900);}
+      return added;
+    },
+    // El próximo capítulo elegido: solo en este dispositivo, sin enviar nada a nadie.
+    getNextChapter:()=>choiceStore.get(),
+    setNextChapter:id=>{const value=choiceStore.set(id);document.dispatchEvent(new CustomEvent('museum:next-chapter',{detail:value}));return value;},
     returnToLobby,
     playDoors,
     openTutorial:(kind,source)=>openTutorial(source,kind),
@@ -294,7 +310,7 @@
   function renderSound(state) {
     const button=$('#ambient-toggle');button.setAttribute('aria-pressed',String(state.muted));button.setAttribute('aria-label',state.muted?'Activar todo el sonido':'Silenciar todo el sonido');$('span',button).textContent=state.muted?'Silencio':'Sonido';
     document.querySelectorAll('[data-audio-src]').forEach(control=>{control.textContent=state.kind==='audio'&&state.active?.getAttribute('src')===control.dataset.audioSrc&&state.playing?'Ⅱ Pausar':control.dataset.audioLabel;});
-    miniPlayer.hidden=!['lobby','room','moments','little-things','you'].includes(screen)||!state.active||state.kind!=='audio';
+    miniPlayer.hidden=!['lobby','room','moments','little-things','you','future'].includes(screen)||!state.active||state.kind!=='audio';
     $('#museum-player-title').textContent=state.title;
     $('#museum-player-toggle').textContent=state.playing?'Ⅱ':'▶';$('#museum-player-toggle').setAttribute('aria-label',state.playing?'Pausar canción':'Reproducir canción');
   }
@@ -330,7 +346,7 @@
   $('#open-passport').addEventListener('click',event=>openDialog('passport',event.currentTarget));
   $('#consult-ticket').addEventListener('click',event=>openDialog('ticket',event.currentTarget));
   $('#open-note').addEventListener('click',event=>openContent({className:'dialog-note',source:event.currentTarget,html:noteMarkup()}));
-  $('#replay-tutorial').addEventListener('click',event=>{const help={room:'room-help',moments:'moments-help','little-things':'little-help',you:'you-help'}[screen];if(help)$('#'+help).click();else openTutorial(event.currentTarget);});
+  $('#replay-tutorial').addEventListener('click',event=>{const help={room:'room-help',moments:'moments-help','little-things':'little-help',you:'you-help',future:'future-help'}[screen];if(help)$('#'+help).click();else openTutorial(event.currentTarget);});
   // Deslizar hacia arriba desde el menú inferior abre el mapa.
   {
     const dock=$('#lobby-dock');let start=null,swallow=0;

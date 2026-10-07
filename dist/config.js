@@ -19,6 +19,9 @@ window.MUSEUM_CONFIG = {
     passportMessage: "Cada sala guarda una parte de nuestra historia. Explórala para recibir su sello.",
     roomSoon: "Esta sala estará disponible pronto",
     lockedRoom: "Se abrirá cuando completes las primeras cinco salas",
+    finalRoomSoon: "La sala final estará disponible pronto",
+    finalRoomUnlocked: "La última sala ya puede abrirse",
+    cluesComplete: "Has reunido las cinco pistas. En la sala final te espera una sorpresa adicional",
     ambientUnavailable: "El ambiente estará disponible pronto. Puedes continuar tu visita."
   },
   resources: {
@@ -33,11 +36,11 @@ window.MUSEUM_CONFIG = {
     { id: "moments", title: "Momentos que se quedaron.", route: "moments-room.js", piecesFrom: "momentsRoom" },
     { id: "little-things", title: "Pequeñas cosas, grandes recuerdos.", route: "little-things-room.js", piecesFrom: "littleThingsRoom" },
     { id: "you", title: "Así te veo yo.", route: "you-room.js", piecesFrom: "youRoom" },
-    { id: "future", title: "Lo que todavía nos espera.", route: null },
+    { id: "future", title: "Lo que todavía nos espera.", route: "future-room.js", piecesFrom: "futureRoom" },
     { id: "artwork", title: "Una obra para ti.", route: null, requires: ["beginning", "moments", "little-things", "you", "future"] }
   ],
   /* Las pistas tienen su propio contador; no son requisitos para los sellos. */
-  clueIds: ["beginning-key", "moments-camera", "little-things-flower", "you-star", "future-key"],
+  clueIds: ["beginning-key", "moments-camera", "little-things-flower", "you-star", "future-compass"],
   beginningRoom: {
     title: "Aquí comenzó todo",
     subtitle: "Antes de tener una historia, tuvimos un primer momento.",
@@ -237,6 +240,49 @@ window.MUSEUM_CONFIG = {
         dedication: "Me encantas tal como eres, incluso cuando tú misma lo olvidas." },
       { id: "cancion-juntos", near: 5, title: "Perfect", artist: "Ed Sheeran", cover: null, audio: "assets/sala04/perfect.mp3", link: null,
         dedication: "Un baile contigo y todos los días que quiero compartir a tu lado." }
+    ]
+  },
+  /* Sala 05. Cinco planes que {sender} quiere vivir contigo, cada uno como una obra por crear.
+     "scene" elige el pequeño escenario 3D del marco: dinner, journey, first-time, slow-day o dream.
+     "photo" (opcional) reemplaza el escenario por una fotografía o ilustración y cuenta en el límite de 25.
+     "invitation" (opcional, solo en un plan): fecha, hora, lugar y mensaje. Deja vacío lo que no quieras mostrar. */
+  futureRoom: {
+    title: "Lo que todavía nos espera",
+    subtitle: "Este museo guarda nuestra historia. Aquí empieza lo que todavía podemos escribir.",
+    completionMessage: "Todavía quedan recuerdos por crear. Esta sala ya tiene su sello.",
+    clue: {
+      id: "future-compass",
+      message: "No sabemos cada paso que viene, pero podemos elegir hacia dónde caminar juntos.",
+      hint: "Acércate a la mesa del libro, en el centro de la sala. En uno de sus costados hay algo que señala un camino."
+    },
+    book: {
+      title: "Nuestro próximo capítulo",
+      empty: "Cuando encuentres un plan que te ilusione, puedes guardarlo aquí.",
+      choose: "Me gustaría empezar por este"
+    },
+    plans: [
+      { id: "cita", scene: "dinner", title: "Una cita solo para nosotros",
+        description: "Una cena tranquila o un picnic, sin prisas y sin nadie más.",
+        dedication: "Quiero seguir haciendo espacio para nosotros, incluso entre los días más ocupados.",
+        photo: null, photoAlt: "",
+        invitation: { date: "", time: "", place: "",
+          message: "Ejemplo de invitación: me gustaría invitarte a una noche solo para nosotros. Cuando tú quieras, elegimos juntos el día." } },
+      { id: "lugar", scene: "journey", title: "Un lugar por descubrir",
+        description: "Visitar una ciudad, una playa o un pueblo que ninguno de los dos conozca.",
+        dedication: "Todavía hay lugares que no conozco y que me gustaría descubrir contigo.",
+        photo: null, photoAlt: "", invitation: null },
+      { id: "primera-vez", scene: "first-time", title: "Nuestra próxima primera vez",
+        description: "Una clase de baile, cocinar una receta nueva o probar algo que nunca hemos hecho.",
+        dedication: "Me gusta pensar que todavía nos quedan muchas primeras veces juntos.",
+        photo: null, photoAlt: "", invitation: null },
+      { id: "sin-prisa", scene: "slow-day", title: "Un día sin prisa",
+        description: "Una tarde de películas, un desayuno largo y tiempo para descansar.",
+        dedication: "No todos nuestros planes tienen que ser grandes. A veces solo quiero tiempo contigo.",
+        photo: null, photoAlt: "", invitation: null },
+      { id: "sueno", scene: "dream", title: "Un sueño compartido",
+        description: "Una meta significativa que elijamos juntos y que podamos construir a nuestro ritmo.",
+        dedication: "Este espacio es para algo que nos ilusione a los dos y que podamos construir a nuestro ritmo.",
+        photo: null, photoAlt: "", invitation: null }
     ]
   }
 };
