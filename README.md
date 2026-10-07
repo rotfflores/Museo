@@ -1,39 +1,62 @@
 # El Museo de Nosotros
 
-Primer módulo en HTML, CSS y JavaScript sin dependencias: invitación, boleto, puertas de entrada y vestíbulo. Las seis salas no contienen experiencias aún y no entregan sellos al tocarlas.
+Experiencia en HTML, CSS y JavaScript. Conserva la invitación, el boleto y la rotonda 3D originales. La primera sala **Aquí comenzó todo** está completa; las otras cinco conservan su aviso de disponibilidad.
 
-## Vista local
+## Ejecutar y verificar
 
-Desde esta carpeta, ejecuta `node preview.cjs` y abre `http://localhost:4173`. También puedes abrir `dist/index.html` directamente; un servidor mantiene un origen estable para guardar preferencias y progreso.
+```sh
+node preview.cjs
+node --test tests/museum.test.cjs
+```
+
+Abre http://localhost:4173. Si el puerto está ocupado, usa la variable MUSEUM_PREVIEW_PORT. Los módulos de Three.js requieren HTTP. No se necesitan instalaciones ni fuentes externas. Sites sirve dist/.
+
+## Primera sala
+
+Desde la puerta 01 de la rotonda, el botón del vestíbulo o el mapa se entra a una galería con una vitrina de mensajes, un cuadro de la primera salida y dos piezas entrelazadas sobre un pedestal. Sus placas muestran títulos, fechas y descripciones.
+
+- Arrastra para mirar. En escritorio, usa WASD o flechas para caminar y Q/E para girar. Los botones de dirección y giro funcionan con puntero y teclado.
+- Elige una de las tres paradas para acercarte con un recorrido guiado que evita los objetos. Pulsa **Ver recuerdo** para abrirlo. Arrastrar nunca abre las piezas.
+- Los recuerdos, el mapa y el pasaporte detienen la cámara y el renderizado. Al cerrar mediante el botón, Escape o el exterior del diálogo, se conserva la posición. Todo audio/video de la pieza se pausa y vuelve al inicio.
+- El sello se entrega una sola vez al abrir los tres recuerdos. No requiere escuchar medios ni encontrar la llave.
+- La llave se recoge con un toque sin arrastre o con **Recoger llave** al enfocarla. La ayuda sólo indica dónde buscar. Las pistas cuentan por separado.
+- Con movimiento reducido, los trayectos guiados son inmediatos y el sello aparece sin animación.
+- Si falta WebGL, las paradas, recuerdos y decoración de la columna siguen accesibles en una vista alternativa.
 
 ## Personalizar
 
-Edita `dist/config.js`: nombres, iniciales, celebración, fecha, mensajes, número de boleto y recursos. Cambia `id` cuando prepares un regalo para otra pareja; cada identificador tiene su propio progreso local.
+Edita dist/config.js. beginningRoom contiene títulos, dedicatorias, fechas, mensajes, foto, audio/video, objeto simbólico y posición de la pista. Los datos actuales son de demostración.
 
-El ambiente se genera mediante Web Audio únicamente cuando la persona toca “Activar ambiente”. Para usar una grabación, añade el archivo a `dist/assets/` y coloca su ruta en `resources.ambientAudio`. Con `synthesizedAmbient: false` y sin grabación, la visita sigue funcionando y muestra un aviso discreto. La preferencia se guarda; al regresar se requiere otro toque para reproducir sonido.
+| Campo | Uso |
+| --- | --- |
+| exhibits[0].messages | Mensajes con from, text y time. Admiten {sender} y {recipient}. |
+| exhibits[0].screenshot | Ruta opcional a una captura; null usa mensajes configurables. |
+| exhibits[1].photo | Foto opcional; null usa la ilustración provisional local. |
+| exhibits[1].audio | Audio opcional del remitente; null oculta el botón. |
+| exhibits[2].video | Video opcional, sin reproducción automática; null oculta el botón. |
+| exhibits[2].videoPoster | Imagen opcional del video. |
+| symbolicObject | interlocked-rings o interlocked-links y los dos colores. |
+| clue.position | Coordenadas [x, y, z], limitadas a la zona accesible. |
 
-## Conectar las salas después
+Coloca los recursos en dist/assets/ y usa rutas relativas. Las fotos mantienen proporciones, se cargan al entrar y se limitan a 768/1024 píxeles en 3D. Los medios usan preload="none" y comienzan sólo al pulsar su botón. Los fallos de recursos configurados no impiden leer las dedicatorias.
 
-La API `window.Museum.registerRoom(id, handler)` registra una sala. El handler recibe `{ config, returnToLobby }` y debe resolver `{ completed: true }` sólo al completar realmente su contenido. Entonces se guarda su sello. Ejemplo conceptual:
+El ambiente global se configura en resources: audio opcional o ambiente sintetizado. Requiere una acción incluso al recordar la preferencia. Cambia config.id para separar el progreso de diferentes parejas.
 
-```js
-Museum.registerRoom('beginning', async ({ returnToLobby }) => {
-  // Abrir la experiencia y esperar su finalización real.
-  // returnToLobby();
-  // return { completed: true };
-});
-```
+## Estructura reutilizable
 
-`Museum.openRoom(id)` respeta el bloqueo de la sexta sala. `Museum.getProgress()` devuelve una copia del progreso. No existe un botón de demostración que conceda sellos ficticios. Las rutas de configuración quedan preparadas en `null`, y el contenido futuro debe registrarse explícitamente.
+- scene3d.js: rotonda original y puertas conectadas a Museum.openRoom(id).
+- beginning-room.js: geometría y contenido de la primera sala.
+- gallery-engine.js: motor local de Three.js, mirada, controles, enfoque, pausa y recorridos.
+- navigation.mjs: colisiones y planificación A* de caminos seguros.
+- progress.js: estado, persistencia y validación, separado del DOM y del motor.
+- app.js: navegación general, diálogos, mapa, pasaporte y sonido.
 
-## Vestíbulo en 3D
+Museum.registerRoom(id, handler) conecta salas futuras. Declara sus identificadores de piezas en config.rooms[].pieces y llama a Museum.discoverPiece(roomId, pieceId) al abrir cada vista. Devuelve {added, newlyCompleted}; sólo una colección completa concede el sello. Museum.findClue(id) guarda una pista válida una sola vez.
 
-`dist/scene3d.js` dibuja el vestíbulo como una rotonda en 3D con Three.js (incluido en `dist/vendor/`, sin descargas): seis puertas-portal, un corazón de oro que abre el pasaporte, suelo de espejo y polvo dorado bajo el óculo. Al tocar una puerta, la cámara vuela hacia ella, la cruza y llama a `Museum.openRoom(id)`; después regresa al vestíbulo.
+Museum.getProgress() devuelve copias del progreso. Museum.openContent({html, className, source, onClose}) abre un diálogo; debe recibir HTML que escape los datos configurables. Museum.openMap, Museum.openPassport, Museum.closeOverlay y Museum.returnToLobby completan la navegación. Los eventos museum:screen, museum:overlay y museum:progress coordinan motor y vistas.
 
-El 3D necesita servirse con `node preview.cjs` (o desde Sites): al abrir `dist/index.html` directamente, o en un navegador sin WebGL, se muestra el vestíbulo ilustrado.
+Se conserva la clave museum-of-us:<id>:v1, extendida con discoveries y clues. Las visitas anteriores mantienen entrada y sonido. Los datos desconocidos se filtran; con almacenamiento bloqueado, la visita funciona en memoria. Tocar salas pendientes nunca da sellos.
 
-## Accesibilidad y almacenamiento
+## Comprobaciones
 
-Botones nativos, diálogo modal con cierre mediante Escape, foco devuelto al control de origen, foco visible y movimiento reducido. El estado guarda únicamente entrada al museo, salas completadas y preferencia sonora. El almacenamiento inaccesible o corrupto no impide navegar.
-
-La publicación de Sites usa `dist/` como directorio estático. No requiere compilación, servicios externos ni fuentes remotas.
+Las pruebas verifican progreso parcial, persistencia, sello único, independencia de pistas, bloqueo de la sexta sala, almacenamiento corrupto/bloqueado, colisiones y rutas guiadas. La revisión en navegador cubre las tres piezas, sello, llave explorada, regreso al vestíbulo, mapa, pasaporte y móvil.

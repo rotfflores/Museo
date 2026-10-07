@@ -4,13 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#eee7da">
-  <meta name="description" content="Un museo privado dedicado a nuestra historia. Una invitación, una entrada y todos los recuerdos que nos esperan.">
+  <meta name="description" content="Un museo privado dedicado a nuestra historia. Descubre sus comienzos en una sala 3D, guarda su sello y encuentra la primera llave.">
   <title>El Museo de Nosotros</title>
   <link rel="icon" href="assets/monogram.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="room.css">
   <script src="config.js" defer></script>
+  <script src="progress.js" defer></script>
   <script src="app.js" defer></script>
   <script type="module" src="scene3d.js"></script>
+  <script type="module" src="beginning-room.js"></script>
 </head>
 <body>
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -93,6 +96,23 @@
         </div>
       </div>
       <button id="consult-ticket" class="text-button consult-ticket"><svg class="icon"><use href="#icon-ticket"/></svg> Volver a consultar mi boleto</button>
+      <button id="enter-first-room" class="button primary lobby-room-entry">Explorar: Aquí comenzó todo <svg class="icon"><use href="#icon-arrow"/></svg></button>
+    </section>
+    <section id="room-screen" class="screen room-screen" hidden aria-labelledby="room-title">
+      <div class="room-topline"><button id="room-back" class="text-button">← Volver al vestíbulo</button><span class="eyebrow">SALA 01 · LOS COMIENZOS</span><div class="room-tools"><button id="room-map" class="room-tool" aria-label="Consultar mapa"><svg class="icon"><use href="#icon-map"/></svg><span>Mapa</span></button><button id="room-passport" class="room-tool" aria-label="Abrir pasaporte"><svg class="icon"><use href="#icon-book"/></svg><span>Pasaporte</span></button></div></div>
+      <div class="room-heading"><h1 id="room-title"></h1><p id="room-subtitle"></p></div>
+      <div id="gallery-stage" class="gallery-stage" role="region" aria-label="Sala 3D. Arrastra para mirar; usa W, A, S, D o las flechas para caminar y Q o E para girar." tabindex="0">
+        <div id="gallery-fallback" class="gallery-fallback" hidden><p>Recorre esta sala a través de sus tres recuerdos.</p><span aria-hidden="true">✧</span></div>
+        <div class="gallery-vignette" aria-hidden="true"></div>
+        <div class="gallery-caption"><span class="eyebrow">EXPOSICIÓN 01</span><p id="gallery-caption-text"></p></div>
+        <div id="look-target" class="look-target" aria-live="polite"><span id="target-name">Un comienzo para cada recuerdo</span><button id="view-memory" class="button primary" disabled>Ver recuerdo</button></div>
+        <div class="gallery-navigation" aria-label="Controles para caminar"><button data-walk="forward" aria-label="Caminar hacia delante">↑</button><div><button data-walk="left" aria-label="Caminar hacia la izquierda">←</button><button data-walk="backward" aria-label="Caminar hacia atrás">↓</button><button data-walk="right" aria-label="Caminar hacia la derecha">→</button></div><div class="turn-controls"><button data-turn="left" aria-label="Girar a la izquierda">↶</button><button data-turn="right" aria-label="Girar a la derecha">↷</button></div></div>
+        <p class="gallery-control-hint">Arrastra para mirar <span>·</span> Flechas para caminar</p>
+      </div>
+      <div class="room-bottomline"><p id="room-discovery-count" role="status">Recuerdos descubiertos: 0 de 3</p><p id="room-clue-count" role="status">Pistas encontradas: 0 de 5</p></div>
+      <nav class="exhibit-tour" aria-label="Recorrido guiado por las tres piezas"></nav>
+      <div class="room-guidance"><p>Acércate a una pieza o elige una parada para recorrer la sala.</p><button id="clue-hint" class="text-button">Necesito una pista <span aria-hidden="true">✧</span></button><button id="accessible-decoration" class="text-button" hidden>Explorar los detalles de la columna</button></div>
+      <div id="room-completed" class="room-completed" hidden><span aria-hidden="true">✧</span><p>Este comienzo ya tiene su sello.</p><button id="completed-lobby" class="text-button">Volver al vestíbulo</button><button id="completed-map" class="button primary">Seguir explorando <svg class="icon"><use href="#icon-arrow"/></svg></button></div>
     </section>
   </main>
   <footer class="site-footer"><span id="stage-label">01 <span class="footer-line"></span> LA INVITACIÓN</span><span>HECHO DE RECUERDOS, <em>Y DE TI.</em></span></footer>

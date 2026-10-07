@@ -441,6 +441,7 @@ function build() {
   }
   function returnHome(delay) {
     setTimeout(() => {
+      if(document.querySelector('#lobby').hidden){flight=null;sceneBox.classList.remove('flying','through');return;}
       view.targetYaw = view.yaw - view.hoverX * 0.06;
       flyTo(home.clone(), homeLook(), 1500, () => sceneBox.classList.remove('flying'));
     }, reducedMotion.matches ? 0 : delay);
@@ -478,7 +479,6 @@ function build() {
   });
   canvas.addEventListener('pointerdown', event => {
     drag = { x: event.clientX, yaw: view.targetYaw, moved: false };
-    if (typeof DeviceOrientationEvent?.requestPermission === 'function' && !tiltAsked) { tiltAsked = true; DeviceOrientationEvent.requestPermission().catch(() => {}); }
   });
   canvas.addEventListener('pointerup', event => {
     const wasDrag = drag?.moved;
@@ -491,7 +491,7 @@ function build() {
     else enterDoor(doors[object.userData.index]);
   });
   canvas.addEventListener('pointerleave', () => { drag = null; hovered = null; view.hoverX = view.hoverY = 0; });
-  let tiltAsked = false, heartPulse = -Infinity;
+  let heartPulse = -Infinity;
   window.addEventListener('deviceorientation', event => {
     if (event.gamma === null || drag || !portrait()) return;
     view.targetYaw = THREE.MathUtils.clamp(-event.gamma / 30, -1, 1) * yawLimit();
