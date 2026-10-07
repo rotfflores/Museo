@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Aquí va la foto de nuestra primera salida">
+<defs><radialGradient id="g" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#f3e3c4"/><stop offset=".6" stop-color="#d9bd92"/><stop offset="1" stop-color="#a98559"/></radialGradient>
+<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .16 0 0 0 .09 0"/></filter></defs>
+<rect width="1200" height="800" fill="url(#g)"/><rect width="1200" height="800" filter="url(#grain)"/>
+<rect x="34" y="34" width="1132" height="732" fill="none" stroke="#fbf1dc" stroke-width="3" opacity=".8"/><rect x="48" y="48" width="1104" height="704" fill="none" stroke="#a18756" stroke-width="1.5" opacity=".7"/>
+<g fill="none" stroke="#6f5532" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" opacity=".75" transform="translate(600 330)">
+<path d="M-110-40h52l20-30h76l20 30h52a14 14 0 0 1 14 14v124a14 14 0 0 1-14 14h-220a14 14 0 0 1-14-14v-124a14 14 0 0 1 14-14Z"/><circle cx="0" cy="34" r="50"/><circle cx="0" cy="34" r="22"/><circle cx="82" cy="-16" r="5" fill="#6f5532"/></g>
+<text x="600" y="520" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="46" fill="#4a3a26">Aquí va la foto de nuestra primera salida</text>
+<text x="600" y="570" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" letter-spacing="4" fill="#6f5a3c">1 DE FEBRERO DE 2026</text>
+<text x="600" y="720" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="17" fill="#7a6342" opacity=".85">Guarda tu foto como assets/primera-salida.jpg</text>
+</svg>

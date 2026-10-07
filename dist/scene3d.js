@@ -238,7 +238,7 @@ function build() {
   halo.position.y = 1.7;
   scene.add(halo);
 
-  /* Seis puertas-portal en el arco del fondo. */
+  /* Seis puertas-portal en el arco del fondo; cada una anuncia su sala. */
   function archShape(width, straight, grow = 0) {
     const w = width / 2 + grow, shape = new THREE.Shape();
     shape.moveTo(-w, -grow);
@@ -248,60 +248,201 @@ function build() {
     shape.lineTo(-w, -grow);
     return shape;
   }
-  function frameGeometry(inner, outer, depth) {
-    const shape = archShape(ARCH_W, ARCH_H, outer);
-    shape.holes.push(archShape(ARCH_W, ARCH_H, inner));
-    return new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 2, curveSegments: 48 });
+  function rectShape(width, height, grow = 0, bottom = 0) {
+    const w = width / 2 + grow, shape = new THREE.Shape();
+    shape.moveTo(-w, bottom - grow); shape.lineTo(w, bottom - grow); shape.lineTo(w, height + grow); shape.lineTo(-w, height + grow); shape.lineTo(-w, bottom - grow);
+    return shape;
   }
-  const portalVertex = `varying vec2 vP; void main(){ vP=vec2(position.x/${ARCH_W.toFixed(2)}+.5, position.y/${(ARCH_H + ARCH_W / 2).toFixed(3)}); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
-  const portalFragment = `uniform float uTime,uHover,uLocked,uDone,uSeed; varying vec2 vP;
+  function ovalShape(rx, ry, cy, grow = 0) {
+    const shape = new THREE.Shape();
+    shape.absellipse(0, cy, rx + grow, ry + grow, 0, Math.PI * 2, false, 0);
+    return shape;
+  }
+  // Arco ojival: dos arcos que se encuentran en punta.
+  function pointedShape(width, straight, grow = 0) {
+    const w = width / 2 + grow, r = 2 * w, shape = new THREE.Shape();
+    const apex = straight + Math.sqrt(r * r - w * w);
+    shape.moveTo(-w, -grow); shape.lineTo(w, -grow); shape.lineTo(w, straight);
+    shape.absarc(-w, straight, r, 0, Math.atan2(apex - straight, w), false);
+    shape.absarc(w, straight, r, Math.PI - Math.atan2(apex - straight, w), Math.PI, false);
+    shape.lineTo(-w, -grow);
+    return shape;
+  }
+  function holed(outer, inner, depth, bevel = 0.02) {
+    outer.holes.push(inner);
+    return new THREE.ExtrudeGeometry(outer, { depth, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 2, curveSegments: 48 });
+  }
+  const wood = new THREE.MeshStandardMaterial({ color: '#5b3a24', roughness: 0.55 });
+  const brass = new THREE.MeshStandardMaterial({ color: '#d9b672', metalness: 1, roughness: 0.22 });
+  const filmDark = new THREE.MeshStandardMaterial({ color: '#2b211a', roughness: 0.6 });
+  const cream = new THREE.MeshStandardMaterial({ color: '#f6eddc', roughness: 0.5, emissive: '#fff1d4', emissiveIntensity: 0.25 });
+  const rose = new THREE.MeshStandardMaterial({ color: '#e8b9a6', metalness: 0.4, roughness: 0.35 });
+  // Medidas de cada abertura: ancho, alto total y dónde va la etiqueta.
+  const DESIGNS = [
+    { w: 1.7, h: 3.05, shape: g => archShape(1.7, 2.2, g), label: 3.8 },
+    { w: 1.6, h: 3.4, shape: g => archShape(1.6, 2.6, g), label: 4.25 },
+    { w: 1.5, h: 2.1, shape: g => archShape(1.5, 1.35, g), label: 3.05 },
+    { w: 1.6, h: 3.0, shape: g => ovalShape(0.8, 1.4, 1.6, g), label: 3.75, bottom: 0.2 },
+    { w: 1.6, h: 3.13, shape: g => pointedShape(1.6, 1.75, g), label: 3.95 },
+    { w: 1.8, h: 2.7, shape: g => rectShape(1.8, 2.7, g), label: 4.2 }
+  ];
+  const portalVertex = `uniform vec2 uSize; uniform float uBottom; varying vec2 vP; void main(){ vP=vec2(position.x/uSize.x+.5,(position.y-uBottom)/uSize.y); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
+  const portalFragment = `uniform float uTime,uHover,uLocked,uDone,uSeed,uStyle,uView; varying vec2 vP;
+    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+    float box(vec2 p,vec2 c,vec2 s){vec2 d=abs(p-c)-s;return length(max(d,0.))+min(max(d.x,d.y),0.);}
     void main(){
-      vec2 c=vP-vec2(.5,.4); float d=length(c*vec2(1.,.78));
+      vec2 c=vP-vec2(.5,.42); float d=length(c*vec2(1.,.78));
       float t=uTime*(1.-uLocked*.7)+uSeed*7.;
       float glow=smoothstep(.72,0.,d);
-      float corridor=pow(abs(sin(d*15.-t*.9)),30.)*glow;
-      float silk=sin(vP.y*16.-t*1.1+sin(vP.x*7.+t*.6)*1.7)*.5+.5;
       vec3 deep=vec3(.13,.08,.05), warm=vec3(1.,.78,.48), cream=vec3(1.,.95,.84);
-      vec3 col=mix(deep,warm,pow(glow,1.8)+silk*.1*glow);
-      col+=cream*pow(glow,7.)*.7;
-      col+=warm*corridor*(.35+uHover*.6);
-      col+=cream*uHover*.28*glow;
-      col+=vec3(1.,.86,.55)*uDone*.18;
+      vec3 col;
+      if(uStyle<.5){
+        /* 01: puerta doble de madera tallada con una cerradura que brilla. */
+        float grain=sin(vP.x*95.+sin(vP.y*9.+vP.x*20.)*2.5)*.5+.5;
+        col=mix(vec3(.2,.11,.06),vec3(.36,.21,.12),grain*.55+.25);
+        vec2 leaf=vec2(fract(vP.x*2.),vP.y);
+        float e=smoothstep(.014,0.,abs(box(leaf,vec2(.5,.66),vec2(.3,.18))))+smoothstep(.014,0.,abs(box(leaf,vec2(.5,.28),vec2(.3,.14))));
+        col=col*(1.-e*.45)+vec3(.85,.62,.32)*e*.18;
+        float seam=smoothstep(.007,0.,abs(vP.x-.5));
+        float key=smoothstep(.045,0.,length((vP-vec2(.5,.45))*vec2(1.,.55)));
+        float pulse=.75+.25*sin(t*1.8);
+        col+=vec3(1.,.72,.38)*(key*(1.3+uHover*1.6)*pulse+seam*(.35+uHover*.7)*glow);
+        col+=warm*glow*.06*(1.+uHover);
+      } else if(uStyle<1.5){
+        /* 02: fotografías que flotan en una luz cálida. */
+        col=mix(deep,warm,pow(glow,1.6));
+        col+=cream*pow(glow,7.)*.5;
+        for(int i=0;i<7;i++){
+          float fi=float(i);
+          vec2 p=vec2(.18+.64*hash(vec2(fi,1.)),fract(hash(vec2(fi,2.))+t*.03*(.6+hash(vec2(fi,3.))))*1.2-.1);
+          float a=(hash(vec2(fi,4.))-.5)*.7; vec2 q=vP-p; q=mat2(cos(a),-sin(a),sin(a),cos(a))*(q*vec2(1.,1.7));
+          float m=smoothstep(.004,0.,box(q,vec2(0.),vec2(.1,.08))), img=smoothstep(.004,0.,box(q,vec2(0.,.01),vec2(.083,.055)));
+          vec3 photo=mix(vec3(.6,.48,.34),vec3(.86,.72,.52),hash(vec2(fi,5.)));
+          col=mix(col,mix(vec3(.98,.94,.86),photo,img),m*(.7+uHover*.25));
+        }
+      } else if(uStyle<2.5){
+        /* 03: luz rosada con pétalos que caen despacio. */
+        col=mix(vec3(.2,.1,.09),vec3(1.,.8,.66),pow(glow,1.5));
+        col+=cream*pow(glow,6.)*.45;
+        for(int i=0;i<12;i++){
+          float fi=float(i);
+          vec2 p=vec2(fract(hash(vec2(fi,7.))+sin(t*.4+fi)*.05),1.1-fract(hash(vec2(fi,8.))+t*.05*(.5+hash(vec2(fi,9.))))*1.2);
+          float a=t*.6+fi; vec2 q=vP-p; q=mat2(cos(a),-sin(a),sin(a),cos(a))*(q*vec2(1.,1.4));
+          float petal=smoothstep(.022,.0,length(q*vec2(1.,2.2)));
+          col=mix(col,mix(vec3(.96,.72,.66),vec3(.95,.82,.55),hash(vec2(fi,6.))),petal*(.8+uHover*.2));
+        }
+      } else if(uStyle<3.5){
+        /* 04: espejo nacarado con un brillo que sigue la mirada. */
+        col=mix(vec3(.8,.78,.76),vec3(.97,.95,.92),vP.y*.6+.3);
+        float sheen=pow(sin((vP.x*1.6+vP.y*.9-uView*2.2)*3.1)*.5+.5,6.);
+        col+=vec3(1.,.96,.9)*sheen*(.32+uHover*.3);
+        col+=vec3(.06,.02,.08)*sin(vP.y*9.+uView*4.)+vec3(.02,.05,.06)*cos(vP.x*7.-uView*3.);
+        col*=.82+.18*smoothstep(.62,.2,d);
+        col+=cream*uHover*.12;
+      } else if(uStyle<4.5){
+        /* 05: noche estrellada que se desliza despacio. */
+        col=mix(vec3(.05,.06,.14),vec3(.16,.12,.22),1.-vP.y);
+        col+=vec3(1.,.72,.42)*pow(max(0.,.35-vP.y),2.)*1.6;
+        vec2 g=vP*vec2(34.,52.)+vec2(t*.15,0.);
+        vec2 id=floor(g),f=fract(g)-.5; float h=hash(id);
+        float star=step(.93,h)*smoothstep(.16,0.,length(f))*(.55+.45*sin(t*2.6+h*60.));
+        col+=mix(vec3(.9,.92,1.),vec3(1.,.85,.5),step(.985,h))*star*(1.4+uHover);
+        col+=vec3(.5,.45,.7)*pow(glow,3.)*.12;
+      } else {
+        /* 06: un portal dorado y radiante, cuando ya se puede entrar. */
+        float rays=pow(abs(sin(atan(c.y,c.x)*9.+t*.25)),8.)*glow;
+        col=mix(vec3(.3,.2,.07),vec3(1.,.82,.42),pow(glow,1.2));
+        col+=vec3(1.,.9,.6)*rays*.5+cream*pow(glow,5.)*.6+warm*uHover*.25*glow;
+      }
+      col+=vec3(1.,.86,.55)*uDone*.16;
+      float silk=sin(vP.y*16.-t*1.1+sin(vP.x*7.+t*.6)*1.7)*.5+.5;
       vec3 vault=vec3(.10,.08,.07)+vec3(.55,.42,.24)*pow(glow,2.)*(.35+.15*silk);
       col=mix(col,vault,uLocked*.88);
       gl_FragColor=vec4(col,1.);
       ${THREE.ShaderChunk.tonemapping_fragment}
       ${THREE.ShaderChunk.colorspace_fragment}
     }`;
+  uniforms.uView = { value: 0 };
+  const instanced = (geometry, material, transforms) => {
+    const mesh = new THREE.InstancedMesh(geometry, material, transforms.length), m = new THREE.Matrix4();
+    transforms.forEach(([x, y, z, sx = 1, sy = 1, sz = 1, rz = 0], i) => mesh.setMatrixAt(i, m.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, rz)), new THREE.Vector3(sx, sy, sz))));
+    return mesh;
+  };
+  // Arquitectura propia de cada puerta.
+  function decorate(group, style, design) {
+    const add = (mesh, z = 0) => { mesh.position.z += z; mesh.castShadow = mesh.receiveShadow = true; group.add(mesh); return mesh; };
+    const top = design.h;
+    if (style === 0) {
+      add(new THREE.Mesh(holed(archShape(1.7, 2.2, 0.22), archShape(1.7, 2.2), 0.3), wood), -0.05);
+      add(new THREE.Mesh(holed(archShape(1.7, 2.2, 0.05), archShape(1.7, 2.2, -0.01), 0.34), gold), -0.06);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.34, 0.36), stoneDark)).position.set(0, top + 0.14, 0.04);
+      group.add(instanced(new THREE.CylinderGeometry(0.022, 0.022, 0.42, 12), brass, [[-0.1, 1.25, 0.06], [0.1, 1.25, 0.06]]));
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.02), brass)).position.set(0, 1.36, 0.03);
+    } else if (style === 1) {
+      add(new THREE.Mesh(holed(rectShape(1.6, 3.4, 0.34), archShape(1.6, 2.6), 0.26, 0.04), gold), -0.05);
+      add(new THREE.Mesh(holed(rectShape(1.6, 3.4, 0.12), rectShape(1.6, 3.4, 0.07), 0.3), stoneDark), -0.05);
+      for (const side of [-1, 1]) {
+        const x = side * (0.8 + 0.5);
+        add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.1, 0.04), filmDark)).position.set(x, 1.6, 0.03);
+        group.add(instanced(new THREE.BoxGeometry(0.06, 0.08, 0.02), cream, Array.from({ length: 12 }, (_, i) => [x, 0.18 + i * 0.25, 0.06])));
+      }
+    } else if (style === 2) {
+      add(new THREE.Mesh(holed(archShape(1.5, 1.35, 0.2), archShape(1.5, 1.35), 0.28), stone), -0.05);
+      add(new THREE.Mesh(holed(archShape(1.5, 1.35, 0.04), archShape(1.5, 1.35, -0.01), 0.32), gold), -0.06);
+      const flowers = [], leaves = [];
+      for (let i = 0; i <= 16; i++) {
+        const a = Math.PI * (i / 16), r = 0.75 + 0.2;
+        const x = Math.cos(a) * r, y = 1.35 + Math.sin(a) * r;
+        (i % 2 ? leaves : flowers).push(i % 2 ? [x, y, 0.27, 1.6, 0.7, 0.5, a] : [x, y, 0.28]);
+      }
+      for (const y of [0.35, 0.75, 1.1]) for (const side of [-1, 1]) flowers.push([side * 0.95, y, 0.28, 0.8, 0.8, 0.8]);
+      group.add(instanced(new THREE.SphereGeometry(0.055, 12, 8), rose, flowers));
+      group.add(instanced(new THREE.SphereGeometry(0.05, 10, 6), gold, leaves));
+    } else if (style === 3) {
+      add(new THREE.Mesh(holed(ovalShape(0.8, 1.4, 1.6, 0.1), ovalShape(0.8, 1.4, 1.6), 0.16, 0.03), gold), -0.04);
+      add(new THREE.Mesh(holed(ovalShape(0.8, 1.4, 1.6, 0.2), ovalShape(0.8, 1.4, 1.6, 0.11), 0.1), stoneDark), -0.06);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.14, 0.34), stoneDark)).position.set(0, 0.07, 0.08);
+      add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 10), gold)).position.set(0, 3.13, 0.08);
+    } else if (style === 4) {
+      add(new THREE.Mesh(holed(pointedShape(1.6, 1.75, 0.22), pointedShape(1.6, 1.75), 0.3), stone), -0.05);
+      add(new THREE.Mesh(holed(pointedShape(1.6, 1.75, 0.05), pointedShape(1.6, 1.75, -0.01), 0.34), gold), -0.06);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.025, 1.75, 0.03), gold)).position.set(0, 0.875, 0.04);
+      const ring = add(new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.014, 8, 48), gold)); ring.position.set(0, 2.3, 0.04);
+      for (const side of [-1, 1]) { const arc = add(new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.012, 8, 32, Math.PI), gold)); arc.position.set(side * 0.4, 1.75, 0.04); }
+      add(new THREE.Mesh(new THREE.OctahedronGeometry(0.07), gold)).position.set(0, top + 0.18, 0.06);
+    } else {
+      add(new THREE.Mesh(holed(rectShape(1.8, 2.7, 0.24), rectShape(1.8, 2.7), 0.34, 0.04), gold), -0.05);
+      for (const side of [-1, 1]) {
+        add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.0, 0.3), stone)).position.set(side * 1.32, 1.5, 0.05);
+        add(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.12, 0.38), gold)).position.set(side * 1.32, 3.06, 0.05);
+      }
+      const pediment = new THREE.Shape(); pediment.moveTo(-1.6, 0); pediment.lineTo(1.6, 0); pediment.lineTo(0, 0.55); pediment.lineTo(-1.6, 0);
+      add(new THREE.Mesh(new THREE.ExtrudeGeometry(pediment, { depth: 0.3, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02 }), stoneDark)).position.set(0, 3.12, -0.04);
+      add(new THREE.Mesh(new THREE.BoxGeometry(3.3, 0.06, 0.36), gold)).position.set(0, 3.12, 0.08);
+    }
+  }
 
   const doors = [];
   const progress = () => new Set(Museum.getProgress().completed);
   config.rooms.forEach((room, index) => {
+    const style = Math.min(index, DESIGNS.length - 1), design = DESIGNS[style];
     const angle = THREE.MathUtils.degToRad(-80 + index * 32);
     const group = new THREE.Group();
     group.position.set((R - 0.18) * Math.sin(angle), 0, -(R - 0.18) * Math.cos(angle));
     group.lookAt(0, 0, 0);
-    const portalUniforms = { uTime: uniforms.uTime, uHover: { value: 0 }, uLocked: { value: 0 }, uDone: { value: 0 }, uSeed: { value: index * 0.37 } };
-    const portal = new THREE.Mesh(new THREE.ShapeGeometry(archShape(ARCH_W, ARCH_H), 48), new THREE.ShaderMaterial({ uniforms: portalUniforms, vertexShader: portalVertex, fragmentShader: portalFragment }));
+    const portalUniforms = { uTime: uniforms.uTime, uView: uniforms.uView, uHover: { value: 0 }, uLocked: { value: 0 }, uDone: { value: 0 }, uSeed: { value: index * 0.37 }, uStyle: { value: style }, uSize: { value: new THREE.Vector2(design.w, design.h - (design.bottom || 0)) }, uBottom: { value: design.bottom || 0 } };
+    const portal = new THREE.Mesh(new THREE.ShapeGeometry(design.shape(0), 48), new THREE.ShaderMaterial({ uniforms: portalUniforms, vertexShader: portalVertex, fragmentShader: portalFragment }));
     portal.userData = { kind: 'door', index };
     group.add(portal);
-    const frame = new THREE.Mesh(frameGeometry(0, 0.24, 0.3), stone);
-    frame.position.z = -0.05; frame.castShadow = frame.receiveShadow = true;
-    group.add(frame);
-    const trim = new THREE.Mesh(frameGeometry(-0.01, 0.05, 0.34), gold);
-    trim.position.z = -0.06;
-    group.add(trim);
-    const keystone = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.34, 0.36), stoneDark);
-    keystone.position.set(0, ARCH_H + ARCH_W / 2 + 0.14, 0.04);
-    group.add(keystone);
+    decorate(group, style, design);
     const label = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.88), new THREE.MeshBasicMaterial({ transparent: true, toneMapped: false }));
-    label.position.set(0, ARCH_H + ARCH_W / 2 + 0.75, 0.05);
+    label.position.set(0, design.label, 0.05);
     group.add(label);
     const lock = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 12, 48), gold);
     lock.position.set(0, 1.25, 0.08);
     group.add(lock);
     scene.add(group);
-    doors.push({ room, index, group, portal, label, lock, uniforms: portalUniforms, hover: 0, state: '' });
+    doors.push({ room, index, group, portal, label, lock, labelY: design.label, uniforms: portalUniforms, hover: 0, state: '' });
   });
   function refreshDoors() {
     const done = progress();
@@ -488,6 +629,7 @@ function build() {
     requestAnimationFrame(frame);
     const now = performance.now(), dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
     uniforms.uTime.value = reducedMotion.matches ? 2 : t;
+    uniforms.uView.value = view.yaw;
     placeCamera(now);
     if (!reducedMotion.matches) {
       heart.rotation.y = Math.sin(t * 0.45) * 1.1;
@@ -508,7 +650,7 @@ function build() {
       const goal = hovered === door.portal ? 1 : 0;
       door.hover += (goal - door.hover) * 0.12;
       door.uniforms.uHover.value = door.hover;
-      door.label.position.y = ARCH_H + ARCH_W / 2 + 0.75 + door.hover * 0.08;
+      door.label.position.y = door.labelY + door.hover * 0.08;
       door.lock.rotation.z = 0;
       if (shake?.door === door) {
         const s = (now - shake.start) / 600;

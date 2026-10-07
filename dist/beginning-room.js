@@ -182,6 +182,13 @@ function buildRoom() {
     });
   });
   const letter=new THREE.Mesh(new THREE.PlaneGeometry(1.08,1.35),new THREE.MeshStandardMaterial({map:conversation,roughness:1,side:THREE.DoubleSide}));letter.position.set(-3.55,1.34,-1.55);letter.rotation.x=-.6;scene.add(letter);
+  if(room.exhibits[0].screenshot)new THREE.TextureLoader().load(room.exhibits[0].screenshot,map=>{
+    const original=map.image,raster=document.createElement('canvas');raster.height=Math.min(1024,original.height);raster.width=Math.round(raster.height*original.width/original.height);
+    raster.getContext('2d').drawImage(original,0,0,raster.width,raster.height);
+    const sceneMap=new THREE.CanvasTexture(raster);sceneMap.colorSpace=THREE.SRGBColorSpace;
+    letter.geometry.dispose();letter.geometry=new THREE.PlaneGeometry(1.35*original.width/original.height,1.35);
+    letter.material.map=sceneMap;letter.material.needsUpdate=true;conversation.dispose();map.dispose();
+  },undefined,()=>{/* La conversación configurada permanece si falta la captura. */});
   const casePlaque=plaque(room.exhibits[0],0,-3.55,.67,-.77,2);
   targets.push({id:'message',index:0,focus:new THREE.Vector3(-3.55,1.45,-1.5),approach:{x:-3.55,z:1.1},hits:[glass,letter,casePlaque],marker:marker(-3.55,-1.5,1.05),glow:[letter.material],lift:letter,rise:[0,.06,0],halo:[-3.55,1.4,-1.5,1.9],seen:[-3.55,2.25,-1.5]});
   // Pieza 02: una obra enmarcada. Su foto sólo se carga cuando se entra en la sala.
@@ -280,7 +287,7 @@ async function enterRoom() {
     engine?.setActive(true);updateProgress();
     if(fallback)setTarget({id:room.exhibits[currentPiece].id,index:currentPiece});
   };
-  const opened=await Museum.playDoors({lines:['Encendiendo la sala…','Desempolvando los recuerdos…','Abriendo la vitrina…'],cover,ready:()=>fallback?null:firstFrame,minimum:1500});
+  const opened=await Museum.playDoors({lines:['Preparando la sala…','Iluminando los recuerdos…','La sala está lista para ti.'],cover,ready:()=>fallback?null:firstFrame,minimum:1500,variant:'room-01',plate:'01'});
   if(!opened)cover();
   $('#room-title').focus({preventScroll:true});
   if(!Museum.tutorialSeen('room'))Museum.openTutorial('room',$('#room-help'));
@@ -357,11 +364,30 @@ function interacted() {
   const hint=$('#gallery-hint');if(hint.classList.contains('gone'))return;
   hint.classList.add('gone');try{localStorage.setItem(HINT_KEY,'1');}catch{/* Sin almacenamiento: la pista sólo se oculta en esta visita. */}
 }
+// Nuestra primera salida: la captura del chat y la foto, cada una se abre en grande al tocarla.
+function firstDateMedia(piece) {
+  const slot=(src,alt,label,fallback='')=>`<figure class="memory-slot"><button class="memory-zoom" type="button" aria-label="Ver en grande: ${escape(label)}"><img src="${escape(src)}" alt="${escape(alt)}" loading="lazy" decoding="async"${fallback?` data-fallback="${escape(fallback)}"`:''}></button><figcaption>${escape(label)}</figcaption></figure>`;
+  const slots=[];
+  if(piece.chat)slots.push(slot(piece.chat,piece.chatAlt||'Captura de nuestra conversación','Captura de WhatsApp'));
+  slots.push(slot(piece.photo||piece.placeholder,piece.photo?piece.photoAlt:'Ilustración provisional de una terraza con dos cafés','Foto de la primera salida',piece.placeholder));
+  return `<div class="memory-gallery${slots.length===1?' single-memory':''}">${slots.join('')}</div>${mediaCredit(piece.photoCredit)}`;
+}
+function mediaCredit(credit) {
+  if(!credit)return '';
+  return `<p class="media-credit">Imagen de ejemplo · <a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.author)}</a> · <a href="${escape(credit.licenseUrl)}" target="_blank" rel="noopener noreferrer">${escape(credit.license)}</a></p>`;
+}
+function zoomImage(image) {
+  const overlay=document.createElement('div');overlay.className='image-zoom';overlay.setAttribute('role','button');overlay.tabIndex=0;overlay.setAttribute('aria-label','Cerrar imagen ampliada');
+  const big=document.createElement('img');big.src=image.currentSrc||image.src;big.alt=image.alt;overlay.append(big);
+  const close=()=>{overlay.remove();image.closest('button')?.focus({preventScroll:true});};
+  overlay.addEventListener('click',close);overlay.addEventListener('keydown',event=>{if(event.key==='Escape'||event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();close();}});
+  $('#museum-dialog').append(overlay);overlay.focus();
+}
 function placeholderPhoto(piece) {
   return `<figure class="memory-photo"><img src="${escape(piece.photo||piece.placeholder)}" alt="${escape(piece.photo?piece.photoAlt:'Ilustración provisional de una terraza con dos cafés')}" decoding="async"><figcaption>${piece.photo?escape(piece.description):'Una primera salida · composición provisional'}</figcaption></figure>`;
 }
 function conversationMarkup(piece) {
-  if(piece.screenshot)return `<figure class="conversation-capture"><img src="${escape(piece.screenshot)}" alt="${escape(piece.screenshotAlt)}" decoding="async"></figure>`;
+  if(piece.screenshot)return `<figure class="conversation-capture"><button class="memory-zoom" type="button" aria-label="Ver en grande: Captura de WhatsApp"><img src="${escape(piece.screenshot)}" alt="${escape(piece.screenshotAlt)}" decoding="async"></button>${mediaCredit(piece.screenshotCredit)}</figure>`;
   return `<div class="conversation-paper"><div class="conversation-header"><span>${escape(config.couple)}</span><small>${escape(piece.date)}</small></div>${piece.messages.map(message=>`<div class="message-bubble ${message.from==='sender'?'sent':'received'}"><span>${escape(config[message.from]||message.from)}</span><p>${escape(text(message.text))}</p><small>${escape(message.time||'')}</small></div>`).join('')}<p class="conversation-note">Conversación de demostración</p></div>`;
 }
 function symbolMarkup() {return '<div class="symbol-composition" aria-label="Dos piezas entrelazadas"><span></span><span></span><i aria-hidden="true">✧</i></div>';}
@@ -370,7 +396,7 @@ function openPiece(index,source=$('#gallery-stage')) {
   const piece=room.exhibits[index];currentPiece=index;
   const progress=Museum.discoverPiece('beginning',piece.id);
   buzz(progress.newlyCompleted?[30,60,45]:14);
-  const artwork=index===0?conversationMarkup(piece):index===1?placeholderPhoto(piece):symbolMarkup();
+  const artwork=index===0?conversationMarkup(piece):index===1?firstDateMedia(piece):symbolMarkup();
   let media='';
   if(piece.audio)media=`<div class="optional-audio"><button id="play-memory-audio" class="button secondary">▶ ${escape(text(piece.audioLabel))}</button><audio id="memory-audio" preload="none" src="${escape(piece.audio)}"></audio><p id="media-status" role="status"></p></div>`;
   if(piece.video)media=`<div class="optional-video"><button id="play-memory-video" class="button secondary">▶ Ver nuestro video</button><video id="memory-video" preload="none" playsinline ${piece.videoPoster?`poster="${escape(piece.videoPoster)}"`:''} src="${escape(piece.video)}" hidden></video><p id="media-status" role="status"></p></div>`;
@@ -380,7 +406,9 @@ function openPiece(index,source=$('#gallery-stage')) {
     if(button.dataset.completion==='map')Museum.openMap($('#room-passport'));
     else{Museum.closeOverlay();Museum.returnToLobby();}
   }));
-  document.querySelectorAll('.memory-overlay img').forEach(image=>image.addEventListener('error',()=>{
+  document.querySelectorAll('.memory-zoom').forEach(button=>button.addEventListener('click',()=>zoomImage(button.querySelector('img'))));
+  document.querySelectorAll('.memory-overlay img[data-fallback]').forEach(image=>image.addEventListener('error',()=>{if(image.dataset.fallback&&!image.src.endsWith(image.dataset.fallback)){image.src=image.dataset.fallback;delete image.dataset.fallback;}},{once:true}));
+  document.querySelectorAll('.memory-overlay img:not([data-fallback])').forEach(image=>image.addEventListener('error',()=>{
     const replacement=document.createElement('div');replacement.className='missing-memory-image';replacement.textContent='Este recuerdo espera su imagen. Por ahora, conserva estas palabras.';image.replaceWith(replacement);
   }));
   if(piece.audio) {

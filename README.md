@@ -23,6 +23,13 @@ Desde la puerta 01 de la rotonda, el botón del vestíbulo o el mapa se entra a 
 - Con movimiento reducido, los trayectos guiados son inmediatos y el sello aparece sin animación.
 - Si falta WebGL, las paradas, recuerdos y decoración de la columna siguen accesibles en una vista alternativa.
 
+## Nuestra primera salida: captura y foto
+
+El recuerdo "Nuestra primera salida" muestra dos imágenes que se amplían al tocarlas. Para usar las reales, reemplaza estos archivos con el mismo nombre (o cambia la ruta en dist/config.js, campos chat y photo de la pieza first-date):
+
+- dist/assets/primera-salida-chat.svg: captura de ejemplo hecha con los mensajes de la sala. Puedes poner, por ejemplo, primera-salida-chat.jpg y actualizar la ruta.
+- dist/assets/primera-salida.jpg: marcador "Aquí va la foto de nuestra primera salida". Guarda tu foto con ese mismo nombre. También aparece en el cuadro de la sala 3D.
+
 ## Personalizar
 
 Edita dist/config.js. beginningRoom contiene títulos, dedicatorias, fechas, mensajes, foto, audio/video, objeto simbólico y posición de la pista. Los datos actuales son de demostración.
@@ -60,3 +67,12 @@ Se conserva la clave museum-of-us:<id>:v1, extendida con discoveries y clues. La
 ## Comprobaciones
 
 Las pruebas verifican progreso parcial, persistencia, sello único, independencia de pistas, bloqueo de la sexta sala, almacenamiento corrupto/bloqueado, colisiones y rutas guiadas. La revisión en navegador cubre las tres piezas, sello, llave explorada, regreso al vestíbulo, mapa, pasaporte y móvil.
+
+## Imágenes de demostración descargadas
+
+- Primera pieza: assets/whatsapp-demo.jpg, captura sin modificaciones de VincentLR, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:WhatsApp_Chatting_with_Dark_Mode.jpg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Aparece en la vitrina y en el recuerdo ampliable. Es una conversación de ejemplo con una invitación a salir.
+- Segunda pieza: assets/primera-salida-cafe.jpg, fotografía de Wesley Davi, [Pexels](https://www.pexels.com/photo/a-couple-on-a-date-in-a-cafe-looking-at-each-other-and-smiling-16122179/), [licencia Pexels](https://www.pexels.com/license/). Descarga a 1600 píxeles de ancho. Aparece en el cuadro y en el recuerdo ampliable.
+
+Los créditos se muestran debajo de cada imagen. Para sustituirlas por recuerdos personales, edita exhibits[0].screenshot y exhibits[1].photo en dist/config.js, y retira sus respectivos screenshotCredit/photoCredit. El campo chat de la segunda pieza sigue disponible para añadir otra captura. Los antiguos marcadores se conservan.
+
+La transición de carga utiliza ahora vidrio esmerilado, perfiles finos de bronce, título de sala y apertura lateral. Respeta la preferencia de movimiento reducido.

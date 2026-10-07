@@ -117,3 +117,23 @@ body.room-view .site-header>*{pointer-events:auto}
 .room-help-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
 dialog:has(.room-help-sheet){width:min(560px,calc(100% - 36px))}
 .lobby-dock{box-sizing:border-box;min-height:58px}@media(max-width:600px){.lobby-dock{min-height:0}}
+/* Nuestra primera salida: captura y foto, ampliables al tocarlas. */
+.memory-gallery{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:20px;align-items:start;max-width:660px;margin:0 auto}
+.memory-slot{margin:0;text-align:center}
+.memory-zoom{display:block;width:100%;padding:0;background:transparent;border:0;cursor:zoom-in}
+.memory-zoom:hover{filter:none}
+.memory-slot img{display:block;width:100%;height:auto;max-height:52svh;object-fit:contain;background:#efe4cc;border:8px solid #fbf3e2;outline:1px solid #beaa85;box-shadow:0 10px 24px #46362424}
+.memory-slot figcaption{margin-top:10px;font-family:var(--serif);font-style:italic;font-size:13px;color:#95805b}
+.image-zoom{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom));background:#1d150fe8;cursor:zoom-out;animation:dialog-in .3s ease}
+.image-zoom img{max-width:100%;max-height:100%;object-fit:contain;border:8px solid #fbf3e2;box-shadow:0 20px 60px #000a}
+@media(max-width:600px){.memory-gallery{grid-template-columns:1fr;gap:16px}.memory-slot img{max-height:60svh}}
+@media(prefers-reduced-motion:reduce){.image-zoom{animation:none}}
+
+/* Recursos descargados: conservan su proporción y abren en grande. */
+.memory-gallery.single-memory{grid-template-columns:1fr;max-width:430px}
+.conversation-capture{max-width:300px;margin:0 auto}
+.conversation-capture img{display:block;width:100%;height:auto;max-height:54svh;object-fit:contain;background:transparent;border:0;box-shadow:0 8px 22px #46362420}
+.media-credit{font-size:10px!important;line-height:1.65!important;text-align:center;color:#8a7a60;margin:12px auto 0!important;max-width:460px}
+.media-credit a{color:inherit;text-underline-offset:3px}
+.memory-gallery.single-memory img{max-height:48svh}
+@media(max-width:600px){.conversation-capture img{max-height:58svh}.memory-gallery.single-memory img{max-height:56svh}}

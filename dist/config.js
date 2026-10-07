@@ -57,8 +57,9 @@ window.MUSEUM_CONFIG = {
         date: "20 de enero de 2026",
         description: "Un saludo sencillo. Un comienzo que no sabíamos que lo era.",
         dedication: "Parecía un mensaje cualquiera. Hoy sé que ahí empezó algo que cambiaría mis días.",
-        screenshot: null,
-        screenshotAlt: "Nuestra primera conversación",
+        screenshot: "assets/whatsapp-demo.jpg",
+        screenshotAlt: "Captura de ejemplo de WhatsApp: dos personas se saludan y acuerdan una salida",
+        screenshotCredit: {author: "VincentLR", url: "https://commons.wikimedia.org/wiki/File:WhatsApp_Chatting_with_Dark_Mode.jpg", license: "CC BY-SA 4.0", licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/"},
         messages: [
           { from: "sender", text: "Hola, {recipient}. Me quedé pensando en nuestra conversación de ayer.", time: "19:42" },
           { from: "recipient", text: "Hola, {sender}. Yo también. Qué bonito leerte.", time: "19:45" },
@@ -72,8 +73,12 @@ window.MUSEUM_CONFIG = {
         date: "1 de febrero de 2026",
         description: "Un café, dos sonrisas y la sensación de querer quedarse.",
         dedication: "Recuerdo los nervios antes de verte, lo rápido que pasó el tiempo y las ganas de volver a encontrarnos.",
-        photo: null,
-        photoAlt: "Nuestra primera salida juntos",
+        /* Reemplaza estos archivos por los reales (mismo nombre) o cambia la ruta. */
+        chat: null,
+        chatAlt: "Captura de la conversación antes de nuestra primera salida",
+        photo: "assets/primera-salida-cafe.jpg",
+        photoAlt: "Foto de ejemplo: una pareja sonríe mientras comparte una bebida en un café",
+        photoCredit: {author: "Wesley Davi", url: "https://www.pexels.com/photo/a-couple-on-a-date-in-a-cafe-looking-at-each-other-and-smiling-16122179/", license: "Pexels", licenseUrl: "https://www.pexels.com/license/"},
         placeholder: "assets/first-date.svg",
         audio: null,
         audioLabel: "Escuchar a {sender}"

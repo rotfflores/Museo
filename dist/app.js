@@ -70,7 +70,7 @@
   function ticketMarkup() {
     return `<article class="ticket" aria-label="Boleto personalizado"><div class="ticket-main"><div class="ticket-top"><span>EXPOSICIÓN PRIVADA · ENTRADA PERSONAL</span><svg class="icon" aria-hidden="true"><use href="#icon-ticket"/></svg></div><h2>El Museo de Nosotros</h2><p class="ticket-description">${escape(config.texts.ticketDescription)}</p><p class="ticket-couple">${escape(config.couple)}</p><div class="ticket-details"><p><small>CELEBRAMOS</small>${escape(config.celebration)}</p><p><small>FECHA</small>${escape(config.date)}</p></div><p class="ticket-admission">${escape(config.texts.ticketAdmission)}</p></div><div class="ticket-stub"><span class="eyebrow">UNA HISTORIA IRREPETIBLE</span><span class="stub-monogram">${escape(config.initials)}</span><span class="barcode" aria-hidden="true"></span><span class="ticket-number">Nº ${escape(config.ticketNumber)}</span></div></article>`;
   }
-  const doorLines=['Puliendo los marcos…','Encendiendo las luces…','Acomodando los recuerdos…','Abriendo las puertas…'];
+  const doorLines=['Preparando tu visita…','Encendiendo las luces…','Todo está listo para ti.'];
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   // La escena avisa tras su primer cuadro; si no hay 3D, el aviso llega de inmediato o se espera como máximo 4 s.
   function sceneReady() {
@@ -79,11 +79,16 @@
   }
   // Puertas con nota: cubren la pantalla, cambian lo que hay detrás y se abren cuando la escena está lista (máximo 4 s).
   let doorsBusy=false;
-  async function playDoors({lines,cover,ready,minimum=1900}) {
+  async function playDoors({lines,cover,ready,minimum=1900,variant='',plate=null}) {
     if(doorsBusy) return false;
     doorsBusy=true;
     const doors = $('#door-transition'), line=$('#door-note-line');
     doors.classList.remove('open','ready','loading');
+    // Cada sala puede tener su propia puerta y su propia placa.
+    doors.dataset.variant=variant;
+    $('#door-monogram').textContent=plate||config.initials;
+    $('#door-room-label').textContent=variant==='room-01'?'SALA 01 · LOS COMIENZOS':'EL MUSEO DE NOSOTROS';
+    $('#door-room-title').textContent=variant==='room-01'?config.beginningRoom.title:'Una historia para recorrer.';
     line.textContent=lines[0];
     doors.hidden = false;
     $('#main').inert = true;
