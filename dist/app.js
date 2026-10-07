@@ -14,8 +14,12 @@
   function save() {
     progressStore.save();
   }
+  function updatePassportCount() {
+    $('#passport-preview-count').textContent=`${state.completed.size}/6`;
+    $('#open-passport').setAttribute('aria-label',`Pasaporte de recuerdos, ${state.completed.size} de 6 salas completadas`);
+  }
   function progressChanged() {
-    $('#passport-preview-count').textContent=`${state.completed.size} de 6 salas completadas`;
+    updatePassportCount();
     document.dispatchEvent(new CustomEvent('museum:progress'));
   }
   function notify(message) {
@@ -32,6 +36,7 @@
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     labels.room='04 <span class="footer-line"></span> AQUÍ COMENZÓ TODO';
     $('#stage-label').innerHTML = labels[next];
+    document.body.classList.toggle('lobby-view',next==='lobby');
     window.scrollTo({top:0,behavior:'instant'});
     document.dispatchEvent(new CustomEvent('museum:screen',{detail:next}));
     if (focus) {
@@ -65,26 +70,77 @@
   function ticketMarkup() {
     return `<article class="ticket" aria-label="Boleto personalizado"><div class="ticket-main"><div class="ticket-top"><span>EXPOSICIÓN PRIVADA · ENTRADA PERSONAL</span><svg class="icon" aria-hidden="true"><use href="#icon-ticket"/></svg></div><h2>El Museo de Nosotros</h2><p class="ticket-description">${escape(config.texts.ticketDescription)}</p><p class="ticket-couple">${escape(config.couple)}</p><div class="ticket-details"><p><small>CELEBRAMOS</small>${escape(config.celebration)}</p><p><small>FECHA</small>${escape(config.date)}</p></div><p class="ticket-admission">${escape(config.texts.ticketAdmission)}</p></div><div class="ticket-stub"><span class="eyebrow">UNA HISTORIA IRREPETIBLE</span><span class="stub-monogram">${escape(config.initials)}</span><span class="barcode" aria-hidden="true"></span><span class="ticket-number">Nº ${escape(config.ticketNumber)}</span></div></article>`;
   }
+  const doorLines=['Puliendo los marcos…','Encendiendo las luces…','Acomodando los recuerdos…','Abriendo las puertas…'];
+  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  // La escena avisa tras su primer cuadro; si no hay 3D, el aviso llega de inmediato o se espera como máximo 4 s.
+  function sceneReady() {
+    if(window.MuseumScene?.ready) return Promise.resolve();
+    return Promise.race([new Promise(resolve=>document.addEventListener('museum:scene-ready',resolve,{once:true})),wait(4000)]);
+  }
   async function enterMuseum() {
     if (transitioning) return;
     transitioning = true;
     $('#enter-museum').disabled = true;
-    const doors = $('#door-transition');
-    doors.classList.remove('open');
+    const doors = $('#door-transition'), line=$('#door-note-line');
+    doors.classList.remove('open','ready');
+    doors.style.setProperty('--note-count',doorLines.length);
+    line.textContent=doorLines[0];
     doors.hidden = false;
-    showScreen('lobby', false);
     $('#main').inert = true;
     state.entered = true;
     save();
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    doors.classList.add('loading');
+    showScreen('lobby', false);
+    let index=0;
+    const ticker=setInterval(()=>{index=Math.min(index+1,doorLines.length-1);line.textContent=doorLines[index];},900);
+    await Promise.all([sceneReady(),wait(reducedMotion.matches?300:1900)]);
+    clearInterval(ticker);
+    line.textContent=doorLines[doorLines.length-1];
+    doors.classList.add('ready');
+    await wait(reducedMotion.matches?0:450);
     doors.classList.add('open');
-    setTimeout(() => {
-      doors.hidden = true;
-      $('#main').inert = false;
-      $('#enter-museum').disabled = false;
-      transitioning = false;
-      showScreen('lobby');
-    }, reducedMotion.matches ? 0 : 1550);
+    await wait(reducedMotion.matches?0:1700);
+    doors.hidden = true;
+    doors.classList.remove('open','ready','loading');
+    $('#main').inert = false;
+    $('#enter-museum').disabled = false;
+    transitioning = false;
+    showScreen('lobby');
+    if(!state.tutorialSeen) openTutorial($('#replay-tutorial'));
+  }
+  function noteMarkup() {
+    return `<article class="welcome-plaque note-plaque"><span class="plaque-screw top-left"></span><span class="plaque-screw top-right"></span><p class="eyebrow">UNA NOTA PARA TI</p><h2 id="dialog-title">${escape(format(config.texts.welcomeTitle))}</h2><p>${escape(format(config.texts.welcomeBody))}</p><p class="signature">${escape(format(config.texts.welcomeSignature))}</p><span class="plaque-screw bottom-left"></span><span class="plaque-screw bottom-right"></span></article>`;
+  }
+  // Mini tutorial de gestos: tres pasos con una mano animada.
+  const coarsePointer=window.matchMedia('(pointer: coarse)');
+  function tutorialSteps() {
+    const touch=coarsePointer.matches;
+    return [
+      {scene:'look',title:'Arrastra para mirar alrededor',text:touch?'Desliza el dedo hacia los lados y recorre la rotonda con la mirada.':'Mantén pulsado el mouse y arrástralo hacia los lados para recorrer la rotonda.'},
+      {scene:'door',title:'Toca una puerta para entrar a una sala',text:'La cámara vuela hasta ella y la cruza contigo. Dentro, toca una pieza para acercarte.'},
+      {scene:'heart',title:'Toca el corazón para ver tu pasaporte',text:touch?'Ahí se guardan los sellos de cada sala. Desliza hacia arriba desde el menú inferior para abrir el mapa.':'Ahí se guardan los sellos de cada sala. El menú inferior tiene tu nota, el mapa y tu boleto.'}
+    ];
+  }
+  const tutorialArt={
+    look:'<svg viewBox="0 0 220 120"><path d="M20 108V58a22 22 0 0 1 44 0v50M88 108V48a22 22 0 0 1 44 0v60M156 108V58a22 22 0 0 1 44 0v50"/><path class="tutorial-floor" d="M6 108h208"/></svg>',
+    door:'<svg viewBox="0 0 220 120"><path d="M80 110V50a30 30 0 0 1 60 0v60"/><path class="tutorial-glow" d="M90 110V52a20 20 0 0 1 40 0v58Z"/><path class="tutorial-floor" d="M30 110h160"/></svg>',
+    heart:'<svg viewBox="0 0 220 120"><path class="tutorial-heart" d="M110 92c-26-17-38-30-38-45 0-11 8-19 18-19 9 0 15 5 20 13 5-8 11-13 20-13 10 0 18 8 18 19 0 15-12 28-38 45Z"/><path class="tutorial-floor" d="M70 108h80"/></svg>'
+  };
+  function openTutorial(source) {
+    const steps=tutorialSteps();let step=0;
+    const render=()=>{
+      const item=steps[step],last=step===steps.length-1;
+      $('#dialog-content').innerHTML=`<div class="tutorial" data-scene="${item.scene}"><p class="eyebrow">CÓMO MOVERTE · ${step+1} DE ${steps.length}</p><div class="tutorial-stage" aria-hidden="true">${tutorialArt[item.scene]}<span class="tutorial-finger"><i></i></span></div><h2 id="dialog-title">${item.title}</h2><p class="tutorial-text">${item.text}</p><div class="tutorial-dots" aria-hidden="true">${steps.map((_,index)=>`<i class="${index===step?'on':''}"></i>`).join('')}</div><div class="tutorial-actions"><button class="text-button" data-tutorial="skip" type="button">Saltar</button><button class="button primary" data-tutorial="${last?'done':'next'}" type="button">${last?'Entendido':'Siguiente'}</button></div></div>`;
+      $('[data-tutorial="next"],[data-tutorial="done"]',dialog).focus();
+    };
+    openContent({className:'tutorial-dialog',source,html:'',onClose:()=>{state.tutorialSeen=true;save();}});
+    render();
+    $('#dialog-content').onclick=event=>{
+      const action=event.target.closest('[data-tutorial]')?.dataset.tutorial;
+      if(action==='next'){step++;render();}
+      else if(action==='skip'||action==='done')closeDialog();
+    };
   }
   function passportMarkup() {
     const count = state.completed.size;
@@ -96,6 +152,7 @@
   const dialog = $('#museum-dialog');
   let dialogCleanup=null;
   function cleanupDialog() {
+    $('#dialog-content').onclick=null;
     dialog.querySelectorAll('audio,video').forEach(media=>{media.pause();try{media.currentTime=0;}catch{}});
     const callback=dialogCleanup; dialogCleanup=null; callback?.();
   }
@@ -224,23 +281,31 @@
   document.querySelectorAll('[data-config]').forEach(node=>node.textContent=config[node.dataset.config]);
   $('#letter-title').textContent=config.texts.invitationTitle;
   $('#letter-body').textContent=config.texts.invitationBody;
-  $('#welcome-title').textContent=format(config.texts.welcomeTitle);
-  $('#welcome-body').textContent=format(config.texts.welcomeBody);
-  $('#welcome-signature').textContent=format(config.texts.welcomeSignature);
   $('.scene-label').textContent=`VESTÍBULO · ${config.initials}`;
-  $('#passport-preview-count').textContent=`${state.completed.size} de 6 salas completadas`;
+  updatePassportCount();
   $('#ticket-mount').innerHTML=ticketMarkup();
   $('#envelope').addEventListener('click',openInvitation);
   $('#discover-ticket').addEventListener('click',()=>showScreen('ticket'));
   $('#enter-museum').addEventListener('click',enterMuseum);
   $('#back-invitation').addEventListener('click',()=>resetInvitation(false));
-  $('#continue-visit').addEventListener('click',()=>showScreen('lobby'));
+  $('#continue-visit').addEventListener('click',enterMuseum);
   $('#replay-invitation').addEventListener('click',()=>resetInvitation(false));
   $('.brand').addEventListener('click',event=>{event.preventDefault();if(!transitioning)resetInvitation();});
   $('#open-map').addEventListener('click',event=>openDialog('map',event.currentTarget));
   $('#open-passport').addEventListener('click',event=>openDialog('passport',event.currentTarget));
   $('#consult-ticket').addEventListener('click',event=>openDialog('ticket',event.currentTarget));
-  $('#enter-first-room').addEventListener('click',()=>visitRoom('beginning'));
+  $('#open-note').addEventListener('click',event=>openContent({className:'dialog-note',source:event.currentTarget,html:noteMarkup()}));
+  $('#replay-tutorial').addEventListener('click',event=>openTutorial(event.currentTarget));
+  // Deslizar hacia arriba desde el menú inferior abre el mapa.
+  {
+    const dock=$('#lobby-dock');let start=null,swallow=0;
+    dock.addEventListener('touchstart',event=>{const touch=event.touches[0];start=event.touches.length===1?{x:touch.clientX,y:touch.clientY,time:performance.now()}:null;},{passive:true});
+    dock.addEventListener('touchend',event=>{
+      if(!start)return;const touch=event.changedTouches[0],dx=touch.clientX-start.x,dy=touch.clientY-start.y,quick=performance.now()-start.time<600;start=null;
+      if(quick&&dy<-45&&Math.abs(dy)>Math.abs(dx)*1.3){swallow=performance.now()+500;openDialog('map',$('#open-map'));}
+    },{passive:true});
+    dock.addEventListener('click',event=>{if(performance.now()<swallow){event.stopPropagation();event.preventDefault();}},true);
+  }
   $('#close-dialog').addEventListener('click',closeDialog);
   $('#ambient-toggle').addEventListener('click',toggleAmbient);
   $('#dismiss-notice').addEventListener('click',()=>{$('#notice').hidden=true;});

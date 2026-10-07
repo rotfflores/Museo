@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eee7da">
   <meta name="description" content="Un museo privado dedicado a nuestra historia. Descubre sus comienzos en una sala 3D, guarda su sello y encuentra la primera llave.">
   <title>El Museo de Nosotros</title>
@@ -88,15 +88,14 @@
         </svg>
         <div class="scene-label">VESTÍBULO <span>·</span> D & S</div>
       </div>
-      <div class="lobby-content">
-        <article class="welcome-plaque"><span class="plaque-screw top-left"></span><span class="plaque-screw top-right"></span><p class="eyebrow">UNA NOTA PARA TI</p><h2 id="welcome-title">Bienvenida, Sofía.</h2><p id="welcome-body"></p><p class="signature" id="welcome-signature"></p><span class="plaque-screw bottom-left"></span><span class="plaque-screw bottom-right"></span></article>
-        <div class="museum-objects">
-          <button id="open-map" class="museum-object map-object"><span class="map-paper" aria-hidden="true"><span class="mini-plan"><i></i><i></i><i></i><i></i><i></i><i></i></span><span>EL MUSEO DE NOSOTROS</span><b>Tu recorrido</b><small>PLANO DE LA EXPOSICIÓN</small></span><span class="object-label"><svg class="icon"><use href="#icon-map"/></svg><span>Mapa del museo<small>Seis salas, una historia</small></span><span aria-hidden="true">↗</span></span></button>
-          <button id="open-passport" class="museum-object passport-object"><span class="passport-cover" aria-hidden="true"><span>PASAPORTE<br>DE RECUERDOS</span><svg><use href="#icon-flower"/></svg><b data-config="initials">D & S</b><small>EL MUSEO DE NOSOTROS</small></span><span class="object-label"><svg class="icon"><use href="#icon-book"/></svg><span>Pasaporte de recuerdos<small id="passport-preview-count">0 de 6 salas completadas</small></span><span aria-hidden="true">↗</span></span></button>
-        </div>
-      </div>
-      <button id="consult-ticket" class="text-button consult-ticket"><svg class="icon"><use href="#icon-ticket"/></svg> Volver a consultar mi boleto</button>
-      <button id="enter-first-room" class="button primary lobby-room-entry">Explorar: Aquí comenzó todo <svg class="icon"><use href="#icon-arrow"/></svg></button>
+      <nav id="lobby-dock" class="lobby-dock" aria-label="Vestíbulo">
+        <span class="dock-handle" aria-hidden="true"></span>
+        <button id="open-note" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-flower"/></svg><span>Nota</span></button>
+        <button id="open-map" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-map"/></svg><span>Mapa</span></button>
+        <button id="open-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="passport-preview-count">0/6</small></span></button>
+        <button id="consult-ticket" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-ticket"/></svg><span>Mi boleto</span></button>
+        <button id="replay-tutorial" class="dock-button dock-help" type="button" aria-label="Cómo moverse por el museo"><span aria-hidden="true">?</span></button>
+      </nav>
     </section>
     <section id="room-screen" class="screen room-screen" hidden aria-labelledby="room-title">
       <div class="room-topline"><button id="room-back" class="text-button">← Volver al vestíbulo</button><span class="eyebrow">SALA 01 · LOS COMIENZOS</span><div class="room-tools"><button id="room-map" class="room-tool" aria-label="Consultar mapa"><svg class="icon"><use href="#icon-map"/></svg><span>Mapa</span></button><button id="room-passport" class="room-tool" aria-label="Abrir pasaporte"><svg class="icon"><use href="#icon-book"/></svg><span>Pasaporte</span></button></div></div>
@@ -117,7 +116,14 @@
     </section>
   </main>
   <footer class="site-footer"><span id="stage-label">01 <span class="footer-line"></span> LA INVITACIÓN</span><span>HECHO DE RECUERDOS, <em>Y DE TI.</em></span></footer>
-  <div id="door-transition" class="door-transition" hidden aria-hidden="true"><div class="door door-left"><i></i><b></b></div><div class="door door-right"><i></i><b></b></div></div>
+  <div id="door-transition" class="door-transition" hidden>
+    <div class="door-light" aria-hidden="true"></div>
+    <div class="door-dust" aria-hidden="true"></div>
+    <div class="door door-left" aria-hidden="true"><span class="door-panel"></span><span class="door-panel"></span><span class="hinge"></span><span class="hinge"></span><b class="door-handle"></b></div>
+    <div class="door door-right" aria-hidden="true"><span class="door-panel"></span><span class="door-panel"></span><span class="hinge"></span><span class="hinge"></span><b class="door-handle"></b><span class="keyplate"><em data-config="initials">D & S</em><i></i></span></div>
+    <div class="door-arch" aria-hidden="true"></div>
+    <div class="door-note" role="status" aria-live="polite"><span class="eyebrow">UN MOMENTO</span><p id="door-note-line">Puliendo los marcos…</p><i class="door-progress" aria-hidden="true"><b></b></i></div>
+  </div>
   <dialog id="museum-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">EL MUSEO DE NOSOTROS</span><button id="close-dialog" class="close-button" aria-label="Cerrar">×</button></div><div id="dialog-content"></div></dialog>
   <div id="notice" class="notice" role="status" aria-live="polite" hidden><span aria-hidden="true">✧</span><span id="notice-text"></span><button id="dismiss-notice" aria-label="Cerrar aviso">×</button></div>
 </body>

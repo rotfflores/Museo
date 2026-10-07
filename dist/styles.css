@@ -19,3 +19,136 @@ h1[tabindex="-1"]:focus-visible{outline:none}.text-button{min-height:44px}dialog
 @media(max-width:600px){.museum-scene.is-3d{height:min(68vh,520px)}.scene-hint{font-size:7px;letter-spacing:1.2px;padding:6px 12px;gap:6px;bottom:18%}}
 .museum-scene.is-3d:after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 55%,#fff8e6 0,#ffe3ad 45%,#f4ecdd00 85%)}.museum-scene.through:after{animation:portal-flash 1.5s ease-in-out}@keyframes portal-flash{0%{opacity:0}40%,55%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.museum-scene.through:after{animation:none}}
+
+/* ===== Vestíbulo a pantalla completa ===== */
+body.lobby-view{overflow:hidden;overscroll-behavior:none}
+body.lobby-view .site-footer{display:none}
+body.lobby-view .site-header{position:fixed;top:0;left:0;right:0;max-width:none;z-index:20;padding-top:env(safe-area-inset-top);padding-left:max(64px,env(safe-area-inset-left));padding-right:max(64px,env(safe-area-inset-right));height:calc(112px + env(safe-area-inset-top));pointer-events:none}
+body.lobby-view .site-header>*{pointer-events:auto}
+.lobby-screen{height:100svh;padding:0;overflow:hidden}
+.lobby-screen .museum-scene,.lobby-screen .museum-scene.is-3d{position:fixed;inset:0;width:100vw;height:100svh;margin:0;mask-image:none;-webkit-mask-image:none;z-index:0}
+.lobby-screen .museum-scene>svg{width:100%;height:100%;margin:0}
+.lobby-heading{position:fixed;top:0;left:0;right:0;z-index:5;padding:calc(env(safe-area-inset-top) + 30px) 24px 90px;pointer-events:none;background:linear-gradient(#f4f0e7f5 0,#f4f0e7d9 38%,#f4f0e780 68%,#f4f0e700 100%)}
+.lobby-heading h1{font-size:clamp(32px,3.4vw,52px);margin:8px auto 6px;max-width:16ch}
+.lobby-heading>p:last-child{font-size:14px}
+/* Viñeta cálida sobre la escena, para que el dock y el título respiren. */
+.lobby-screen:after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 52%,transparent 62%,#46362430 100%),linear-gradient(0deg,#f4f0e7c7 0,#f4f0e700 22%)}
+/* Dock inferior: papel translúcido como las píldoras del vestíbulo. */
+.lobby-dock{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:4px;padding:6px;border:1px solid #b9a17780;border-radius:999px;background:#f8f2e6d6;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 12px 34px #46362424,inset 0 0 0 3px #fffaf055;animation:dock-in .8s .3s both}
+.dock-handle{position:absolute;top:-12px;left:50%;width:34px;height:4px;margin-left:-17px;border-radius:4px;background:#a1875666}
+.dock-button{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 16px;border-radius:999px;background:transparent;color:#5d4a33;font-size:12px;letter-spacing:.3px;white-space:nowrap;transition:background .2s,color .2s}
+.dock-button:hover{background:#fbf7ed;filter:none}
+.dock-button .icon{width:19px;height:19px;color:#9a7b45}
+.dock-button small{font-size:10px;color:#9a7b45;margin-left:3px;letter-spacing:.5px}
+.dock-help{width:44px;min-width:44px;padding:0;justify-content:center;border:1px solid #b9a17780;font-family:var(--serif);font-size:18px;color:#8c754e}
+@keyframes dock-in{from{opacity:0;transform:translate(-50%,18px)}}
+@media(max-width:850px){body.lobby-view .site-header{height:calc(95px + env(safe-area-inset-top));padding-left:max(30px,env(safe-area-inset-left));padding-right:max(30px,env(safe-area-inset-right))}.lobby-heading{padding-top:calc(env(safe-area-inset-top) + 88px)}}
+@media(max-width:600px){
+  body.lobby-view .site-header{height:calc(76px + env(safe-area-inset-top));padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
+  .lobby-heading{padding:calc(env(safe-area-inset-top) + 74px) 18px 64px}
+  .lobby-heading .eyebrow{font-size:7px;letter-spacing:1.3px}
+  .lobby-heading h1{font-size:34px;margin:6px auto 4px}
+  .lobby-heading>p:last-child{font-size:12px}
+  .lobby-dock{width:calc(100% - 20px - env(safe-area-inset-left) - env(safe-area-inset-right));max-width:420px;justify-content:space-between;gap:0;padding:4px;bottom:calc(12px + env(safe-area-inset-bottom))}
+  .dock-button{flex:1 1 0;flex-direction:column;gap:3px;min-width:0;min-height:54px;padding:6px 2px;font-size:10px;letter-spacing:.2px}
+  .dock-button small{margin-left:0}
+  .dock-button>span{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+  .dock-help{flex:0 0 44px;width:44px;height:44px;min-height:44px;margin:0 3px}
+}
+@media(max-width:380px){.dock-button{font-size:9px}.lobby-heading h1{font-size:30px}}
+@media(prefers-reduced-motion:reduce){.lobby-dock{animation:none}}
+
+/* ===== Mini tutorial de gestos ===== */
+#dialog-content.tutorial-dialog{max-width:440px;margin:0 auto}
+.tutorial{text-align:center}
+.tutorial>.eyebrow{color:#9a7b45}
+.tutorial-stage{position:relative;height:150px;margin:16px auto 6px;max-width:300px;border:1px solid #beaa85;background:radial-gradient(ellipse at 50% 30%,#fbf3df,#ebdfc7 70%);box-shadow:inset 0 0 0 4px #f5ecd455,0 6px 18px #46362414;overflow:hidden}
+.tutorial-stage svg{position:absolute;inset:12px 30px 10px;width:calc(100% - 60px);height:calc(100% - 22px);fill:none;stroke:#a18756;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tutorial-stage .tutorial-floor{stroke:#c9b38a;stroke-width:1.4}
+.tutorial-stage .tutorial-glow{fill:#ffe3ad;stroke:none;opacity:.55;animation:tutorial-glow 2.2s ease-in-out infinite}
+.tutorial-stage .tutorial-heart{fill:#e2b86b55;stroke:#a18756;animation:tutorial-beat 2.2s ease-in-out infinite;transform-origin:110px 60px}
+.tutorial-finger{position:absolute;left:50%;top:58%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#5d4a33cc;box-shadow:0 0 0 6px #f8f2e6aa,0 6px 14px #46362440}
+.tutorial-finger i{position:absolute;inset:-6px;border-radius:50%;border:2px solid #c9a564;opacity:0}
+.tutorial[data-scene="look"] .tutorial-finger{animation:tutorial-drag 2.6s ease-in-out infinite}
+.tutorial[data-scene="look"] .tutorial-stage svg{animation:tutorial-pan 2.6s ease-in-out infinite}
+.tutorial[data-scene="door"] .tutorial-finger,.tutorial[data-scene="heart"] .tutorial-finger{top:62%;animation:tutorial-tap 2.2s ease-in-out infinite}
+.tutorial[data-scene="door"] .tutorial-finger i,.tutorial[data-scene="heart"] .tutorial-finger i{animation:tutorial-ripple 2.2s ease-out infinite}
+.tutorial h2{font-size:clamp(22px,3vw,27px);line-height:1.25;margin:14px 0 8px}
+.tutorial-text{font-size:13px;line-height:1.75;color:#766750;max-width:340px;margin:0 auto}
+.tutorial-dots{display:flex;gap:8px;justify-content:center;margin:18px 0 6px}
+.tutorial-dots i{width:7px;height:7px;border-radius:50%;border:1px solid #a18756}
+.tutorial-dots i.on{background:#a18756}
+.tutorial-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+@keyframes tutorial-drag{0%,100%{transform:translateX(-55px)}50%{transform:translateX(55px)}}
+@keyframes tutorial-pan{0%,100%{transform:translateX(18px)}50%{transform:translateX(-18px)}}
+@keyframes tutorial-tap{0%,30%{transform:translate(40px,30px) scale(1)}55%{transform:translate(0,0) scale(1)}65%{transform:translate(0,0) scale(.82)}75%,100%{transform:translate(0,0) scale(1)}}
+@keyframes tutorial-ripple{0%,62%{opacity:0;transform:scale(.6)}68%{opacity:1}100%{opacity:0;transform:scale(2.2)}}
+@keyframes tutorial-glow{0%,55%{opacity:.25}70%,85%{opacity:.85}100%{opacity:.25}}
+@keyframes tutorial-beat{0%,60%,100%{transform:scale(1)}68%{transform:scale(1.12)}76%{transform:scale(.98)}}
+@media(prefers-reduced-motion:reduce){.tutorial-finger,.tutorial-finger i,.tutorial-stage svg,.tutorial-stage .tutorial-glow,.tutorial-stage .tutorial-heart{animation:none!important}.tutorial[data-scene] .tutorial-finger{transform:none}}
+
+/* ===== Puertas de entrada ===== */
+.door-transition{display:flex;justify-content:space-between;background:#1d140e;perspective:1700px;transition:background 1.2s ease .5s}
+.door-transition[hidden]{display:none}
+.door-transition.open{background:transparent}
+.door{width:calc(50% - 1px);height:100%;border:0;z-index:2;background:linear-gradient(90deg,#2a1b12,#4a3222 16%,#5d402b 50%,#4a3222 84%,#2a1b12),repeating-linear-gradient(90deg,#ffffff06 0 1px,transparent 1px 9px);background-blend-mode:soft-light;box-shadow:inset 0 0 70px #0d0805aa;transition:transform 1.7s cubic-bezier(.5,.05,.2,1)}
+.door-left{transform-origin:left center}.door-right{transform-origin:right center}
+.door-panel{position:absolute;left:15%;right:15%;border:2px solid #9c7a45;background:linear-gradient(160deg,#5c3f2b,#3c2819);box-shadow:inset 0 0 0 7px #2a1b11,inset 0 0 0 8px #b8955a66,inset 0 0 34px #0d080580,0 0 0 5px #23160d,0 0 0 6px #b8955a33}
+.door-panel:nth-child(1){top:8%;height:45%;border-radius:999px 999px 3px 3px/120px 120px 3px 3px}
+.door-panel:nth-child(2){top:60%;height:30%;border-radius:3px}
+.hinge{position:absolute;width:10px;height:58px;border-radius:3px;background:linear-gradient(90deg,#6d5126,#e0c584 50%,#7a5a2b);box-shadow:0 2px 6px #0009}
+.door-left .hinge{left:8px}.door-right .hinge{right:8px}
+.hinge:nth-of-type(3){top:14%}.hinge:nth-of-type(4){bottom:14%}
+.door .door-handle{position:absolute;top:calc(50% - 60px);width:12px;height:120px;border-radius:8px;background:linear-gradient(90deg,#6b4d22,#efd596 45%,#8a6a35);box-shadow:0 5px 12px #000a}
+.door-left .door-handle{left:auto;right:7%}.door-right .door-handle{left:7%;right:auto}
+.keyplate{position:absolute;left:-36px;top:calc(50% - 52px);width:72px;height:104px;z-index:3;border-radius:36px 36px 12px 12px;background:radial-gradient(circle at 35% 25%,#f6e2aa,#c9a564 48%,#8c6a33);box-shadow:0 8px 20px #000b,inset 0 0 0 2px #f6e3b166,inset 0 0 0 6px #8c6a3366;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.keyplate em{font-family:var(--serif);font-size:13px;color:#4a3317;letter-spacing:.5px}
+.keyplate i{width:9px;height:18px;border-radius:5px 5px 1px 1px;background:#24170c;box-shadow:0 1px 0 #f6e3b155}
+.door-arch{position:absolute;inset:0;z-index:3;pointer-events:none;border:clamp(10px,1.8vw,22px) solid #d8c6a6;box-shadow:inset 0 0 0 2px #c9a564,inset 0 0 50px #0007;transition:opacity .9s ease .6s}
+.door-light{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 42% 75% at 50% 50%,#fff6df,#ffd796 32%,#f4ecdd00 72%);opacity:.7;transform:scaleX(.03);transition:opacity 1.3s ease .35s,transform 1.7s cubic-bezier(.5,.05,.2,1)}
+.door-dust{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;background-image:radial-gradient(circle,#ffeccb 0 1.4px,transparent 2.4px),radial-gradient(circle,#ffe2a8 0 1px,transparent 2px);background-size:47px 53px,71px 67px;background-position:0 0,23px 31px;-webkit-mask-image:radial-gradient(ellipse 28% 48% at 50% 52%,#000,transparent 72%);mask-image:radial-gradient(ellipse 28% 48% at 50% 52%,#000,transparent 72%)}
+.door-note{position:absolute;left:50%;bottom:clamp(36px,11vh,110px);transform:translateX(-50%);z-index:5;width:min(340px,calc(100vw - 48px));padding:16px 26px 15px;text-align:center;background:linear-gradient(120deg,#efe5d0,#e0d0b3);border:1px solid #beaa85;box-shadow:0 14px 34px #0007,inset 0 0 0 4px #f5ecd455;transition:opacity .45s,transform .45s}
+.door-note .eyebrow{font-size:9px;color:#9a7b45}
+.door-note p{font-family:var(--serif);font-style:italic;font-size:19px;color:#4a3c2c;margin:4px 0 0;min-height:1.5em}
+.door-progress{display:block;height:1px;margin-top:12px;background:#beaa8580;overflow:hidden}
+.door-progress b{display:block;width:100%;height:100%;background:#a18756;transform-origin:left;transform:scaleX(0)}
+.door-transition.loading .door-progress b{animation:door-progress 3.6s cubic-bezier(.3,.6,.4,1) forwards}
+.door-transition.ready .door-progress b{animation:none;transform:scaleX(1);transition:transform .4s}
+.door-transition.ready .door-left{transform:rotateY(-7deg)}.door-transition.ready .door-right{transform:rotateY(7deg)}
+.door-transition.ready .door-light{transform:scaleX(.16);opacity:.95}
+.door-transition.open .door-left{transform:rotateY(-104deg)}.door-transition.open .door-right{transform:rotateY(104deg)}
+.door-transition.open .door-light{transform:scaleX(2.4);opacity:0;transition:opacity 1.2s ease .55s,transform 1.6s cubic-bezier(.3,.1,.2,1)}
+.door-transition.open .door-arch{opacity:0}
+.door-transition.open .door-note{opacity:0;transform:translate(-50%,14px)}
+.door-transition.open .door-dust{animation:dust-burst 1.9s ease-out both}
+@keyframes door-progress{to{transform:scaleX(.88)}}
+@keyframes dust-burst{0%{opacity:0;transform:scale(.6)}35%{opacity:.95}100%{opacity:0;transform:scale(1.5) translateY(-40px)}}
+@media(max-width:600px){.door-panel{left:12%;right:12%}.door-panel:nth-child(1){border-radius:999px 999px 3px 3px/70px 70px 3px 3px}.keyplate{left:-28px;width:56px;height:84px;top:calc(50% - 42px)}.keyplate em{font-size:11px}.door .door-handle{height:84px;top:calc(50% - 42px);width:9px}.hinge{height:42px;width:8px}.door-note p{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.door,.door-light,.door-arch,.door-note,.door-transition{transition:none!important}.door-dust,.door-progress b{animation:none!important}}
+
+/* ===== El resto del museo, con el mismo lenguaje ===== */
+body:before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 70% 55% at 50% 30%,#fbf7ed 0,#fbf7ed00 70%),radial-gradient(ellipse 90% 80% at 50% 50%,transparent 60%,#a1875626 100%)}
+.site-header{padding-top:env(safe-area-inset-top)}
+.invitation-screen,.ticket-screen{justify-content:center;min-height:calc(100svh - 190px - env(safe-area-inset-top))}
+.button{border-radius:999px;padding-left:28px;padding-right:28px}
+.primary{box-shadow:0 6px 16px #493a2d26,inset 0 0 0 1px #c9a56455}
+.secondary{border-radius:999px}
+.letter{border-color:#beaa85;box-shadow:0 18px 60px #5d42261c,inset 0 0 0 4px #f5ecd455}
+.ticket{box-shadow:0 18px 44px #55432622,0 0 0 1px #beaa8580}
+dialog{border:1px solid #beaa85;border-radius:4px;background:linear-gradient(180deg,#fbf7ed,#f6efe1);box-shadow:0 30px 90px #2c22185c,inset 0 0 0 5px #fffaf0,inset 0 0 0 6px #c9a5644d}
+dialog::backdrop{background:radial-gradient(ellipse at 50% 40%,#3a2d21a6,#1d150fd6);backdrop-filter:blur(6px)}
+dialog[open]{animation:dialog-in .45s cubic-bezier(.2,.7,.2,1)}
+@keyframes dialog-in{from{opacity:0;transform:translateY(14px) scale(.985)}}
+.dialog-top .eyebrow{color:#9a7b45}
+.close-button{border-radius:50%;border:1px solid #b9a17766;width:40px;height:40px;font-size:24px;display:flex;align-items:center;justify-content:center}
+.close-button:hover{background:#fbf7ed}
+.dialog-note .note-plaque{max-width:520px;margin:6px auto 4px}
+.dialog-note .note-plaque h2{font-size:28px}
+.dialog-note .note-plaque>p:not(.eyebrow):not(.signature){font-size:14px;line-height:1.95;color:#766750}
+.dialog-note .note-plaque .signature{font-family:var(--serif);font-style:italic;color:#8c754e;font-size:17px}
+.plaque-screw.top-left{top:10px;left:10px}.plaque-screw.top-right{top:10px;right:10px}.plaque-screw.bottom-left{bottom:10px;left:10px}.plaque-screw.bottom-right{bottom:10px;right:10px}
+.notice{border-radius:999px;padding:10px 12px 10px 20px;background:#4c4030f0;backdrop-filter:blur(8px);border:1px solid #c9a56455}
+body.lobby-view .notice{bottom:calc(96px + env(safe-area-inset-bottom))}
+@media(prefers-reduced-motion:reduce){dialog[open]{animation:none}}
+.door .keyplate i{position:relative;inset:auto;border:0;box-shadow:0 1px 0 #f6e3b155}
+dialog:has(.tutorial-dialog),dialog:has(.dialog-note){width:min(560px,calc(100% - 36px))}

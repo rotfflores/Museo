@@ -10,13 +10,18 @@ const Museum = window.Museum;
 const sceneBox = document.querySelector('.museum-scene');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+function announce(available) {
+  window.MuseumScene = { ready: true, available };
+  document.dispatchEvent(new CustomEvent('museum:scene-ready', { detail: { available } }));
+}
+
 function supportsWebGL() {
   try { const canvas = document.createElement('canvas'); return !!(canvas.getContext('webgl2') || canvas.getContext('webgl')); } catch { return false; }
 }
 
 if (config && Museum && sceneBox && supportsWebGL()) {
-  try { build(); } catch (error) { console.warn('Vestíbulo 3D no disponible:', error); sceneBox.classList.remove('is-3d'); }
-}
+  try { build(); } catch (error) { console.warn('Vestíbulo 3D no disponible:', error); sceneBox.classList.remove('is-3d'); announce(false); }
+} else announce(false);
 
 function build() {
   const R = 9, WALL = 6.4, ARCH_W = 1.7, ARCH_H = 2.2;
@@ -33,15 +38,6 @@ function build() {
   sceneBox.prepend(canvas);
   sceneBox.classList.add('is-3d');
 
-  const hint = document.createElement('div');
-  hint.className = 'scene-hint';
-  hint.setAttribute('aria-hidden', 'true');
-  for (const [tag, text] of [['span', 'Arrastra para mirar'], ['b', '·'], ['span', 'Toca una puerta o el corazón']]) {
-    const part = document.createElement(tag);
-    part.textContent = text;
-    hint.append(part);
-  }
-  sceneBox.append(hint);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#efe6d6');
@@ -357,10 +353,11 @@ function build() {
 
   /* Cámara: entra por la puerta del museo y luego sigue tu mirada. */
   const home = new THREE.Vector3(0, 1.95, 6.6);
-  const view = { yaw: 0, pitch: -0.05, targetYaw: 0, targetPitch: -0.05, hoverX: 0, hoverY: 0 };
-  let flight = null, intro = null, lastInteraction = -Infinity, hovered = null, visible = false, running = false;
+  const view = { yaw: 0, pitch: -0.05, targetYaw: 0, targetPitch: -0.05 };
+  let flight = null, intro = null, hovered = null, visible = false, running = false, announced = false;
   const portrait = () => sceneBox.clientWidth / sceneBox.clientHeight < 1.1;
-  const yawLimit = () => (portrait() ? 1.05 : 0.38);
+  // A pantalla completa se puede recorrer con la mirada todo el arco de puertas.
+  const yawLimit = () => (portrait() ? 1.1 : 0.62);
 
   function resize() {
     const w = sceneBox.clientWidth, h = sceneBox.clientHeight;
@@ -374,6 +371,7 @@ function build() {
     mirror.getRenderTarget().setSize(Math.round(w * renderer.getPixelRatio() * 0.6), Math.round(h * renderer.getPixelRatio() * 0.6));
   }
   new ResizeObserver(resize).observe(sceneBox);
+  window.addEventListener('resize', resize);
   resize();
 
   const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -400,13 +398,9 @@ function build() {
       if (t === 1) intro = null;
       return;
     }
-    if (now - lastInteraction > 4000 && !reducedMotion.matches) {
-      view.targetYaw = Math.sin(now / 7000) * yawLimit() * 0.45;
-      view.targetPitch = -0.05 + Math.sin(now / 9000) * 0.03;
-    }
-    /* El mouse sólo inclina un poco la mirada, para que las puertas no se escapen del cursor. */
-    view.yaw += (view.targetYaw + view.hoverX * 0.06 - view.yaw) * 0.05;
-    view.pitch += (view.targetPitch - view.hoverY * 0.025 - view.pitch) * 0.05;
+    /* La mirada sólo cambia cuando la persona la mueve: sin deriva automática. */
+    view.yaw += (view.targetYaw - view.yaw) * 0.08;
+    view.pitch += (view.targetPitch - view.pitch) * 0.08;
     const sway = reducedMotion.matches ? 0 : Math.sin(now / 2600) * 0.025;
     camera.position.set(home.x + view.yaw * 0.6, home.y + sway, home.z);
     camera.lookAt(camera.position.clone().add(lookDirection(view.yaw, view.pitch)));
@@ -442,7 +436,7 @@ function build() {
   function returnHome(delay) {
     setTimeout(() => {
       if(document.querySelector('#lobby').hidden){flight=null;sceneBox.classList.remove('flying','through');return;}
-      view.targetYaw = view.yaw - view.hoverX * 0.06;
+      view.targetYaw = view.yaw;
       flyTo(home.clone(), homeLook(), 1500, () => sceneBox.classList.remove('flying'));
     }, reducedMotion.matches ? 0 : delay);
   }
@@ -458,18 +452,11 @@ function build() {
     raycaster.setFromCamera(pointer, camera);
     return raycaster.intersectObjects(pickables, false)[0]?.object || null;
   }
-  function interacted() { lastInteraction = performance.now(); hint.classList.add('gone'); }
   canvas.addEventListener('pointermove', event => {
-    if (event.pointerType === 'mouse' && !drag) {
-      const rect = canvas.getBoundingClientRect();
-      view.hoverX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      view.hoverY = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-      lastInteraction = performance.now();
-    }
     if (drag) {
       const dx = event.clientX - drag.x;
-      view.targetYaw = THREE.MathUtils.clamp(drag.yaw - dx / sceneBox.clientWidth * 2.2, -yawLimit(), yawLimit());
-      if (Math.abs(dx) > 6) { drag.moved = true; interacted(); }
+      if (Math.abs(dx) > 6) drag.moved = true;
+      if (drag.moved) view.targetYaw = THREE.MathUtils.clamp(drag.yaw - dx / sceneBox.clientWidth * 2.4, -yawLimit(), yawLimit());
     }
     if (event.pointerType === 'mouse') {
       const object = flight ? null : pick(event);
@@ -479,24 +466,21 @@ function build() {
   });
   canvas.addEventListener('pointerdown', event => {
     drag = { x: event.clientX, yaw: view.targetYaw, moved: false };
+    try { canvas.setPointerCapture(event.pointerId); } catch { /* Puntero ya liberado. */ }
   });
   canvas.addEventListener('pointerup', event => {
     const wasDrag = drag?.moved;
     drag = null;
     if (wasDrag || flight || intro) return;
-    interacted();
     const object = pick(event);
     if (!object) return;
     if (object.userData.kind === 'heart') { heartPulse = performance.now(); Museum.openPassport(); }
     else enterDoor(doors[object.userData.index]);
   });
-  canvas.addEventListener('pointerleave', () => { drag = null; hovered = null; view.hoverX = view.hoverY = 0; });
+  canvas.addEventListener('pointercancel', () => { drag = null; hovered = null; });
+  canvas.addEventListener('pointerleave', () => { if (!drag) hovered = null; canvas.style.cursor = ''; });
+  window.addEventListener('blur', () => { drag = null; hovered = null; });
   let heartPulse = -Infinity;
-  window.addEventListener('deviceorientation', event => {
-    if (event.gamma === null || drag || !portrait()) return;
-    view.targetYaw = THREE.MathUtils.clamp(-event.gamma / 30, -1, 1) * yawLimit();
-    lastInteraction = performance.now();
-  });
 
   /* Animación: sólo mientras el vestíbulo está visible en pantalla. */
   function frame() {
@@ -533,6 +517,7 @@ function build() {
     }
     heart.material.emissiveIntensity = 0.15 + (hovered === heartHit ? 0.35 : 0);
     renderer.render(scene, camera);
+    if (!announced) { announced = true; requestAnimationFrame(() => announce(true)); }
   }
   function setRunning() {
     const should = visible && !document.hidden && !document.querySelector('#lobby').hidden;

@@ -13,6 +13,7 @@
     const state = {
       entered:saved.entered===true,
       soundPreferred:saved.soundPreferred===true,
+      tutorialSeen:saved.tutorialSeen===true,
       discoveries,
       completed:new Set(Array.isArray(saved.completed) ? saved.completed.filter(id=>{
         const room=config.rooms.find(item=>item.id===id);
@@ -24,7 +25,7 @@
     for(const room of config.rooms) if(room.pieces?.length && room.pieces.every(id=>discoveries[room.id].has(id))) state.completed.add(room.id);
     const getProgress = () => ({entered:state.entered,completed:[...state.completed],clues:[...state.clues],discoveries:Object.fromEntries(Object.entries(discoveries).map(([id,set])=>[id,[...set]]))});
     function save() {
-      try { storage?.setItem(key,JSON.stringify({...getProgress(),soundPreferred:state.soundPreferred})); } catch { /* Memoria de sesión como alternativa. */ }
+      try { storage?.setItem(key,JSON.stringify({...getProgress(),soundPreferred:state.soundPreferred,tutorialSeen:state.tutorialSeen})); } catch { /* Memoria de sesión como alternativa. */ }
     }
     function completeRoom(id) {
       const room=config.rooms.find(item=>item.id===id);
