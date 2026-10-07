@@ -31,13 +31,13 @@ window.MUSEUM_CONFIG = {
   rooms: [
     { id: "beginning", title: "Aquí comenzó todo.", route: "beginning-room.js", pieces: ["message", "first-date", "together"] },
     { id: "moments", title: "Momentos que se quedaron.", route: "moments-room.js", piecesFrom: "momentsRoom" },
-    { id: "little-things", title: "Pequeñas cosas, grandes recuerdos.", route: null },
+    { id: "little-things", title: "Pequeñas cosas, grandes recuerdos.", route: "little-things-room.js", piecesFrom: "littleThingsRoom" },
     { id: "you", title: "Así te veo yo.", route: null },
     { id: "future", title: "Lo que todavía nos espera.", route: null },
     { id: "artwork", title: "Una obra para ti.", route: null, requires: ["beginning", "moments", "little-things", "you", "future"] }
   ],
   /* Las pistas tienen su propio contador; no son requisitos para los sellos. */
-  clueIds: ["beginning-key", "moments-camera", "little-things-key", "you-key", "future-key"],
+  clueIds: ["beginning-key", "moments-camera", "little-things-flower", "you-key", "future-key"],
   beginningRoom: {
     title: "Aquí comenzó todo",
     subtitle: "Antes de tener una historia, tuvimos un primer momento.",
@@ -147,6 +147,46 @@ window.MUSEUM_CONFIG = {
         dedication: "Un pedacito de lo que somos, para que lo lleves contigo siempre.",
         src: "assets/sala02/video-pedacito.mp4", poster: "assets/sala02/video-pedacito-portada.jpg",
         credit: { author: "Jep Gambardella", url: "https://www.pexels.com/video/couple-hugging-each-other-during-sunset-5102615/", note: "Clip de ejemplo sin audio original." } }
+    ]
+  },
+  /* Sala 03. Cada objeto puede usar un modelo de demostración (object: "cups", "tickets", "flower",
+     "suitcase", "note", "keychain"), un modelo propio .glb en "model" o, con object: "photo",
+     una fotografía enmarcada sobre el pedestal ("photo"). "position" va de 1 a 6 alrededor de la mesa.
+     Las fotos complementarias ("photo") cuentan dentro del límite de 25 fotografías del museo. */
+  littleThingsRoom: {
+    title: "Pequeñas cosas, grandes recuerdos",
+    subtitle: "Para cualquiera son objetos. Para nosotros, son parte de nuestra historia.",
+    completionMessage: "Lo pequeño también puede guardar una historia enorme. Ya tienes el sello de esta sala.",
+    clue: {
+      id: "little-things-flower",
+      message: "Los detalles también guardan secretos. Has encontrado otra parte de la sorpresa.",
+      hint: "Rodea la mesa central de «Nuestra colección»: en uno de sus costados hay un detalle muy pequeño."
+    },
+    objects: [
+      { id: "tazas", object: "cups", model: null, position: 1, title: "Un café contigo", date: "Nuestras tardes de café",
+        description: "Representan las conversaciones y el tiempo compartido.",
+        dedication: "Muchas veces mi parte favorita del día fue sentarme contigo y hablar de cualquier cosa.",
+        message: "", photo: null, photoAlt: "", audio: null, audioLabel: "Escuchar este recuerdo" },
+      { id: "entradas", object: "tickets", model: null, position: 2, title: "Nuestra función favorita", date: "Una noche de cine",
+        description: "Representan una salida especial.",
+        dedication: "No recuerdo cada escena de la película, pero sí lo que sentí al tenerte a mi lado.",
+        message: "", ticketText: "CINE · SALA 4 · FILA F", photo: null, photoAlt: "", audio: null },
+      { id: "flor", object: "flower", model: null, position: 3, title: "Un detalle que se quedó", date: "Un día cualquiera",
+        description: "Representa un regalo o gesto de cariño.",
+        dedication: "Era una manera pequeña de decirte algo enorme: estaba pensando en ti.",
+        message: "", cardText: "Pensé en ti", photo: null, photoAlt: "", audio: null },
+      { id: "maleta", object: "suitcase", model: null, position: 4, title: "Donde fuimos juntos", date: "Nuestro primer viaje",
+        description: "Representa un viaje o una aventura.",
+        dedication: "El destino era una parte del viaje. La otra, y mi favorita, era compartirlo contigo.",
+        message: "", tags: ["Oaxaca", "Playa del Carmen", "Ciudad de México"], photo: null, photoAlt: "", audio: null },
+      { id: "nota", object: "note", model: null, position: 5, title: "Algo que quería decirte", date: "Un mensaje guardado",
+        description: "Representa un mensaje guardado.",
+        dedication: "Hay palabras que merecen conservarse porque todavía significan lo mismo.",
+        message: "", noteText: "Gracias por quedarte. Contigo todo se siente como casa.", photo: null, photoAlt: "", audio: null },
+      { id: "llavero", object: "keychain", model: null, position: 6, title: "Solo nosotros sabemos", date: "Nuestra pequeña historia",
+        description: "Un objeto que representa una anécdota que sólo nosotros entendemos.",
+        dedication: "Tal vez nadie más entienda por qué esto es especial. Me gusta que nosotros sí.",
+        message: "", photo: null, photoAlt: "", audio: null }
     ]
   }
 };

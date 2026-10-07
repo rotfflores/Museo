@@ -15,6 +15,20 @@
       const data=room.piecesFrom && config[room.piecesFrom];
       if(!data) continue;
       const seen=new Set(), dropped=[];
+      // Salas de objetos: cada objeto es una pieza; su foto complementaria cuenta en el límite de fotos.
+      if(Array.isArray(data.objects)) {
+        data.objects=data.objects.filter(piece=>{
+          if(!piece||!piece.id||seen.has(piece.id)) return false;
+          const needsPhoto=piece.object==='photo';
+          if(needsPhoto&&(!piece.photo||photos>=LIMITS.photos)){dropped.push(piece.id);return false;}
+          if(piece.photo){ if(photos<LIMITS.photos) photos++; else {piece.photo=null;dropped.push(`${piece.id} (foto)`);} }
+          seen.add(piece.id);
+          return true;
+        });
+        if(dropped.length && typeof console!=='undefined') console.warn(`Límite de ${LIMITS.photos} fotos: se omiten ${dropped.join(', ')}.`);
+        room.pieces=data.objects.map(piece=>piece.id);
+        continue;
+      }
       data.exhibits=(Array.isArray(data.exhibits)?data.exhibits:[]).filter(piece=>{
         if(!piece||!piece.id||seen.has(piece.id)||!['photo','video'].includes(piece.type)) return false;
         const isVideo=piece.type==='video';

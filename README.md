@@ -107,3 +107,12 @@ Al elegir cualquiera de los videos, la cámara encuadra el cuadro según el tama
 | Un pedacito de nosotros | video-pedacito.mp4 y video-pedacito-portada.jpg | [Jep Gambardella: abrazo al atardecer](https://www.pexels.com/video/couple-hugging-each-other-during-sunset-5102615/) |
 
 Los recursos de Pexels se distribuyen bajo su [licencia](https://www.pexels.com/license/); el video aportado por el usuario conserva su contenido original y no se atribuye a Pexels. Para sustituir recursos, reemplaza los archivos o edita `momentsRoom.exhibits[].src`, `poster`, `alt`, `aspectRatio`, `frame`, `mediaLabel` y `credit` en dist/config.js. Elimina `credit` al usar contenido personal. Los videos sólo se descargan al pulsar reproducir.
+
+## Sala 03: Pequeñas cosas, grandes recuerdos
+
+Sala circular e íntima: seis vitrinas de madera oscura y cristal alrededor de la mesa «Nuestra colección». Se entra por la puerta 03 del vestíbulo o desde el mapa; la puerta de regreso está detrás de la cámara, como en las salas 01 y 02.
+
+- Al enfocar un objeto aparece «Examinar recuerdo». Al examinarlo se abre la nota lateral con el objeto en 3D: se gira arrastrando (o con las flechas y los botones), se acerca con la rueda o pellizcando dentro de límites, y «Restablecer vista» lo devuelve a su encuadre. Mientras tanto la sala no se mueve; al cerrar, el visitante vuelve a donde estaba.
+- Cada objeto examinado deja su miniatura en la mesa; tocar la mesa o una miniatura vuelve a abrir el recuerdo. «Objetos descubiertos: n de 6» se calcula con los objetos configurados; al examinarlos todos se entrega el sello.
+- La pista secreta es una pequeña flor dorada en el costado derecho de la mesa central (id `little-things-flower`).
+- Personaliza en dist/config.js, `littleThingsRoom.objects[]`: `object` (cups, tickets, flower, suitcase, note, keychain o photo), `model` (ruta .glb/.gltf opcional), `position` (1 a 6), `title`, `date`, `description`, `dedication`, `message`, `photo` y `photoAlt` (opcionales; cuentan en el límite de 25 fotos), `audio` y `audioLabel` (opcionales; pausan el ambiente mientras suenan), `tags` (destinos de la maleta), `ticketText`, `noteText` y `cardText`. Con `object: "photo"` y una `photo`, el recuerdo se muestra como fotografía enmarcada sobre el pedestal con las mismas funciones.

@@ -32,18 +32,19 @@
   function showScreen(next, focus = true) {
     clearTimeout(invitationTimer);
     screen = next;
-    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen']]) $(`#${id}`).hidden = name !== next;
+    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen'],['little-things','little-screen']]) $(`#${id}`).hidden = name !== next;
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     labels.room='04 <span class="footer-line"></span> AQUÍ COMENZÓ TODO';
     labels.moments='05 <span class="footer-line"></span> MOMENTOS QUE SE QUEDARON';
+    labels['little-things']='06 <span class="footer-line"></span> PEQUEÑAS COSAS, GRANDES RECUERDOS';
     $('#stage-label').innerHTML = labels[next];
     document.body.classList.toggle('lobby-view',next==='lobby');
     // Las salas comparten el mismo diseño a pantalla completa.
-    document.body.classList.toggle('room-view',next==='room'||next==='moments');
+    document.body.classList.toggle('room-view',next==='room'||next==='moments'||next==='little-things');
     window.scrollTo({top:0,behavior:'instant'});
     document.dispatchEvent(new CustomEvent('museum:screen',{detail:next}));
     if (focus) {
-      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next} h1`);
+      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next === 'little-things' ? 'little-screen' : next} h1`);
       heading.setAttribute('tabindex','-1');
       heading.focus({preventScroll:true});
     }
@@ -115,7 +116,7 @@
   }
   // Volver desde una sala: la puerta del museo se cierra, cambia la escena y se abre en el vestíbulo.
   async function returnToLobby() {
-    if(screen!=='room'&&screen!=='moments'){showScreen('lobby');return;}
+    if(screen!=='room'&&screen!=='moments'&&screen!=='little-things'){showScreen('lobby');return;}
     if(dialog.open) closeDialog();
     const opened=await playDoors({lines:['Cerrando la sala…','Volviendo al vestíbulo…','Bienvenida de nuevo.'],cover:()=>showScreen('lobby',false),ready:()=>null,minimum:1100,label:'EL MUSEO DE NOSOTROS',title:'El vestíbulo'});
     if(opened){$('#lobby-title').setAttribute('tabindex','-1');$('#lobby-title').focus({preventScroll:true});} else showScreen('lobby');
@@ -203,7 +204,7 @@
     $('#dialog-content').className = type === 'ticket' ? 'dialog-ticket' : '';
     $('#dialog-content').innerHTML = type === 'map' ? mapMarkup() : type === 'passport' ? passportMarkup() : `<div class="dialog-heading"><h2 id="dialog-title">Tu entrada, para siempre</h2><p>Esta historia tiene un lugar reservado para ti.</p></div>${ticketMarkup()}`;
     if(type==='map') {
-      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':screen==='moments'?'Sala 02 · Momentos que se quedaron':'Vestíbulo';
+      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':screen==='moments'?'Sala 02 · Momentos que se quedaron':screen==='little-things'?'Sala 03 · Pequeñas cosas, grandes recuerdos':'Vestíbulo';
       const open=config.rooms.filter(room=>roomHandlers.has(room.id)).map(room=>room.title.replace(/\.$/,''));
       $('.map-footnote',dialog).textContent=open.length>1?`${open.slice(0,-1).join(', ')} y ${open.at(-1)} están abiertas. Las otras salas abrirán pronto.`:`${open[0]||'La primera sala'} está abierta. Las otras salas abrirán pronto.`;
       dialog.querySelectorAll('[data-room]').forEach(button=>{

@@ -202,3 +202,27 @@ dialog:has(.moments-photo),dialog:has(.moments-video){width:min(860px,calc(100% 
 .lobby-heading.room-overlay #moments-subtitle{font-family:var(--serif);font-style:italic;font-size:14px;color:#817057;margin:0 auto}
 .lobby-heading.room-overlay #moments-title{max-width:24ch}
 @media(max-width:600px){.lobby-heading.room-overlay>p.moments-counter{font-size:8px;letter-spacing:1.1px;margin-top:5px}.lobby-heading.room-overlay #moments-subtitle{font-size:12px}}
+/* ===== Sala 03 · Pequeñas cosas, grandes recuerdos ===== */
+.lobby-heading.room-overlay>p#little-counter{font-family:var(--sans);font-style:normal;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#8c754e;margin:8px auto 0}
+.lobby-heading.room-overlay #little-subtitle{font-family:var(--serif);font-style:italic;font-size:14px;color:#817057;margin:0 auto;max-width:560px}
+.lobby-heading.room-overlay #little-title{max-width:24ch}
+.examine-pill{position:fixed;left:50%;bottom:calc(98px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:7;display:flex;gap:8px;align-items:center;max-width:calc(100vw - 32px);min-height:42px;padding:9px 20px;border:1px solid #b9a17780;border-radius:999px;background:#f8f2e6e6;backdrop-filter:blur(10px);color:#5d4a33;font-size:12px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 10px 26px #4636242a;animation:dock-in .4s both}
+.examine-pill>span:first-child{color:#b89b66}
+.room-note.inspect-note.inspecting{width:min(420px,calc(100vw - 40px));max-height:calc(100svh - 190px)}
+.inspect-stage{position:relative;height:230px;margin:-4px -6px 10px;background:radial-gradient(ellipse at 50% 40%,#fbf3e2,#eadcc4 75%);border:1px solid #d7c7a8;overflow:hidden}
+.inspect-canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;outline:none}
+.inspect-canvas:active{cursor:grabbing}
+.inspect-canvas:focus-visible{box-shadow:inset 0 0 0 2px #806232}
+.inspect-fallback{display:flex;align-items:center;justify-content:center;height:100%;font-size:60px;color:#b89b66;margin:0}
+.inspect-controls{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:0 0 14px}
+.inspect-controls button{min-width:36px;height:36px;padding:0 8px;border:1px solid #b9a17780;border-radius:999px;background:#fbf7ed;color:#5d4a33;font-size:15px}
+.inspect-controls .inspect-reset{font-size:11px;padding:0 12px}
+.inspect-message{margin-top:12px}
+.inspect-photo{margin:14px 0 0}.inspect-photo img{display:block;width:100%;max-height:220px;object-fit:contain;border:6px solid #fbf3e2;outline:1px solid #beaa85}
+.inspect-audio{margin:14px 0 0}
+.collection-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px}
+.collection-item{display:flex;gap:8px;align-items:center;min-height:40px;padding:6px 10px;border:1px solid #d7c7a8;border-radius:4px;background:#fbf7ed;color:#9a8a70;font-size:11px;text-align:left}
+.collection-item.found{color:#4a3c2c;border-color:#c9a564}
+.collection-item span{color:#b89b66;font-size:12px}
+@media(max-width:600px){.lobby-heading.room-overlay>p#little-counter{font-size:8px;letter-spacing:1.1px;margin-top:5px}.lobby-heading.room-overlay #little-subtitle{font-size:12px}.room-note.inspect-note.inspecting{left:12px;right:12px;width:auto;max-height:58svh}.inspect-stage{height:190px}.examine-pill{bottom:calc(86px + env(safe-area-inset-bottom));font-size:11px}}
+@media(prefers-reduced-motion:reduce){.examine-pill{animation:none}}
