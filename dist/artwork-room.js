@@ -625,4 +625,3 @@ document.addEventListener('museum:screen',event=>{
   engine?.setActive(here);
 });
 updateProgress();
-window.__artDebug={get engine(){return engine;},reducedMotion,THREE,get piece(){return pieceTarget;},get letter(){return letterTarget;},get vitrine(){return caseTarget;}};
