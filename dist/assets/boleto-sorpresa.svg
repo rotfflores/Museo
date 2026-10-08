@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="ground" x2="1" y2="1"><stop stop-color="#28302b"/><stop offset="1" stop-color="#484333"/></linearGradient>
+    <linearGradient id="paper" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#e9dbc0"/></linearGradient>
+    <linearGradient id="gold" x2="1"><stop stop-color="#a18758"/><stop offset=".5" stop-color="#d1b985"/><stop offset="1" stop-color="#92754a"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#131a16" flood-opacity=".33"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#ground)"/>
+  <path d="M48 49H1152V581H48Z" fill="url(#paper)" filter="url(#shadow)"/>
+  <path d="M67 68H1133V562H67Z" fill="none" stroke="#bda67c" stroke-width="2"/>
+  <path d="M78 79H1122V551H78Z" fill="none" stroke="#ddcfb2"/>
+  <path d="M955 70V560" stroke="#ad9469" stroke-width="2" stroke-dasharray="5 9"/>
+  <circle cx="955" cy="49" r="19" fill="#28302b"/><circle cx="955" cy="581" r="19" fill="#484333"/>
+  <path d="M113 96h62m-62 8h34m743-8h-62m62 8h-34M795 533h94" stroke="#bc9d69" stroke-width="2"/>
+  <text x="116" y="149" fill="#8d7550" font-family="Arial, sans-serif" font-size="18" letter-spacing="6">EXPOSICIÓN PRIVADA · BOLETO DE ACCESO</text>
+  <text x="110" y="263" fill="#40372c" font-family="Georgia, serif" font-size="88" letter-spacing="-2">El Museo</text>
+  <text x="110" y="354" fill="#40372c" font-family="Georgia, serif" font-size="88" font-style="italic" letter-spacing="-3">de Nosotros</text>
+  <path d="M112 389H860" stroke="url(#gold)" stroke-width="2"/>
+  <text x="115" y="443" fill="#8a6e47" font-family="Arial, sans-serif" font-size="27" letter-spacing="3">UNA ENTRADA A UNA SORPRESA</text>
+  <text x="115" y="485" fill="#665b4b" font-family="Georgia, serif" font-size="25" font-style="italic">Una historia para recorrer. Un final para descubrir.</text>
+  <text x="115" y="533" fill="#987f57" font-family="Arial, sans-serif" font-size="17" letter-spacing="3">DANIEL &amp; SOFÍA  ·  UNA VISITA MUY NUESTRA</text>
+  <image x="983" y="151" width="149" height="149" xlink:href="museum-wax-seal.png"/>
+  <text x="1056" y="350" fill="#584936" font-family="Georgia, serif" font-size="25" font-style="italic" text-anchor="middle">Para ti</text>
+  <text x="1056" y="397" fill="#8a704c" font-family="Arial, sans-serif" font-size="15" letter-spacing="3" text-anchor="middle">ADMISIÓN</text>
+  <text x="1056" y="430" fill="#584936" font-family="Georgia, serif" font-size="32" text-anchor="middle">01</text>
+  <path d="M997 465h119" stroke="#bca47d"/>
+  <path d="M1003 482v37m7-37v37m4-37v37m9-37v37m5-37v37m5-37v37m10-37v37m4-37v37m8-37v37m5-37v37m10-37v37m4-37v37m7-37v37m5-37v37m5-37v37m7-37v37" stroke="#786347" stroke-width="2"/>
+</svg>

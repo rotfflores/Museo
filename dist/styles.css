@@ -165,3 +165,5 @@ dialog:has(.tutorial-dialog),dialog:has(.dialog-note){width:min(560px,calc(100% 
 .door-transition[data-variant="room-01"].ready .door-right{transform:rotateY(2deg)}
 .door-transition[data-variant="room-01"].open .door-left{transform:rotateY(-100deg)}
 .door-transition[data-variant="room-01"].open .door-right{transform:rotateY(100deg)}
+
+.icon-arrow-image{display:inline-block;width:19px;height:19px;object-fit:contain;flex:none;vertical-align:middle}.button.primary .icon-arrow-image{filter:brightness(0) invert(1)}.dock-button>.icon-arrow-image,.room-dock .dock-glyph.icon-arrow-image{width:19px;height:19px}.map-room-symbol .icon-arrow-image{width:15px;height:15px}.plan-caption .icon-arrow-image{width:13px;height:13px}.text-button .icon-arrow-image{width:14px;height:14px}

@@ -433,7 +433,7 @@ function openSong(index,source=$('#you-stage')) {
   showNote({eyebrow:'CANCIÓN DEDICADA',title:song.title,source,body:`<p class="room-note-description">${escape(song.artist||'')}</p>
     ${song.cover?`<figure class="you-cover"><img src="${escape(song.cover)}" alt="Portada de ${escape(song.title)}" loading="lazy" decoding="async"></figure>`:''}
     <p class="room-note-dedication">${escape(text(song.dedication||''))}</p>
-    <div class="optional-audio you-audio">${song.audio?`<button id="you-play-song" class="button secondary" type="button">▶ Escuchar</button>`:''}${song.link?`<a class="button ${song.audio?'text-button':'secondary'} you-song-link" href="${escape(song.link)}" target="_blank" rel="noopener noreferrer">Abrir canción <span aria-hidden="true">↗</span></a>`:''}<p id="you-song-status" role="status"></p></div>
+    <div class="optional-audio you-audio">${song.audio?`<button id="you-play-song" class="button secondary" type="button">▶ Escuchar</button>`:''}${song.link?`<a class="button ${song.audio?'text-button':'secondary'} you-song-link" href="${escape(song.link)}" target="_blank" rel="noopener noreferrer">Abrir canción <img class="icon-arrow-image" src="assets/icons/arrow-up-right.svg" alt="" aria-hidden="true"></a>`:''}<p id="you-song-status" role="status"></p></div>
     `});
   $('#you-note .you-cover img')?.addEventListener('error',event=>event.currentTarget.closest('figure').remove(),{once:true});
   Museum.bindAudioButton($('#you-play-song'),{src:song.audio,title:`${song.title} · ${song.artist}`,status:$('#you-song-status')});

@@ -4,7 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#eee7da">
-  <meta name="description" content="Un museo privado dedicado a nuestra historia. Descubre sus comienzos en una sala 3D, guarda su sello y encuentra la primera llave.">
+  <meta name="description" content="Una entrada a una sorpresa para Sofía. Recorre El Museo de Nosotros y descubre la historia de Daniel y Sofía.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rotfflores.github.io/Museo/">
+  <meta property="og:title" content="El Museo de Nosotros · Una entrada a una sorpresa">
+  <meta property="og:description" content="Un boleto reservado para ti. Entra y descubre lo que guarda nuestra historia.">
+  <meta property="og:image" content="https://rotfflores.github.io/Museo/assets/boleto-sorpresa.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Boleto dorado para entrar a El Museo de Nosotros y descubrir una sorpresa">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://rotfflores.github.io/Museo/assets/boleto-sorpresa.png">
   <title>El Museo de Nosotros</title>
   <link rel="icon" href="assets/monogram.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
@@ -42,7 +53,7 @@
   <main id="main">
     <section id="invitation" class="screen invitation-screen" aria-labelledby="invitation-title">
       <div class="invitation-heading"><p class="eyebrow">UNA EXPOSICIÓN ÚNICA. UNA HISTORIA NUESTRA.</p><h1 id="invitation-title">Una invitación<br><em>solo para ti.</em></h1><p class="recipient">Para <span data-config="recipient">Sofía</span>, con todo mi amor.</p></div>
-      <div id="return-visit" class="return-visit" hidden><p>Tu museo te estaba esperando.</p><button id="continue-visit" class="button primary">Continuar mi visita <span aria-hidden="true">↗</span></button><button id="replay-invitation" class="text-button">Ver la invitación otra vez</button></div>
+      <div id="return-visit" class="return-visit" hidden><p>Tu museo te estaba esperando.</p><button id="continue-visit" class="button primary">Continuar mi visita <img class="icon icon-arrow-image" src="assets/icons/arrow-up-right.svg" alt="" aria-hidden="true"></button><button id="replay-invitation" class="text-button">Ver la invitación otra vez</button></div>
       <div id="envelope-wrap" class="envelope-wrap">
         <div class="envelope-shadow"></div>
         <button id="envelope" class="envelope" type="button" aria-label="Abrir tu invitación" aria-expanded="false">
@@ -51,14 +62,14 @@
         <p class="open-hint"><span aria-hidden="true">✧</span> Toca para abrir</p>
       </div>
       <article id="letter" class="letter" hidden aria-labelledby="letter-title" tabindex="-1">
-        <svg class="letter-flower" aria-hidden="true"><use href="#icon-flower"/></svg><p class="eyebrow">MI PERSONA FAVORITA</p><h2 id="letter-title"></h2><p id="letter-body"></p><p class="signature">Con amor, <span data-config="sender">Daniel</span></p><button id="discover-ticket" class="button primary">Descubrir mi entrada <svg class="icon"><use href="#icon-arrow"/></svg></button>
+        <svg class="letter-flower" aria-hidden="true"><use href="#icon-flower"/></svg><p class="eyebrow">MI PERSONA FAVORITA</p><h2 id="letter-title"></h2><p id="letter-body"></p><p class="signature">Con amor, <span data-config="sender">Daniel</span></p><button id="discover-ticket" class="button primary">Descubrir mi entrada <img class="icon icon-arrow-image" src="assets/icons/arrow-right.svg" alt="" aria-hidden="true"></button>
       </article>
       <p class="invitation-note">Algunas historias merecen ser guardadas para siempre.</p>
     </section>
     <section id="ticket-screen" class="screen ticket-screen" hidden aria-labelledby="ticket-heading">
       <p class="eyebrow">EL COMIENZO DE UN RECORRIDO MUY NUESTRO</p><h1 id="ticket-heading">Tu entrada a <em>nuestra historia.</em></h1><p class="screen-subtitle">Un lugar reservado para la persona más especial.</p>
       <div id="ticket-mount"></div>
-      <button id="enter-museum" class="button primary">Entrar al museo <svg class="icon"><use href="#icon-arrow"/></svg></button><button id="back-invitation" class="text-button">Volver a la invitación</button>
+      <button id="enter-museum" class="button primary">Entrar al museo <img class="icon icon-arrow-image" src="assets/icons/arrow-right.svg" alt="" aria-hidden="true"></button><button id="back-invitation" class="text-button">Volver a la invitación</button>
     </section>
     <section id="lobby" class="screen lobby-screen" hidden aria-labelledby="lobby-title">
       <div class="lobby-heading"><p class="eyebrow">BIENVENIDA A NUESTRA EXPOSICIÓN PRIVADA</p><h1 id="lobby-title">El Museo <em>de Nosotros</em></h1><p>Cada recuerdo tiene un lugar. Este es el nuestro.</p></div>
@@ -99,7 +110,7 @@
         <div class="scene-label">VESTÍBULO <span>·</span> D & S</div>
       </div>
       <nav id="lobby-dock" class="lobby-dock" aria-label="Vestíbulo">
-        <button id="museum-back" class="dock-button dock-back" type="button" aria-label="Volver al vestíbulo" hidden><span aria-hidden="true">←</span><span>Salir</span></button>
+        <button id="museum-back" class="dock-button dock-back" type="button" aria-label="Volver al vestíbulo" hidden><img class="icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Salir</span></button>
         <span class="dock-handle" aria-hidden="true"></span>
         <button id="open-note" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-flower"/></svg><span>Nota</span></button>
         <button id="open-map" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-map"/></svg><span>Mapa</span></button>
@@ -132,7 +143,7 @@
         <div id="room-note-content"></div>
       </aside>
       <nav id="room-dock" class="lobby-dock room-dock" aria-label="Sala 01">
-        <button id="room-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="room-back" class="dock-button" type="button"><img class="dock-glyph icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Vestíbulo</span></button>
         <button id="room-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="room-passport-count">0/6</small></span></button>
         <button id="room-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
@@ -160,7 +171,7 @@
         <div id="moments-note-content"></div>
       </aside>
       <nav id="moments-dock" class="lobby-dock room-dock" aria-label="Sala 02">
-        <button id="moments-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="moments-back" class="dock-button" type="button"><img class="dock-glyph icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Vestíbulo</span></button>
         <button id="moments-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="moments-passport-count">0/6</small></span></button>
         <button id="moments-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
@@ -187,7 +198,7 @@
         <div id="little-note-content"></div>
       </aside>
       <nav id="little-dock" class="lobby-dock room-dock" aria-label="Sala 03">
-        <button id="little-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="little-back" class="dock-button" type="button"><img class="dock-glyph icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Vestíbulo</span></button>
         <button id="little-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="little-passport-count">0/6</small></span></button>
         <button id="little-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
@@ -213,7 +224,7 @@
         <div id="you-note-content"></div>
       </aside>
       <nav id="you-dock" class="lobby-dock room-dock" aria-label="Sala 04">
-        <button id="you-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="you-back" class="dock-button" type="button"><img class="dock-glyph icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Vestíbulo</span></button>
         <button id="you-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="you-passport-count">0/6</small></span></button>
         <button id="you-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
@@ -240,7 +251,7 @@
         <div id="future-note-content"></div>
       </aside>
       <nav id="future-dock" class="lobby-dock room-dock" aria-label="Sala 05">
-        <button id="future-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="future-back" class="dock-button" type="button"><img class="dock-glyph icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Vestíbulo</span></button>
         <button id="future-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="future-passport-count">0/6</small></span></button>
         <button id="future-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
@@ -267,7 +278,7 @@
         <div id="artwork-note-content"></div>
       </aside>
       <nav id="artwork-dock" class="lobby-dock room-dock" aria-label="Sala 06">
-        <button id="artwork-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="artwork-back" class="dock-button" type="button"><img class="dock-glyph icon-arrow-image" src="assets/icons/arrow-left.svg" alt="" aria-hidden="true"><span>Vestíbulo</span></button>
         <button id="artwork-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="artwork-passport-count">0/6</small></span></button>
         <button id="artwork-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
