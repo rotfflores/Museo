@@ -1,5 +1,5 @@
 /* Sello aportado y plano de visita del museo. */
-.wax-seal{width:90px;height:90px;left:calc(50% - 45px);top:112px;border-radius:0;background:none;box-shadow:none;transform:rotate(5deg);filter:drop-shadow(0 4px 3px #4f422d50)}
+.wax-seal{width:90px;height:90px;left:50%;top:60%;border-radius:0;background:none;box-shadow:none;transform:translate(-50%,-50%) rotate(5deg);filter:drop-shadow(0 4px 3px #4f422d50)}
 .wax-seal img{width:100%;height:100%;object-fit:contain;display:block}
 .stamp-slot.completed .stamp-outline{border:0;background:none;box-shadow:none;transform:rotate(-8deg)}
 .stamp-outline img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 2px #54442a30)}
@@ -67,7 +67,7 @@ dialog:has(.dialog-map){width:min(700px,calc(100% - 28px));padding:20px 32px 25p
   .map-location{margin-top:13px}
 }
 @media(max-width:600px){
-  .wax-seal{width:78px;height:78px;left:calc(50% - 39px);top:105px}
+  .wax-seal{width:78px;height:78px}
   dialog:has(.dialog-map){padding:15px 17px 19px;width:calc(100% - 20px);max-height:calc(100svh - 20px)}
   dialog:has(.dialog-map) .dialog-top{margin-bottom:10px}
   .dialog-map .map-heading{padding:0 30px 18px}
