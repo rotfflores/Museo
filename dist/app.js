@@ -21,9 +21,16 @@
   const miniPlayer=document.createElement('section');miniPlayer.className='museum-player';miniPlayer.hidden=true;miniPlayer.setAttribute('aria-label','Canción en reproducción');
   miniPlayer.innerHTML='<span id="museum-player-title"></span><button id="museum-player-toggle" type="button" aria-label="Pausar canción">Ⅱ</button><button id="museum-player-stop" type="button" aria-label="Detener canción">×</button>';
   $('#main').append(miniPlayer);
+  const heartHint=document.createElement('aside');heartHint.className='heart-wayfinding';heartHint.hidden=true;heartHint.innerHTML='<p>Tu recorrido vive en el corazón.<br>Tócalo para guardar tu resumen.</p><button type="button" aria-label="Abrir mi resumen del museo">♡</button>';$('#main').append(heartHint);heartHint.querySelector('button').onclick=()=>openHeart();
+  const tourComplete=()=>config.rooms.every(room=>state.completed.has(room.id));
+  function openHeart(source=$('#open-passport')){window.MuseumHeart.open(source);}
+  async function goToHeart(){closeDialog();if(screen!=='lobby')await returnToLobby();notify('Toca el corazón dorado del vestíbulo para ver y compartir tu resumen.');}
   function updatePassportCount() {
     $('#passport-preview-count').textContent=`${state.completed.size}/6`;
-    $('#open-passport').setAttribute('aria-label',`Pasaporte de recuerdos, ${state.completed.size} de 6 salas completadas`);
+    const done=tourComplete();$('#open-passport').setAttribute('aria-label',done?'Abrir mi resumen del museo':`Pasaporte de recuerdos, ${state.completed.size} de 6 salas completadas`);
+    $('#open-passport span').firstChild.textContent=done?'Corazón ':'Pasaporte ';
+    $('#open-passport use').setAttribute('href',done?'#icon-heart':'#icon-book');
+    heartHint.hidden=screen!=='lobby'||!done;
   }
   function progressChanged() {
     updatePassportCount();
@@ -42,6 +49,7 @@
   function showScreen(next, focus = true) {
     clearTimeout(invitationTimer);
     screen = next;
+    heartHint.hidden=next!=='lobby'||!tourComplete();
     const inMuseum=['lobby','room','moments','little-things','you','future','artwork'].includes(next);
     sharedDock.hidden=!inMuseum;$('#museum-back').hidden=next==='lobby';sharedDock.setAttribute('aria-label','Navegación del museo');
     if(next==='lobby')sound.enter();else if(!inMuseum)sound.leave();
@@ -166,7 +174,7 @@
     return [
       {scene:'look',title:'Arrastra para mirar alrededor',text:touch?'Arrastra para desplazar la escena, como una fotografía. La escena sigue el movimiento de tu dedo.':'Mantén pulsado el mouse y arrastra: la escena sigue tu movimiento.'},
       {scene:'door',title:'Toca una puerta para entrar a una sala',text:'La cámara vuela hasta ella y la cruza contigo. Dentro, toca una pieza para acercarte.'},
-      {scene:'heart',title:'Toca el corazón para ver tu pasaporte',text:touch?'Ahí se guardan los sellos de cada sala. Desliza hacia arriba desde el menú inferior para abrir el mapa.':'Ahí se guardan los sellos de cada sala. El menú inferior tiene tu nota, el mapa y tu boleto.'}
+      {scene:'heart',title:'Toca el corazón para guardar tu recorrido',text:touch?'Ahí se reúnen tu pasaporte y el resumen de tu visita. Desliza hacia arriba desde el menú inferior para abrir el mapa.':'Ahí se guardan los sellos de cada sala. El menú inferior tiene tu nota, el mapa y tu boleto.'}
     ];
   }
   const tutorialArt={
@@ -308,6 +316,7 @@
     openTutorial:(kind,source)=>openTutorial(source,kind),
     tutorialSeen,
     openMap:source=>openDialog('map',source||$('#open-map')),
+    openHeart,goToHeart,
     openPassport:source=>openDialog('passport',source||$('#open-passport'))
   });
   let muted=false;try{muted=storage?.getItem('museum-sound-muted')==='1';}catch{}
@@ -349,7 +358,7 @@
   $('#replay-invitation').addEventListener('click',()=>resetInvitation(false));
   $('.brand').addEventListener('click',event=>{event.preventDefault();if(!transitioning)resetInvitation();});
   $('#open-map').addEventListener('click',event=>openDialog('map',event.currentTarget));
-  $('#open-passport').addEventListener('click',event=>openDialog('passport',event.currentTarget));
+  $('#open-passport').addEventListener('click',event=>tourComplete()?openHeart(event.currentTarget):openDialog('passport',event.currentTarget));
   $('#consult-ticket').addEventListener('click',event=>openDialog('ticket',event.currentTarget));
   $('#open-note').addEventListener('click',event=>openContent({className:'dialog-note',source:event.currentTarget,html:noteMarkup()}));
   $('#replay-tutorial').addEventListener('click',event=>{const help={room:'room-help',moments:'moments-help','little-things':'little-help',you:'you-help',future:'future-help',artwork:'artwork-help'}[screen];if(help)$('#'+help).click();else openTutorial(event.currentTarget);});

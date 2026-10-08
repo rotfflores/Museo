@@ -1,0 +1,40 @@
+dialog:has(.heart-summary){width:min(730px,calc(100% - 24px))}
+.heart-heading{text-align:center;padding:0 15px 25px;border-bottom:1px solid #dfd2bb}
+.heart-heading img{object-fit:contain;filter:drop-shadow(0 2px 2px #57432933);margin-bottom:12px}
+.heart-heading .eyebrow{font-size:8px;letter-spacing:2px;color:#947a52}
+.heart-heading h2{font-family:var(--serif);font-weight:400;font-size:35px;margin:10px 0}
+.heart-heading>p:last-child{font-family:var(--serif);font-style:italic;color:#8d795a;font-size:15px}
+.heart-section{padding:25px 0;border-bottom:1px solid #dfd2bb}
+.heart-section h3{font-family:var(--serif);font-weight:400;font-size:24px;color:#625039;margin:0 0 15px}
+.heart-section p{font-size:13px;line-height:1.8;color:#7c6b52;margin:8px 0}
+.heart-rooms{display:grid;grid-template-columns:1fr 1fr;gap:17px 22px}
+.heart-rooms>span{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:16px;color:#938574}
+.heart-rooms b{font-weight:400;color:#b6a487;font-size:22px}
+.heart-rooms .done b{color:#97794b}
+.heart-rooms small{display:block;font-family:var(--sans);font-size:8px;text-transform:uppercase;letter-spacing:1px;margin-top:6px;color:#9e8b6c}
+.heart-choice,.heart-gift{background:#eee4d333;padding:24px 18px}
+.heart-choice .eyebrow,.heart-gift .eyebrow{font-size:8px;color:#9a7c50;margin-top:0}
+.heart-choice p:first-of-type:not(.eyebrow){font-family:var(--serif);font-size:21px;color:#625039}
+.heart-songs{display:grid;gap:12px}
+.heart-songs article{border:1px solid #e2d7c4;padding:17px 20px;background:#fffaf055}
+.heart-songs h4{font-family:var(--serif);font-size:20px;font-weight:400;margin:0 0 3px}
+.heart-songs small{color:#a48c66;font-size:10px}
+.heart-songs .text-button{padding-left:0}
+.heart-art{display:block;width:100%;max-height:340px;object-fit:contain;margin:0 auto 18px;background:#ece4d6;border:1px solid #caba9b;padding:7px}
+.heart-letter summary{cursor:pointer;font-family:var(--serif);font-size:23px;color:#625039}
+.heart-letter[open] summary{margin-bottom:18px}
+.heart-sharing{padding:20px 0;text-align:center}
+.heart-ending{font-family:var(--serif);font-style:italic;font-size:22px;color:#92764b;margin:5px 0 22px}
+.heart-sharing>.button{margin:5px;gap:8px}
+.heart-sharing .button{text-decoration:none}
+#heart-image-status,.heart-share-note{font-size:11px;color:#9a8665;line-height:1.6;margin:12px 0}
+#heart-image-preview{width:100%;max-width:420px;height:auto;display:block;margin:20px auto;border:1px solid #c9b795}
+.heart-image-view summary{cursor:pointer;font-family:var(--serif);font-size:16px;color:#8c754f;margin:16px 0}
+.heart-image-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.heart-wayfinding{position:fixed;z-index:17;bottom:91px;left:50%;transform:translateX(-50%);width:min(400px,calc(100% - 30px));background:#f8f1e4ed;border:1px solid #cbb792;border-radius:8px;padding:13px 18px;box-shadow:0 8px 25px #49372222;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.heart-wayfinding[hidden]{display:none}
+body:has(.museum-player:not([hidden])) .heart-wayfinding{bottom:149px}
+.heart-wayfinding p{font-family:var(--serif);font-size:15px;color:#796345;margin:0;line-height:1.35}
+.heart-wayfinding button{padding:8px;font-size:20px;color:#937448;background:none;border:1px solid #cbb792;border-radius:50%;width:39px;height:39px;flex-shrink:0}
+.final-heart-instruction{background:#ede1cc;padding:18px 20px;font-family:var(--serif);font-size:19px;text-align:center;line-height:1.5;color:#806946;margin:20px 0 5px}
+@media(max-width:600px){.heart-heading h2{font-size:29px}.heart-rooms{gap:17px 13px}.heart-rooms>span{font-size:14px}.heart-section h3{font-size:23px}.heart-sharing>.button{display:flex;width:100%;margin:10px 0}.heart-songs article{padding:15px}.heart-section{padding-top:22px;padding-bottom:22px}.heart-wayfinding{bottom:90px}.heart-art{max-height:280px}.heart-image-actions .button{width:100%}}

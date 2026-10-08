@@ -163,7 +163,7 @@ window.MUSEUM_CONFIG = {
     clue: {
       id: "little-things-flower",
       message: "Los detalles también guardan secretos. Has encontrado otra parte de la sorpresa.",
-      hint: "Rodea la mesa central de «Nuestra colección»: en uno de sus costados hay un detalle muy pequeño."
+      hint: "Ve a la mesa redonda del centro y rodéala por la derecha: en el borde que mira hacia la derecha brilla una florecita dorada. Tócala."
     },
     objects: [
       { id: "tazas", object: "cups", model: null, position: 1, title: "Un café contigo", date: "Nuestras tardes de café",
@@ -202,7 +202,7 @@ window.MUSEUM_CONFIG = {
     clue: {
       id: "you-star",
       message: "Hay formas de brillar que solo descubrimos al conocer a alguien. Has encontrado otra parte de la sorpresa.",
-      hint: "Acércate al caballete del centro y mira su base: algo pequeño brilla ahí."
+      hint: "Acércate al caballete del centro y mira abajo, a la derecha de sus patas: ahí brilla una estrella dorada. Tócala."
     },
     portraits: [
       { id: "alegria", title: "Tu manera de alegrar mis días", phrase: "Tu risa, siempre.",
@@ -253,7 +253,7 @@ window.MUSEUM_CONFIG = {
     clue: {
       id: "future-compass",
       message: "No sabemos cada paso que viene, pero podemos elegir hacia dónde caminar juntos.",
-      hint: "Acércate a la mesa del libro, en el centro de la sala. En uno de sus costados hay algo que señala un camino."
+      hint: "Ve a la mesa del libro y rodéala por la izquierda: bajo el borde de ese costado brilla una brújula dorada. Tócala."
     },
     book: {
       title: "Nuestro próximo capítulo",

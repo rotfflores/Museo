@@ -529,60 +529,25 @@ function openFinale(source=$('#artwork-help')) {
   const progress=Museum.getProgress();
   Museum.openContent({className:'final-closing',source,html:`<div class="dialog-heading"><p class="eyebrow">PASAPORTE DE RECUERDOS · ${progress.completed.length} DE 6 SALAS COMPLETADAS</p><h2 id="dialog-title">${escape(room.completionTitle)}</h2><p>${escape(room.completionMessage)}</p></div>
     ${stampsMarkup()}
+    <p class="final-heart-instruction">Vuelve al vestíbulo y toca el corazón dorado. Ahí encontrarás tu resumen completo para compartirlo o guardarlo como imagen.</p>
     <div class="final-actions">
-      <button class="button primary" data-final="map" type="button">Volver a recorrerlo</button>
+      <button class="button primary" data-final="heart" type="button">Ir al corazón</button>
+      <button class="button secondary" data-final="map" type="button">Volver a recorrerlo</button>
       <button class="button secondary" data-final="letter" type="button">Leer la carta otra vez</button>
       ${Museum.vitrineOpened()?'<button class="button secondary" data-final="gift" type="button">Ver mi sorpresa</button>':''}
       ${progress.cluesComplete?'':'<button class="button secondary" data-final="clues" type="button">Buscar las pistas pendientes</button>'}
-      ${progress.completed.length>=6?'<button class="button secondary" data-final="card" type="button">Guardar mi recuerdo</button>':''}
+
     </div>
     <p id="final-card-status" class="final-card-status" role="status"></p>`});
   $('#dialog-content').onclick=event=>{
     const action=event.target.closest('[data-final]')?.dataset.final;if(!action)return;
-    if(action==='map'){Museum.closeOverlay();setTimeout(()=>Museum.openMap($('#open-map')),0);}
+    if(action==='heart')Museum.goToHeart();
+    else if(action==='map'){Museum.closeOverlay();setTimeout(()=>Museum.openMap($('#open-map')),0);}
     else if(action==='letter')showLetter($('#artwork-stage'));
     else if(action==='gift')openGift($('#artwork-stage'));
     else if(action==='clues'){Museum.closeOverlay();setTimeout(()=>openVitrine(),0);}
-    else if(action==='card')saveCard(event.target.closest('button'));
+
   };
-}
-// Tarjeta PNG: una composición 2D propia, con fuentes del sistema ya cargadas y sin recursos externos.
-async function saveCard(button) {
-  const status=$('#final-card-status');
-  button.disabled=true;if(status)status.textContent='Preparando tu recuerdo…';
-  try{
-    await document.fonts?.ready;
-    const blob=await renderCard();
-    const url=URL.createObjectURL(blob),link=document.createElement('a');
-    link.href=url;link.download=room.card?.fileName||'nuestro-museo.png';document.body.append(link);link.click();link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),4000);
-    if(status)status.textContent='Tu recuerdo se ha guardado.';
-  }catch(error){
-    console.warn('No se pudo crear la tarjeta:',error);
-    if(status)status.textContent='No se pudo guardar la imagen. Inténtalo de nuevo.';
-  }finally{button.disabled=false;}
-}
-function renderCard() {
-  const w=1200,h=1600,canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-  const g=canvas.getContext('2d');if(!g)return Promise.reject(new Error('Sin canvas 2D'));
-  const serif='Georgia, "Times New Roman", serif',sans='"Segoe UI", Arial, sans-serif';
-  const bg=g.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#fbf7ed');bg.addColorStop(1,'#efe4cf');g.fillStyle=bg;g.fillRect(0,0,w,h);
-  g.strokeStyle='#b89b66';g.lineWidth=4;g.strokeRect(40,40,w-80,h-80);g.lineWidth=1.5;g.strokeRect(58,58,w-116,h-116);
-  g.textAlign='center';g.fillStyle='#9a7b45';g.font=`500 24px ${sans}`;g.letterSpacing='10px';g.fillText('EL MUSEO DE NOSOTROS',w/2,170);g.letterSpacing='0px';
-  g.fillStyle='#443b30';g.font=`italic 84px ${serif}`;g.fillText(config.couple,w/2,290);
-  g.strokeStyle='#b89b66';g.lineWidth=2;g.beginPath();g.moveTo(w/2-120,330);g.lineTo(w/2+120,330);g.stroke();
-  g.fillStyle='#7c7263';g.font=`34px ${serif}`;g.fillText(config.celebration,w/2,395);g.font=`28px ${sans}`;g.fillText(config.date,w/2,445);
-  const done=Museum.getProgress().completed;
-  config.rooms.forEach((item,index)=>{
-    const col=index%3,row=Math.floor(index/3),cx=w/2+(col-1)*300,cy=640+row*330,on=done.includes(item.id);
-    g.strokeStyle=on?'#8a6a3c':'#c9b89c';g.lineWidth=5;g.beginPath();g.arc(cx,cy,104,0,Math.PI*2);g.stroke();g.lineWidth=2;g.beginPath();g.arc(cx,cy,88,0,Math.PI*2);g.stroke();
-    g.fillStyle=on?'#8a6a3c':'#c9b89c';g.font=`500 18px ${sans}`;g.letterSpacing='4px';g.fillText(`SALA ${String(index+1).padStart(2,'0')}`,cx,cy-34);g.letterSpacing='0px';
-    g.font=`48px ${serif}`;g.fillText(on?'✧':'·',cx,cy+22);
-    g.fillStyle='#5b4a36';g.font=`italic 22px ${serif}`;wrapText(g,item.title.replace(/\.$/,''),cx,cy+150,250,28,2);
-  });
-  g.fillStyle='#443b30';g.font=`italic 46px ${serif}`;wrapText(g,room.card?.phrase||'Nuestra historia merece su propio museo',w/2,1390,w-200,56,2);
-  g.fillStyle='#9a7b45';g.font=`500 20px ${sans}`;g.letterSpacing='6px';g.fillText(`${done.length} DE 6 SALAS COMPLETADAS`,w/2,1500);g.letterSpacing='0px';
-  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Sin imagen')),'image/png'));
 }
 function openExit() {
   closeNote(false,false);

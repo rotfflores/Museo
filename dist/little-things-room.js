@@ -327,9 +327,12 @@ function buildRoom() {
     const flower=new THREE.Group(),gold=new THREE.MeshStandardMaterial({color:'#d9b46a',metalness:1,roughness:.25});
     for(let i=0;i<5;i++){const petal=new THREE.Mesh(new THREE.SphereGeometry(.018,10,8),gold);const a=i/5*Math.PI*2;petal.scale.set(1,1,.35);petal.position.set(Math.cos(a)*.02,Math.sin(a)*.02,0);flower.add(petal);}
     const middle=new THREE.Mesh(new THREE.SphereGeometry(.011,10,8),new THREE.MeshStandardMaterial({color:'#9b2f2a',roughness:.4}));middle.position.z=.006;flower.add(middle);
-    flower.position.set(TABLE_R-.035,.68,0);flower.rotation.y=Math.PI/2;scene.add(flower);
-    const clueHit=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),new THREE.MeshBasicMaterial({visible:false}));clueHit.position.set(TABLE_R+.05,.68,0);scene.add(clueHit);
+    flower.position.set(TABLE_R+.012,.66,0);flower.rotation.y=Math.PI/2;flower.scale.setScalar(2.6);scene.add(flower);
+    const clueHit=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),new THREE.MeshBasicMaterial({visible:false}));clueHit.position.set(TABLE_R+.12,.66,0);scene.add(clueHit);
     clueTarget={id:'clue',focus:new THREE.Vector3(TABLE_R,.68,0),approach:{x:2.55,z:.0},hits:[clueHit],marker:null,glow:[gold],lift:flower,rise:[.02,0,0],halo:[TABLE_R+.04,.68,0,.45]};
+
+    clueTarget.twinkle=new THREE.Sprite(new THREE.SpriteMaterial({map:dotMap,color:'#ffd98a',transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+    clueTarget.twinkle.position.set(TABLE_R+.08,0.66,0);clueTarget.twinkle.scale.setScalar(0.55);scene.add(clueTarget.twinkle);
     targets.push(clueTarget);
   }
   // Puerta de regreso al vestíbulo: detrás de la cámara, por donde se entra (como en las salas 01 y 02).
@@ -453,6 +456,7 @@ function onSwipe(direction,restoreView) {
   const count=pieceTargets.length;goTo(pieceTargets[(focused.index+(direction==='left'?1:count-1))%count]);
 }
 function animate(dt) {
+  if(clueTarget?.twinkle){const found=Museum.getProgress().clues.includes(room.clue.id),t=performance.now()/1000;clueTarget.twinkle.material.opacity=found?.12:(reducedMotion.matches?.45:.3+.25*Math.sin(t*2.2));}
   lastFrameTime=dt;
   if(exitTarget){exitOpen+=((exitOpening?1:0)-exitOpen)*(reducedMotion.matches?1:Math.min(1,dt*4));for(const {hinge,side} of exitTarget.leaves)hinge.rotation.y=side*exitOpen*1.75;}
   const ease=reducedMotion.matches?1:Math.min(1,dt*8);

@@ -613,7 +613,7 @@ function build() {
     if (wasDrag || flight) return;
     const object = pick(event);
     if (!object) return;
-    if (object.userData.kind === 'heart') { heartPulse = performance.now(); Museum.openPassport(); }
+    if (object.userData.kind === 'heart') { heartPulse = performance.now(); Museum.openHeart(); }
     else enterDoor(doors[object.userData.index]);
   });
   canvas.addEventListener('pointercancel', () => { drag = null; hovered = null; });

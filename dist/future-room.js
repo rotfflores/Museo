@@ -325,15 +325,18 @@ function buildRoom() {
     bookTarget={id:'book',focus:new THREE.Vector3(TABLE.x,TABLE.h,TABLE.z+.05),approach:{x:TABLE.x,z:TABLE.z+TABLE.d/2+1.25},hits:[bookHit,pages],marker:marker(TABLE.x,TABLE.z+TABLE.d/2+1.25,.5),glow:[],lift:pages,rise:[0,.015,0],halo:[TABLE.x,TABLE.h+.2,TABLE.z,1.6]};
     targets.push(bookTarget);
     // Quinta pista: una pequeña brújula en el costado izquierdo de la mesa, alcanzable desde el pasillo.
-    const compass=new THREE.Group();compass.position.set(-TABLE.w/2+.07,TABLE.h-.1,0);compass.rotation.y=-Math.PI/2;table.add(compass);
+    const compass=new THREE.Group();compass.position.set(-TABLE.w/2+.07,TABLE.h-.17,0);compass.rotation.y=-Math.PI/2;compass.scale.setScalar(1.8);table.add(compass);
     const compassMaterial=new THREE.MeshStandardMaterial({color:'#e2bf72',metalness:1,roughness:.25,emissive:'#6a4a14',emissiveIntensity:.2});
     const face=new THREE.Mesh(new THREE.CircleGeometry(.06,24),new THREE.MeshBasicMaterial({color:'#fbf3e3'}));face.position.z=.032;compass.add(face);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(.062,.008,8,28),compassMaterial);rim.position.z=.032;compass.add(rim);
     const needleShape=new THREE.Shape();needleShape.moveTo(0,.05);needleShape.lineTo(.012,0);needleShape.lineTo(0,-.05);needleShape.lineTo(-.012,0);needleShape.lineTo(0,.05);
     const needle=new THREE.Mesh(new THREE.ShapeGeometry(needleShape),new THREE.MeshBasicMaterial({color:'#a8413a'}));needle.position.z=.036;needle.rotation.z=-.5;compass.add(needle);
-    const clueHit=new THREE.Mesh(new THREE.SphereGeometry(.17,12,8),new THREE.MeshBasicMaterial({visible:false}));clueHit.position.z=.08;compass.add(clueHit);
-    const world=new THREE.Vector3(TABLE.x-TABLE.w/2+.04,TABLE.h-.1,TABLE.z);
+    const clueHit=new THREE.Mesh(new THREE.SphereGeometry(.13,12,8),new THREE.MeshBasicMaterial({visible:false}));clueHit.position.z=.08;compass.add(clueHit);
+    const world=new THREE.Vector3(TABLE.x-TABLE.w/2+.04,TABLE.h-.17,TABLE.z);
     clueTarget={id:'clue',focus:world.clone(),approach:{x:TABLE.x-TABLE.w/2-1.15,z:TABLE.z},hits:[clueHit],marker:null,glow:[compassMaterial],lift:compass,rise:[0,.01,0],halo:[world.x-.06,world.y,world.z,.42],needle};
+
+    clueTarget.twinkle=new THREE.Sprite(new THREE.SpriteMaterial({map:dotMap,color:'#ffd98a',transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+    clueTarget.twinkle.position.set(world.x-.12,world.y,world.z);clueTarget.twinkle.scale.setScalar(0.6);scene.add(clueTarget.twinkle);
     targets.push(clueTarget);
   }
   // Puerta de regreso al vestíbulo: detrás de la cámara, por donde se entra.
@@ -481,6 +484,7 @@ function syncPill() {
   if(next)pill.textContent=revealed(plans[next.index])?`Ver «${plans[next.index].title}»`:'Descubrir este plan';
 }
 function animate(dt) {
+  if(clueTarget?.twinkle){const found=Museum.getProgress().clues.includes(room.clue.id),t=performance.now()/1000;clueTarget.twinkle.material.opacity=found?.12:(reducedMotion.matches?.45:.3+.25*Math.sin(t*2.2));}
   if(exitTarget){exitOpen+=((exitOpening?1:0)-exitOpen)*(reducedMotion.matches?1:Math.min(1,dt*4));for(const {hinge,side} of exitTarget.leaves)hinge.rotation.y=side*exitOpen*1.75;}
   // El papel se levanta desde el borde superior y se desvanece; con movimiento reducido, solo un fundido breve.
   if(revealing){

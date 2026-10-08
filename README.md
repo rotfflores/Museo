@@ -8,6 +8,8 @@ GitHub Pages publica `dist/` en https://rotfflores.github.io/Museo/. El flujo `.
 
 El sello proporcionado se conserva en `dist/assets/museum-wax-seal.png` y aparece en el sobre, el encabezado del mapa y los sellos completados del pasaporte. El mapa (`dist/map.css`) muestra seis salas conectadas al vestíbulo, su estado y la ubicación actual; cada sala permite continuar el recorrido y el vestíbulo permite regresar al inicio.
 
+Al completar las seis salas, el cierre invita a regresar al corazón del vestíbulo. El corazón reúne el pasaporte, el plan elegido en «Me gustaría empezar por este», las canciones dedicadas, la obra final, la carta y la sorpresa de las cinco pistas. La obra y la carta necesitan estar descubiertas; la sorpresa requiere todas las pistas y la última sala disponible. El resumen se prepara en el dispositivo con `summary-data.js` y `heart.js`: WhatsApp abre el texto dirigido a `526182051723`, y el PNG completo se genera y descarga sin servicios externos. En navegadores compatibles también se puede compartir el archivo mediante el menú del dispositivo. Las canciones utilizan el reproductor compartido del museo.
+
 ```sh
 node preview.cjs
 node --test tests/museum.test.cjs tests/moments.test.cjs tests/little-things.test.cjs tests/you.test.cjs tests/sound.test.cjs

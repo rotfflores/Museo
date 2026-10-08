@@ -220,10 +220,13 @@ function buildRoom() {
     const star=new THREE.Shape();for(let i=0;i<10;i++){const r=i%2?.022:.055,a=i/10*Math.PI*2-Math.PI/2;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(i)star.lineTo(x,y);else star.moveTo(x,y);}star.closePath();
     const starMaterial=new THREE.MeshStandardMaterial({color:'#e2bf72',metalness:1,roughness:.22,emissive:'#6a4a14',emissiveIntensity:.2});
     const starMesh=new THREE.Mesh(new THREE.ExtrudeGeometry(star,{depth:.012,bevelEnabled:true,bevelSize:.004,bevelThickness:.004,bevelSegments:2}),starMaterial);
-    const starHolder=new THREE.Group();starHolder.position.set(.5,.12,.2);starHolder.add(starMesh);easel.add(starHolder);
+    const starHolder=new THREE.Group();starHolder.position.set(.5,.3,.24);starHolder.add(starMesh);starHolder.scale.setScalar(2.2);easel.add(starHolder);
     const footBar=new THREE.Mesh(new THREE.BoxGeometry(1.05,.05,.06),wood);footBar.position.set(0,.12,.12);easel.add(footBar);
-    const clueHit=new THREE.Mesh(new THREE.SphereGeometry(.26,12,8),new THREE.MeshBasicMaterial({visible:false}));clueHit.position.set(.5,.14,.3);easel.add(clueHit);
-    clueTarget={id:'clue',focus:new THREE.Vector3(EASEL.x+.5,.12,EASEL.z+.2),approach:{x:EASEL.x+.9,z:EASEL.z+1.65},hits:[clueHit],marker:null,glow:[starMaterial],lift:starHolder,rise:[0,.02,.02],halo:[EASEL.x+.5,.14,EASEL.z+.26,.45]};
+    const clueHit=new THREE.Mesh(new THREE.SphereGeometry(.26,12,8),new THREE.MeshBasicMaterial({visible:false}));clueHit.position.set(.5,.3,.34);easel.add(clueHit);
+    clueTarget={id:'clue',focus:new THREE.Vector3(EASEL.x+.5,.3,EASEL.z+.24),approach:{x:EASEL.x+.9,z:EASEL.z+1.65},hits:[clueHit],marker:null,glow:[starMaterial],lift:starHolder,rise:[0,.02,.02],halo:[EASEL.x+.5,.3,EASEL.z+.3,.6]};
+
+    clueTarget.twinkle=new THREE.Sprite(new THREE.SpriteMaterial({map:dotMap,color:'#ffd98a',transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+    clueTarget.twinkle.position.set(EASEL.x+.5,.3,EASEL.z+.32);clueTarget.twinkle.scale.setScalar(0.6);scene.add(clueTarget.twinkle);
     targets.push(clueTarget);
   }
   // Puerta de regreso al vestíbulo: detrás de la cámara, por donde se entra.
@@ -343,6 +346,7 @@ function onSwipe(direction,restoreView) {
 }
 const easeInOut=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 function animate(dt) {
+  if(clueTarget?.twinkle){const found=Museum.getProgress().clues.includes(room.clue.id),t=performance.now()/1000;clueTarget.twinkle.material.opacity=found?.12:(reducedMotion.matches?.45:.3+.25*Math.sin(t*2.2));}
   if(exitTarget){exitOpen+=((exitOpening?1:0)-exitOpen)*(reducedMotion.matches?1:Math.min(1,dt*4));for(const {hinge,side} of exitTarget.leaves)hinge.rotation.y=side*exitOpen*1.75;}
   // La tela sube y se retira; el foco de la obra se enciende.
   if(revealing&&cloth){
