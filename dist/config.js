@@ -295,7 +295,8 @@ window.MUSEUM_CONFIG = {
     completionMessage: "La visita termina aquí. Nuestra historia continúa.",
     centerpiece: {
       id: "obra-final", plaque: "Nuestra historia sigue",
-      photo: "assets/sala06/obra-final.jpg", alt: "Ilustración de ejemplo de una pareja al atardecer",
+      photo: "assets/sala06/obra-final-atardecer.jpg", alt: "Pareja abrazada de espaldas frente al mar durante un atardecer",
+      credit: {author: "Roshan Fotowala", url: "https://www.pexels.com/photo/couple-embracing-on-a-beach-at-sunset-15716670/"},
       /* Cambia "celebration" en la parte superior (por ejemplo "Nuestro sexto mes juntos") y adapta la dedicatoria. */
       dedication: "Este museo tiene un poco de lo que hemos vivido, pero hay mucho que ninguna sala podría guardar. Gracias por compartir tu tiempo, tu cariño y tu historia conmigo. Feliz aniversario. Me hace ilusión todo lo que todavía nos espera."
     },
