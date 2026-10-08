@@ -27,6 +27,15 @@
         room.pieces=[...data.portraits.map(piece=>piece.id),...(data.centerpiece?[data.centerpiece.id]:[])];
         continue;
       }
+      // Sala final: se completa al revelar la obra y abrir la carta. Video, narración y vitrina son opcionales.
+      if(data.letter&&data.centerpiece) {
+        const photo=(item,key='photo')=>{ const path=item?.[key]; if(!path||paths.has(path)) return; if(photos<LIMITS.photos){photos++;paths.add(path);} else {dropped.push(`${room.id} (foto)`);item[key]=null;} };
+        photo(data.centerpiece); photo(data.vitrine);
+        if(data.video?.src){ if(videos<LIMITS.videos) videos++; else {dropped.push(`${room.id} (video)`);data.video=null;} } else data.video=null;
+        if(dropped.length && typeof console!=='undefined') console.warn(`Límites del museo: se omiten ${dropped.join(', ')}.`);
+        room.pieces=[data.centerpiece.id||'obra-final',data.letter.id||'carta'];
+        continue;
+      }
       // Sala de planes: cada plan es una pieza. Solo un plan conserva su invitación opcional.
       if(Array.isArray(data.plans)) {
         let invitation=false;
@@ -122,6 +131,16 @@
     }
     return {state,save,getProgress,discoverPiece,completeRoom,findClue,finalUnlocked,cluesComplete};
   }
+  /* La vitrina secreta abierta: un estado aparte de piezas, sellos y pistas. */
+  function createFlagStore(config, storage, name) {
+    const key = `museum-of-us:${config.id}:${name}:v1`;
+    let value = false;
+    try { value = storage?.getItem(key) === '1'; } catch { /* Sin almacenamiento: solo esta visita. */ }
+    return {
+      get: () => value,
+      set(next=true) { value=!!next; try { if(value) storage?.setItem(key,'1'); else storage?.removeItem?.(key); } catch { /* Memoria de sesión. */ } return value; }
+    };
+  }
   /* El próximo capítulo elegido en la sala 05: solo en este dispositivo y separado de piezas, sellos y pistas. */
   function createChoiceStore(config, storage) {
     const key = `museum-of-us:${config.id}:next-chapter:v1`;
@@ -137,6 +156,6 @@
       }
     };
   }
-  root.MuseumProgress={createStore,createChoiceStore,prepareConfig,LIMITS};
-  if(typeof module!=='undefined' && module.exports) module.exports={createStore,createChoiceStore,prepareConfig,LIMITS};
+  root.MuseumProgress={createStore,createChoiceStore,createFlagStore,prepareConfig,LIMITS};
+  if(typeof module!=='undefined' && module.exports) module.exports={createStore,createChoiceStore,createFlagStore,prepareConfig,LIMITS};
 })(globalThis);

@@ -9,6 +9,7 @@
   <link rel="icon" href="assets/monogram.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="room.css">
+  <link rel="stylesheet" href="map.css">
   <script src="config.js" defer></script>
   <script src="progress.js" defer></script>
   <script src="sound.js" defer></script>
@@ -19,6 +20,7 @@
   <script type="module" src="little-things-room.js"></script>
   <script type="module" src="you-room.js"></script>
   <script type="module" src="future-room.js"></script>
+  <script type="module" src="artwork-room.js"></script>
 </head>
 <body>
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -40,7 +42,7 @@
       <div id="envelope-wrap" class="envelope-wrap">
         <div class="envelope-shadow"></div>
         <button id="envelope" class="envelope" type="button" aria-label="Abrir tu invitación" aria-expanded="false">
-          <span class="envelope-back"></span><span class="peek-card"><svg><use href="#icon-flower"/></svg></span><span class="envelope-front"></span><span class="envelope-flap"></span><span class="wax-seal"><span data-config="initials">D & S</span></span><span class="envelope-caption">PARA TI, SIEMPRE.</span>
+          <span class="envelope-back"></span><span class="peek-card"><svg><use href="#icon-flower"/></svg></span><span class="envelope-front"></span><span class="envelope-flap"></span><span class="wax-seal"><img src="assets/museum-wax-seal.png" alt="" width="90" height="90" decoding="async"></span><span class="envelope-caption">PARA TI, SIEMPRE.</span>
         </button>
         <p class="open-hint"><span aria-hidden="true">✧</span> Toca para abrir</p>
       </div>
@@ -237,6 +239,33 @@
         <button id="future-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
         <button id="future-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="future-passport-count">0/6</small></span></button>
         <button id="future-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
+      </nav>
+    </section>
+    <section id="artwork-screen" class="screen room-screen" hidden aria-labelledby="artwork-title">
+      <div class="lobby-heading room-overlay"><p class="eyebrow">SALA 06 · UNA OBRA PARA TI</p><h1 id="artwork-title"></h1><p id="artwork-subtitle"></p><p class="moments-counter" id="artwork-counter" role="status">La obra: cubierta · La carta: sin abrir</p></div>
+      <div id="artwork-stage" class="gallery-stage" role="region" aria-label="Sala 3D íntima con una gran obra cubierta por una tela, un banco frente a ella, un escritorio con una carta y una pequeña vitrina cerrada. Toca la obra, la carta o la vitrina para acercarte, toca el suelo para caminar y arrastra para mirar. Con teclado: W, A, S, D o las flechas para caminar, Q o E para girar, Enter para abrir y Escape para retroceder." tabindex="0">
+        <div id="artwork-fallback" class="gallery-fallback" hidden><p>La obra, la carta y la vitrina siguen disponibles desde la ayuda de la sala.</p><span aria-hidden="true">✧</span></div>
+        <p class="sr-only" aria-live="polite"><span id="artwork-target-name"></span></p>
+        <button id="artwork-approach" class="examine-pill artwork-approach" type="button" hidden>Acercarme a la obra</button>
+        <div class="keyboard-shortcuts"><button id="artwork-go-piece" class="sr-only-focusable" type="button">Ir a la obra central</button><button id="artwork-go-letter" class="sr-only-focusable" type="button">Ir a la carta</button><button id="artwork-go-vitrine" class="sr-only-focusable" type="button">Ir a la vitrina secreta</button><button id="artwork-exit-door" class="sr-only-focusable" type="button">Salir por la puerta al vestíbulo</button></div>
+      </div>
+      <div id="artwork-help-panel" class="welcome-plaque room-help-card" hidden>
+        <span class="plaque-screw top-left"></span><span class="plaque-screw top-right"></span>
+        <p class="eyebrow">LO QUE LLEVAS</p>
+        <div class="room-status"><p id="artwork-piece-state">La obra: cubierta</p><p id="artwork-letter-state">La carta: sin abrir</p><p id="artwork-clue-count">Pistas encontradas: 0 de 5</p></div>
+        <nav id="artwork-tour" class="exhibit-tour" aria-label="La obra, la carta y la vitrina"></nav>
+        <p class="room-help-exit">Descubre la obra y lee la carta para recibir el último sello. La vitrina se abre con las cinco pistas y es opcional. Detrás de ti, por donde entraste, está la puerta de regreso al vestíbulo.</p>
+        <div class="room-help-actions"><button id="artwork-open-final" class="text-button" type="button" hidden>Ver el cierre del recorrido</button></div>
+        <span class="plaque-screw bottom-left"></span><span class="plaque-screw bottom-right"></span>
+      </div>
+      <aside id="artwork-note" class="room-note" hidden aria-labelledby="artwork-note-title">
+        <button id="close-artwork-note" class="close-button" type="button" aria-label="Cerrar nota">×</button>
+        <div id="artwork-note-content"></div>
+      </aside>
+      <nav id="artwork-dock" class="lobby-dock room-dock" aria-label="Sala 06">
+        <button id="artwork-back" class="dock-button" type="button"><span class="dock-glyph" aria-hidden="true">←</span><span>Vestíbulo</span></button>
+        <button id="artwork-passport" class="dock-button" type="button"><svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg><span>Pasaporte <small id="artwork-passport-count">0/6</small></span></button>
+        <button id="artwork-help" class="dock-button dock-help" type="button" aria-label="Ayuda y recorrido de la sala"><span aria-hidden="true">?</span></button>
       </nav>
     </section>
   </main>

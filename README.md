@@ -6,6 +6,8 @@ Experiencia en HTML, CSS y JavaScript. Conserva la invitación, el boleto y la r
 
 GitHub Pages publica `dist/` en https://rotfflores.github.io/Museo/. El flujo `.github/workflows/pages.yml` comprueba el museo y lo actualiza automáticamente al subir cambios a `main`. También puede ejecutarse desde la pestaña Actions de GitHub.
 
+El sello proporcionado se conserva en `dist/assets/museum-wax-seal.png` y aparece en el sobre, el encabezado del mapa y los sellos completados del pasaporte. El mapa (`dist/map.css`) muestra seis salas conectadas al vestíbulo, su estado y la ubicación actual; cada sala permite continuar el recorrido y el vestíbulo permite regresar al inicio.
+
 ```sh
 node preview.cjs
 node --test tests/museum.test.cjs tests/moments.test.cjs tests/little-things.test.cjs tests/you.test.cjs tests/sound.test.cjs

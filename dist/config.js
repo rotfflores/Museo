@@ -37,7 +37,7 @@ window.MUSEUM_CONFIG = {
     { id: "little-things", title: "Pequeñas cosas, grandes recuerdos.", route: "little-things-room.js", piecesFrom: "littleThingsRoom" },
     { id: "you", title: "Así te veo yo.", route: "you-room.js", piecesFrom: "youRoom" },
     { id: "future", title: "Lo que todavía nos espera.", route: "future-room.js", piecesFrom: "futureRoom" },
-    { id: "artwork", title: "Una obra para ti.", route: null, requires: ["beginning", "moments", "little-things", "you", "future"] }
+    { id: "artwork", title: "Una obra para ti.", route: "artwork-room.js", piecesFrom: "artworkRoom", requires: ["beginning", "moments", "little-things", "you", "future"] }
   ],
   /* Las pistas tienen su propio contador; no son requisitos para los sellos. */
   clueIds: ["beginning-key", "moments-camera", "little-things-flower", "you-star", "future-compass"],
@@ -284,5 +284,47 @@ window.MUSEUM_CONFIG = {
         dedication: "Este espacio es para algo que nos ilusione a los dos y que podamos construir a nuestro ritmo.",
         photo: null, photoAlt: "", invitation: null }
     ]
+  },
+  /* Sala 06, el cierre. Se abre con los cinco primeros sellos; las pistas solo abren la vitrina secreta.
+     La foto, el video y la foto opcional de la sorpresa cuentan en los límites de 25 fotos y 5 videos
+     (una ruta ya usada en otra sala no vuelve a contar). Deja en null o "" lo que no quieras mostrar. */
+  artworkRoom: {
+    title: "Una obra para ti",
+    subtitle: "Después de recorrer nuestra historia, hay algo más que quiero decirte.",
+    completionTitle: "Has recorrido nuestro museo",
+    completionMessage: "La visita termina aquí. Nuestra historia continúa.",
+    centerpiece: {
+      id: "obra-final", plaque: "Nuestra historia sigue",
+      photo: "assets/sala06/obra-final.jpg", alt: "Ilustración de ejemplo de una pareja al atardecer",
+      /* Cambia "celebration" en la parte superior (por ejemplo "Nuestro sexto mes juntos") y adapta la dedicatoria. */
+      dedication: "Este museo tiene un poco de lo que hemos vivido, pero hay mucho que ninguna sala podría guardar. Gracias por compartir tu tiempo, tu cariño y tu historia conmigo. Feliz aniversario. Me hace ilusión todo lo que todavía nos espera."
+    },
+    letter: {
+      id: "carta",
+      greeting: "{recipient}:",
+      body: [
+        "Quería regalarte algo que pudieras recorrer, porque nuestra historia está hecha de muchos momentos.",
+        "Mientras preparaba este museo, recordé cómo empezamos, las cosas pequeñas que compartimos y todo lo que admiro de ti. Me hizo feliz darme cuenta de cuántos recuerdos hemos construido.",
+        "Gracias por las conversaciones, las risas y el tiempo juntos. Espero que al visitar estas salas hayas sentido el cariño con el que elegí cada detalle.",
+        "Feliz aniversario. Todavía tengo muchas ganas de seguir creando recuerdos contigo."
+      ],
+      closing: "Con amor,",
+      signature: "{sender}.",
+      /* Narración opcional, por ejemplo assets/sala06/mi-voz.mp3. */
+      audio: null, audioLabel: "Escuchar mi voz"
+    },
+    /* Dedicatoria audiovisual opcional: { src: "assets/sala06/dedicatoria.mp4", poster: null, title: "..." }. */
+    video: null,
+    vitrine: {
+      title: "Una cita para seguir escribiendo nuestra historia",
+      message: "Este regalo incluye una tarde para nosotros: tu comida favorita, una película que elijas y tiempo para disfrutar juntos.",
+      kind: "Una invitación especial",
+      date: "", place: "", instructions: "",
+      photo: null, photoAlt: ""
+    },
+    card: {
+      phrase: "Nuestra historia merece su propio museo",
+      fileName: "nuestro-museo-recuerdo.png"
+    }
   }
 };

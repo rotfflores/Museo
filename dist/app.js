@@ -9,6 +9,7 @@
   try { storage=window.localStorage; } catch { /* Acceso restringido: conservar en memoria. */ }
   const progressStore=window.MuseumProgress.createStore(config,storage);
   const choiceStore=window.MuseumProgress.createChoiceStore(config,storage);
+  const vitrineStore=window.MuseumProgress.createFlagStore(config,storage,'final-vitrine');
   let finalWasUnlocked=progressStore.finalUnlocked();
   const state=progressStore.state;
   let screen = 'invitation', transitioning = false, opener = null, noticeTimer, invitationTimer;
@@ -41,25 +42,26 @@
   function showScreen(next, focus = true) {
     clearTimeout(invitationTimer);
     screen = next;
-    const inMuseum=['lobby','room','moments','little-things','you','future'].includes(next);
+    const inMuseum=['lobby','room','moments','little-things','you','future','artwork'].includes(next);
     sharedDock.hidden=!inMuseum;$('#museum-back').hidden=next==='lobby';sharedDock.setAttribute('aria-label','Navegación del museo');
     if(next==='lobby')sound.enter();else if(!inMuseum)sound.leave();
     miniPlayer.hidden=!inMuseum||sound.state().kind!=='audio'||!sound.state().active;
-    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen'],['little-things','little-screen'],['you','you-screen'],['future','future-screen']]) $(`#${id}`).hidden = name !== next;
+    for (const [name, id] of [['invitation','invitation'],['ticket','ticket-screen'],['lobby','lobby'],['room','room-screen'],['moments','moments-screen'],['little-things','little-screen'],['you','you-screen'],['future','future-screen'],['artwork','artwork-screen']]) $(`#${id}`).hidden = name !== next;
     const labels = {invitation:'01 <span class="footer-line"></span> LA INVITACIÓN',ticket:'02 <span class="footer-line"></span> TU ENTRADA',lobby:'03 <span class="footer-line"></span> EL VESTÍBULO'};
     labels.room='04 <span class="footer-line"></span> AQUÍ COMENZÓ TODO';
     labels.moments='05 <span class="footer-line"></span> MOMENTOS QUE SE QUEDARON';
     labels.you='07 <span class="footer-line"></span> ASÍ TE VEO YO';
     labels.future='08 <span class="footer-line"></span> LO QUE TODAVÍA NOS ESPERA';
+    labels.artwork='09 <span class="footer-line"></span> UNA OBRA PARA TI';
     labels['little-things']='06 <span class="footer-line"></span> PEQUEÑAS COSAS, GRANDES RECUERDOS';
     $('#stage-label').innerHTML = labels[next];
     document.body.classList.toggle('lobby-view',next==='lobby');
     // Las salas comparten el mismo diseño a pantalla completa.
-    document.body.classList.toggle('room-view',next==='room'||next==='moments'||next==='little-things'||next==='you'||next==='future');
+    document.body.classList.toggle('room-view',next==='room'||next==='moments'||next==='little-things'||next==='you'||next==='future'||next==='artwork');
     window.scrollTo({top:0,behavior:'instant'});
     document.dispatchEvent(new CustomEvent('museum:screen',{detail:next}));
     if (focus) {
-      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next === 'little-things' ? 'little-screen' : next === 'you' ? 'you-screen' : next === 'future' ? 'future-screen' : next} h1`);
+      const heading = $(`#${next === 'ticket' ? 'ticket-screen' : next === 'room' ? 'room-screen' : next === 'moments' ? 'moments-screen' : next === 'little-things' ? 'little-screen' : next === 'you' ? 'you-screen' : next === 'future' ? 'future-screen' : next === 'artwork' ? 'artwork-screen' : next} h1`);
       heading.setAttribute('tabindex','-1');
       heading.focus({preventScroll:true});
     }
@@ -131,7 +133,7 @@
   }
   // Volver desde una sala: la puerta del museo se cierra, cambia la escena y se abre en el vestíbulo.
   async function returnToLobby() {
-    if(screen!=='room'&&screen!=='moments'&&screen!=='little-things'&&screen!=='you'&&screen!=='future'){showScreen('lobby');return;}
+    if(screen!=='room'&&screen!=='moments'&&screen!=='little-things'&&screen!=='you'&&screen!=='future'&&screen!=='artwork'){showScreen('lobby');return;}
     if(dialog.open) closeDialog();
     const opened=await playDoors({lines:['Cerrando la sala…','Volviendo al vestíbulo…','Bienvenida de nuevo.'],cover:()=>showScreen('lobby',false),ready:()=>null,minimum:1100,label:'EL MUSEO DE NOSOTROS',title:'El vestíbulo'});
     if(opened){$('#lobby-title').setAttribute('tabindex','-1');$('#lobby-title').focus({preventScroll:true});} else showScreen('lobby');
@@ -193,10 +195,19 @@
   }
   function passportMarkup() {
     const count = state.completed.size;
-    return `<div class="dialog-heading"><h2 id="dialog-title">Pasaporte de recuerdos</h2><p>Lo que vivimos, para llevarlo siempre contigo.</p></div><div class="passport-spread"><div class="passport-page"><p class="eyebrow">ESTE PASAPORTE PERTENECE A</p><svg class="passport-flower" aria-hidden="true"><use href="#icon-flower"/></svg><p class="passport-name">${escape(config.recipient)}</p><p class="passport-pair">${escape(config.couple)}</p><p class="passport-date">${escape(config.date)}</p><p class="passport-count">${count} de 6 salas completadas</p><p class="passport-message">${escape(config.texts.passportMessage)}</p></div><div class="passport-page"><p class="eyebrow">LOS SELLOS DE NUESTRA HISTORIA</p><div class="stamp-grid">${config.rooms.map((room,i) => `<div class="stamp-slot ${state.completed.has(room.id)?'completed':''}"><div class="stamp-outline" aria-label="Sala ${i+1}: ${state.completed.has(room.id)?'completada':'sin sello'}">${state.completed.has(room.id)?'✧':String(i+1).padStart(2,'0')}</div><small>${escape(room.title)}</small></div>`).join('')}</div></div></div>`;
+    return `<div class="dialog-heading"><h2 id="dialog-title">Pasaporte de recuerdos</h2><p>Lo que vivimos, para llevarlo siempre contigo.</p></div><div class="passport-spread"><div class="passport-page"><p class="eyebrow">ESTE PASAPORTE PERTENECE A</p><svg class="passport-flower" aria-hidden="true"><use href="#icon-flower"/></svg><p class="passport-name">${escape(config.recipient)}</p><p class="passport-pair">${escape(config.couple)}</p><p class="passport-date">${escape(config.date)}</p><p class="passport-count">${count} de 6 salas completadas</p><p class="passport-message">${escape(config.texts.passportMessage)}</p></div><div class="passport-page"><p class="eyebrow">LOS SELLOS DE NUESTRA HISTORIA</p><div class="stamp-grid">${config.rooms.map((room,i) => `<div class="stamp-slot ${state.completed.has(room.id)?'completed':''}"><div class="stamp-outline" aria-label="Sala ${i+1}: ${state.completed.has(room.id)?'completada':'sin sello'}">${state.completed.has(room.id)?'<img src="assets/museum-wax-seal.png" alt="" width="70" height="70">':String(i+1).padStart(2,'0')}</div><small>${escape(room.title)}</small></div>`).join('')}</div></div></div>`;
   }
   function mapMarkup() {
-    return `<div class="dialog-heading"><h2 id="dialog-title">Mapa del museo</h2><p>Todos los caminos nos llevan a nosotros.</p></div><div class="map-sheet"><div class="map-north" aria-hidden="true">N<br>↑</div><div class="floorplan">${config.rooms.map((room,i) => `<button class="room-access ${room.requires && !room.requires.every(id=>state.completed.has(id)) ? 'locked':''}" data-room="${escape(room.id)}" ${room.requires ? `aria-describedby="room-lock-explanation"` : ''}><span class="room-number">${String(i+1).padStart(2,'0')}</span><span>${escape(room.title)}</span>${room.requires && !room.requires.every(id=>state.completed.has(id)) ? '<svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg>' : ''}</button>`).join('')}<div class="you-are-here"><b aria-hidden="true"></b>ESTÁS AQUÍ<span>Vestíbulo</span></div></div><p class="map-legend" id="room-lock-explanation"><svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg><span>Sala 06 · ${escape(config.texts.lockedRoom)}</span></p></div><p class="map-footnote">Las salas abrirán pronto. Por ahora, disfruta del comienzo.</p>`;
+    const current={room:'beginning',moments:'moments','little-things':'little-things',you:'you',future:'future',artwork:'artwork'}[screen];
+    const location=config.rooms.find(room=>room.id===current)?.title.replace(/\.$/,'')||'Vestíbulo';
+    const cards=config.rooms.map((room,i)=>{
+      const locked=!!room.requires&&!room.requires.every(id=>state.completed.has(id));
+      const available=roomHandlers.has(room.id)&&!locked,completed=state.completed.has(room.id),here=current===room.id;
+      const status=here?'Estás aquí':locked?'Por descubrir':completed?'Completada':available?'Abierta':'Próximamente';
+      return `<button type="button" class="map-room ${locked?'locked':''} ${available?'available':''} ${completed?'completed':''} ${here?'current':''}" data-room="${escape(room.id)}" ${here?'aria-current="location"':''} ${locked?'aria-describedby="room-lock-explanation"':''}><span class="map-room-top"><span class="map-room-number">${String(i+1).padStart(2,'0')}</span><span class="map-room-symbol" aria-hidden="true">${here?'●':locked?'<svg class="icon"><use href="#icon-lock"/></svg>':completed?'✧':'↗'}</span></span><span class="map-room-title">${escape(room.title.replace(/\.$/,''))}</span><span class="map-room-status">${escape(status)}</span></button>`;
+    }).join('');
+    const locked=!progressStore.finalUnlocked();
+    return `<div class="map-heading"><img src="assets/museum-wax-seal.png" alt="" width="52" height="52"><p class="eyebrow">PLANO DE LA VISITA</p><h2 id="dialog-title">Nuestro museo</h2><p>Seis salas. Una historia compartida.</p></div><div class="museum-plan"><div class="plan-caption"><span>EL MUSEO DE NOSOTROS</span><span aria-hidden="true">N ↑</span></div><div class="map-floorplan" aria-label="Salas del museo"><div class="map-corridor" aria-hidden="true"><span>EL RECORRIDO</span></div>${cards}<button type="button" class="map-vestibule ${!current?'current':''}" id="map-vestibule" ${!current?'aria-current="location"':''}><span aria-hidden="true">⌂</span><span>Vestíbulo<small>${!current?'Estás aquí':'Volver al inicio'}</small></span></button></div><div class="map-key"><span><i class="map-location-dot"></i> Tu ubicación</span><span><b>✧</b> Completada</span><span><svg class="icon" aria-hidden="true"><use href="#icon-lock"/></svg> Por descubrir</span></div></div><p class="map-location">Estás en <strong>${escape(location)}</strong></p>${locked?`<p id="room-lock-explanation" class="map-unlock-note">${escape(config.texts.lockedRoom)}</p>`:''}<p class="map-instruction">Elige una sala para continuar tu visita.</p>`;
   }
   const dialog = $('#museum-dialog');
   let dialogCleanup=null;
@@ -217,22 +228,8 @@
   function openDialog(type, source) {
     cleanupDialog();
     opener = source;
-    $('#dialog-content').className = type === 'ticket' ? 'dialog-ticket' : '';
+    $('#dialog-content').className = type === 'ticket' ? 'dialog-ticket' : type === 'map' ? 'dialog-map' : '';
     $('#dialog-content').innerHTML = type === 'map' ? mapMarkup() : type === 'passport' ? passportMarkup() : `<div class="dialog-heading"><h2 id="dialog-title">Tu entrada, para siempre</h2><p>Esta historia tiene un lugar reservado para ti.</p></div>${ticketMarkup()}`;
-    if(type==='map') {
-      $('.you-are-here span',dialog).textContent=screen==='room'?'Sala 01 · Aquí comenzó todo':screen==='moments'?'Sala 02 · Momentos que se quedaron':screen==='little-things'?'Sala 03 · Pequeñas cosas, grandes recuerdos':screen==='you'?'Sala 04 · Así te veo yo':screen==='future'?'Sala 05 · Lo que todavía nos espera':'Vestíbulo';
-      const open=config.rooms.filter(room=>roomHandlers.has(room.id)).map(room=>room.title.replace(/\.$/,''));
-      $('.map-footnote',dialog).textContent=open.length>1?`${open.slice(0,-1).join(', ')} y ${open.at(-1)} están abiertas. Las otras salas abrirán pronto.`:`${open[0]||'La primera sala'} está abierta. Las otras salas abrirán pronto.`;
-      dialog.querySelectorAll('[data-room]').forEach(button=>{
-        const target=config.rooms.find(room=>room.id===button.dataset.room);
-        if(target?.requires&&progressStore.finalUnlocked()&&!roomHandlers.has(target.id)) $('.room-number',button).textContent+=' · DESBLOQUEADA';
-        if(roomHandlers.has(button.dataset.room)) {
-          button.classList.add('available');
-          $('.room-number',button).textContent+=state.completed.has(button.dataset.room)?' · ✧':' · ABIERTA';
-        }
-      });
-    }
-    if(type==='map'&&progressStore.finalUnlocked()) $('#room-lock-explanation span',dialog).textContent=`Sala 06 · ${config.texts.finalRoomUnlocked}`;
     if(type==='passport') {
       const counter=document.createElement('p');counter.className='passport-clues';counter.textContent=`Pistas encontradas: ${state.clues.size} de ${config.clueIds.length}${progressStore.cluesComplete()?' · colección completa':''}`;
       $('.passport-page',dialog).append(counter);
@@ -252,19 +249,24 @@
   });
   dialog.addEventListener('click',event=> {
     if (event.target === dialog) { const rect=dialog.getBoundingClientRect(); if(event.clientX<rect.left || event.clientX>rect.right || event.clientY<rect.top || event.clientY>rect.bottom) closeDialog(); }
+    if(event.target.closest('#map-vestibule')){closeDialog();if(screen!=='lobby')returnToLobby();return;}
     const button = event.target.closest('[data-room]');
     if(button) visitRoom(button.dataset.room);
   });
   async function visitRoom(id) {
     const room = config.rooms.find(item=>item.id===id);
     if(!room) return;
-    if(room.requires && !room.requires.every(item=>state.completed.has(item))) { notify(config.texts.lockedRoom); return; }
+    if(room.requires && !room.requires.every(item=>state.completed.has(item))) { showPendingRooms(room); return; }
     if(!roomHandlers.has(id)) { notify(room.requires ? config.texts.finalRoomSoon : config.texts.roomSoon); return; }
     closeDialog();
     try {
       const result = await roomHandlers.get(id)({config, returnToLobby});
       if(result?.completed === true && progressStore.completeRoom(id)) progressChanged();
     } catch { notify(config.texts.roomSoon); }
+  }
+  function showPendingRooms(room) {
+    const pending=config.rooms.filter(item=>room.requires.includes(item.id)&&!state.completed.has(item.id));
+    openContent({className:'pending-rooms',source:opener||$('#open-map'),html:`<div class="dialog-heading"><p class="eyebrow">SALA ${String(config.rooms.indexOf(room)+1).padStart(2,'0')} · ${escape(room.title.replace(/.$/,'').toUpperCase())}</p><h2 id="dialog-title">Todavía no se abre</h2><p>${escape(config.texts.lockedRoom)}. Te faltan estos sellos:</p></div><div class="pending-list">${pending.map(item=>`<button class="room-access available" data-room="${escape(item.id)}" type="button"><span class="room-number">${String(config.rooms.indexOf(item)+1).padStart(2,'0')} · IR A LA SALA</span><span>${escape(item.title)}</span></button>`).join('')}</div>`});
   }
   /* Próximas entregas: registrar una sala que resuelva { completed: true }
      únicamente al finalizar su experiencia. Visitar el mapa nunca da sellos. */
@@ -277,6 +279,7 @@
     playMedia:(element,options)=>sound.play(element,options),
     pauseMedia:element=>sound.pause(element),
     releaseMedia:element=>sound.release(element),
+    stopMedia:()=>sound.stop(),
     toggleVideoSound:element=>sound.toggleMediaMuted(element),
     bindAudioButton,
     audioPlaying:src=>{const state=sound.state();return state.kind==='audio'&&state.playing&&state.active?.getAttribute('src')===src;},
@@ -296,6 +299,9 @@
     },
     // El próximo capítulo elegido: solo en este dispositivo, sin enviar nada a nadie.
     getNextChapter:()=>choiceStore.get(),
+    // La vitrina secreta de la sala final se guarda aparte de sellos y pistas.
+    vitrineOpened:()=>vitrineStore.get(),
+    openVitrine:()=>{if(!progressStore.cluesComplete())return false;vitrineStore.set(true);return true;},
     setNextChapter:id=>{const value=choiceStore.set(id);document.dispatchEvent(new CustomEvent('museum:next-chapter',{detail:value}));return value;},
     returnToLobby,
     playDoors,
@@ -310,7 +316,7 @@
   function renderSound(state) {
     const button=$('#ambient-toggle');button.setAttribute('aria-pressed',String(state.muted));button.setAttribute('aria-label',state.muted?'Activar todo el sonido':'Silenciar todo el sonido');$('span',button).textContent=state.muted?'Silencio':'Sonido';
     document.querySelectorAll('[data-audio-src]').forEach(control=>{control.textContent=state.kind==='audio'&&state.active?.getAttribute('src')===control.dataset.audioSrc&&state.playing?'Ⅱ Pausar':control.dataset.audioLabel;});
-    miniPlayer.hidden=!['lobby','room','moments','little-things','you','future'].includes(screen)||!state.active||state.kind!=='audio';
+    miniPlayer.hidden=!['lobby','room','moments','little-things','you','future','artwork'].includes(screen)||!state.active||state.kind!=='audio';
     $('#museum-player-title').textContent=state.title;
     $('#museum-player-toggle').textContent=state.playing?'Ⅱ':'▶';$('#museum-player-toggle').setAttribute('aria-label',state.playing?'Pausar canción':'Reproducir canción');
   }
@@ -346,7 +352,7 @@
   $('#open-passport').addEventListener('click',event=>openDialog('passport',event.currentTarget));
   $('#consult-ticket').addEventListener('click',event=>openDialog('ticket',event.currentTarget));
   $('#open-note').addEventListener('click',event=>openContent({className:'dialog-note',source:event.currentTarget,html:noteMarkup()}));
-  $('#replay-tutorial').addEventListener('click',event=>{const help={room:'room-help',moments:'moments-help','little-things':'little-help',you:'you-help',future:'future-help'}[screen];if(help)$('#'+help).click();else openTutorial(event.currentTarget);});
+  $('#replay-tutorial').addEventListener('click',event=>{const help={room:'room-help',moments:'moments-help','little-things':'little-help',you:'you-help',future:'future-help',artwork:'artwork-help'}[screen];if(help)$('#'+help).click();else openTutorial(event.currentTarget);});
   // Deslizar hacia arriba desde el menú inferior abre el mapa.
   {
     const dock=$('#lobby-dock');let start=null,swallow=0;
